@@ -177,6 +177,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
   let finalDigest: string | undefined;
   let writes = 0;
   let verificationAttempts = 0;
+  let sourceEditingOpen = true;
 
   const server = createSdkMcpServer({
     name: "replicator",
@@ -267,6 +268,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
           try {
             if (!planAccepted) throw new Error("the plan is not host-accepted");
             if (finalDigest) throw new Error("source is finalized");
+            if (!sourceEditingOpen) throw new Error("source editing is closed after validation until a source-scoped failure reopens it");
             if (writes >= 18) throw new Error("bounded source edit limit reached");
             await options.editSource(file, oldText, newText, replaceAll === true);
             writes += 1;
@@ -314,10 +316,12 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             const summary = await options.validate();
             validatedDigest = await options.currentDigest();
             verifiedDigest = undefined;
+            sourceEditingOpen = false;
             options.onStage("validation", true, summary);
             return { content: [{ type: "text", text: `Validation passed for source ${validatedDigest}. Do not edit unless verify_behavior reports a source failure.\n${summary}` }] };
           } catch (error) {
             const summary = error instanceof Error ? error.message : "Validation failed";
+            sourceEditingOpen = true;
             options.onStage("validation", false, summary);
             return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source. Make a focused source edit, then call validate_app again.` }] };
           }
@@ -342,6 +346,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             return { content: [{ type: "text", text: `Behavior verification passed for source ${verifiedDigest}.\n${summary}` }] };
           } catch (error) {
             const summary = error instanceof Error ? error.message : "Behavior verification failed";
+            sourceEditingOpen = true;
             options.onStage("verification", false, summary);
             return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source. Make a focused source edit, then validate and verify again.` }] };
           }
