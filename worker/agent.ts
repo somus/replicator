@@ -109,10 +109,6 @@ export async function runStructuredAgentTurn<T>(options: AgentTurnOptions<T>): P
 }
 
 export type AgenticImplementationOptions = {
-  planAcceptedInitially?: boolean;
-  acceptPlan: (input: { summary: string; scenarios: unknown[] }) => Promise<string>;
-  requestClarification: (questions: unknown[]) => Promise<Record<string, string>>;
-  writeSource: (file: string, contents: string) => Promise<void>;
   listSourceFiles: () => Promise<string[]>;
   readSource: (file: string) => Promise<string>;
   editSource: (file: string, oldText: string, newText: string, replaceAll: boolean) => Promise<void>;
@@ -171,7 +167,6 @@ export function createPlanningGuidance(): McpSdkServerConfigWithInstance {
 }
 
 export function createAgenticImplementation(options: AgenticImplementationOptions): AgenticImplementation {
-  let planAccepted = options.planAcceptedInitially ?? false;
   let validatedDigest: string | undefined;
   let verifiedDigest: string | undefined;
   let finalDigest: string | undefined;
@@ -185,58 +180,6 @@ export function createAgenticImplementation(options: AgenticImplementationOption
     alwaysLoad: true,
     instructions: "Implement through the bounded edit, documentation, validation, behavior verification, and finalization tools. Keep repairing in this query until finalization passes.",
     tools: [
-      tool(
-        "request_clarification",
-        "Pause for owner answers only when a material ambiguity prevents a safe plan. Call only before accept_plan.",
-        {
-          questions: z.array(z.object({
-            id: z.string().min(1).max(128),
-            question: z.string().min(1).max(1_000),
-            answerKind: z.enum(["choice", "short_text"]),
-            options: z.array(z.string().min(1).max(500)).min(2).max(5).optional(),
-          })).min(1).max(6),
-        },
-        async ({ questions }) => {
-          try {
-            if (planAccepted) throw new Error("the plan is already accepted");
-            const answers = await options.requestClarification(questions);
-            return { content: [{ type: "text", text: `Owner answers: ${JSON.stringify(answers)}` }] };
-          } catch (error) {
-            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Clarification failed" }] };
-          }
-        },
-      ),
-      tool(
-        "accept_plan",
-        "Submit the immutable bounded Native plan and executable Behavior Contract before editing source.",
-        {
-          summary: z.string().min(1).max(4_000),
-          scenarios: z.array(z.object({
-            id: z.string().min(1).max(128),
-            title: z.string().min(1).max(1_000),
-            purpose: z.enum(["primary", "newest_change", "preserved_behavior", "high_risk"]),
-            steps: z.array(z.union([
-              z.object({ action: z.literal("launch") }),
-              z.object({ action: z.literal("click"), target: z.string().min(1).max(200) }),
-              z.object({ action: z.literal("input"), target: z.string().min(1).max(200), value: z.string().max(2_000) }),
-              z.object({ action: z.literal("wait"), milliseconds: z.number().min(0).max(5_000) }),
-              z.object({ action: z.literal("assert_text"), target: z.string().min(1).max(200), value: z.string().min(1).max(2_000) }),
-              z.object({ action: z.literal("assert_visible"), target: z.string().min(1).max(200) }),
-              z.object({ action: z.literal("screenshot"), name: z.string().min(1).max(80) }),
-            ])).min(1).max(24),
-          })).min(1).max(3),
-        },
-        async ({ summary, scenarios }) => {
-          try {
-            if (planAccepted) throw new Error("the plan is already accepted");
-            const result = await options.acceptPlan({ summary, scenarios });
-            planAccepted = true;
-            return { content: [{ type: "text", text: result }] };
-          } catch (error) {
-            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Plan rejected" }] };
-          }
-        },
-      ),
       tool(
         "list_app_files",
         "List every editable file allowed by the locked bounded Native format.",
@@ -266,7 +209,6 @@ export function createAgenticImplementation(options: AgenticImplementationOption
         },
         async ({ file, oldText, newText, replaceAll }) => {
           try {
-            if (!planAccepted) throw new Error("the plan is not host-accepted");
             if (finalDigest) throw new Error("source is finalized");
             if (!sourceEditingOpen) throw new Error("source editing is closed after validation until a source-scoped failure reopens it");
             if (writes >= 18) throw new Error("bounded source edit limit reached");
@@ -275,25 +217,6 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             validatedDigest = undefined;
             verifiedDigest = undefined;
             return { content: [{ type: "text", text: `Edited ${file}; validation evidence is invalid until validate_app passes.` }] };
-          } catch (error) {
-            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Source edit rejected" }] };
-          }
-        },
-      ),
-      tool(
-        "write_source",
-        "Replace one complete host-approved Native source file. Any edit invalidates validation and verification evidence.",
-        { file: z.string().min(1).max(128), contents: z.string().max(500_000) },
-        async ({ file, contents }) => {
-          try {
-            if (!planAccepted) throw new Error("call accept_plan before editing source");
-            if (finalDigest) throw new Error("source is finalized");
-            if (writes >= 18) throw new Error("bounded source edit limit reached");
-            await options.writeSource(file, contents);
-            writes += 1;
-            validatedDigest = undefined;
-            verifiedDigest = undefined;
-            return { content: [{ type: "text", text: `Updated ${file}; validation evidence is invalid until validate_app passes.` }] };
           } catch (error) {
             return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Source edit rejected" }] };
           }
@@ -311,7 +234,6 @@ export function createAgenticImplementation(options: AgenticImplementationOption
         {},
         async () => {
           try {
-            if (!planAccepted) throw new Error("call accept_plan before validation");
             if (finalDigest) throw new Error("source is finalized");
             const summary = await options.validate();
             validatedDigest = await options.currentDigest();
@@ -333,7 +255,6 @@ export function createAgenticImplementation(options: AgenticImplementationOption
         {},
         async () => {
           try {
-            if (!planAccepted) throw new Error("call accept_plan before behavior verification");
             if (finalDigest) throw new Error("source is finalized");
             if (!validatedDigest || await options.currentDigest() !== validatedDigest) {
               throw new Error("source changed or has not passed validate_app");
@@ -358,7 +279,6 @@ export function createAgenticImplementation(options: AgenticImplementationOption
         {},
         async () => {
           try {
-            if (!planAccepted) throw new Error("call accept_plan before finalization");
             const digest = await options.currentDigest();
             if (!validatedDigest || !verifiedDigest || digest !== validatedDigest || digest !== verifiedDigest) {
               throw new Error("current source has not passed validation and behavior verification for one unchanged digest");

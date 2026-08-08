@@ -616,10 +616,6 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       return contents;
     };
     const implementation = createAgenticImplementation({
-      planAcceptedInitially: true,
-      acceptPlan: async () => { throw new Error("Plan is already host-accepted"); },
-      requestClarification: async () => { throw new Error("Clarification is available only during planning"); },
-      writeSource: (file, contents) => candidateAdapter().writeSource(file, contents),
       listSourceFiles: async () => [...editableFiles],
       readSource: readEditable,
       editSource: async (file, oldText, newText, replaceAll) => {
