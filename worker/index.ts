@@ -63,7 +63,7 @@ async function startAttempt(command: StartAttemptCommand): Promise<void> {
     emit({
       type: "stage_result",
       attemptId,
-      stage: "agent_session_probe",
+      stage: "validation",
       ok: true,
       summary: "Agent SDK session initialized and persisted",
     });
