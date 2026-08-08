@@ -24,6 +24,73 @@ const protectedWebViewFiles = new Set([
   "frontend/src/replicator-harness.ts",
 ]);
 
+export const utilityFormatMarkerName = ".replicator-format-v1.json";
+const boundedNativeEditableFiles = ["app.zon", "src/app.native", "src/core.ts"] as const;
+const boundedNativeProtectedFiles = [
+  ".gitignore",
+  "README.md",
+  "package.json",
+  "tsconfig.json",
+  "assets/icon.png",
+] as const;
+
+export type ProjectFilePolicy = {
+  readable: readonly string[];
+  editable: readonly string[];
+  creatable: readonly string[];
+  protected: readonly string[];
+  digest: readonly string[];
+};
+
+export function projectFilePolicy(format: UtilityFormat): ProjectFilePolicy {
+  if (format === "native-bounded") {
+    return {
+      readable: boundedNativeEditableFiles,
+      editable: boundedNativeEditableFiles,
+      creatable: [],
+      protected: boundedNativeProtectedFiles,
+      digest: [...boundedNativeEditableFiles, ...boundedNativeProtectedFiles].sort(),
+    };
+  }
+  return { readable: [], editable: [], creatable: [], protected: [], digest: [] };
+}
+
+function markerContents(format: UtilityFormat): string {
+  return `${JSON.stringify({ version: 1, format })}\n`;
+}
+
+export async function createUtilityFormatMarker(
+  utilityRoot: string,
+  format: UtilityFormat,
+): Promise<string> {
+  const root = await realpath(utilityRoot);
+  const marker = path.join(root, utilityFormatMarkerName);
+  const handle = await open(marker, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL, 0o600);
+  try {
+    await handle.writeFile(markerContents(format), "utf8");
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  return marker;
+}
+
+export async function assertUtilityFormatMarker(
+  utilityRoot: string,
+  format: UtilityFormat,
+): Promise<string> {
+  const marker = path.join(await realpath(utilityRoot), utilityFormatMarkerName);
+  const entry = await lstat(marker);
+  if (entry.isSymbolicLink() || !entry.isFile()) {
+    throw new Error("Utility Format marker is not a regular file");
+  }
+  const contents = await readFile(marker, "utf8");
+  if (contents !== markerContents(format)) {
+    throw new Error("Utility Format marker is missing, changed, or does not match the locked format");
+  }
+  return createHash("sha256").update(contents).digest("hex");
+}
+
 const configuredTemplateRoot = process.env.REPLICATOR_TEMPLATE_ROOT;
 if (configuredTemplateRoot && !path.isAbsolute(configuredTemplateRoot)) {
   throw new Error("REPLICATOR_TEMPLATE_ROOT must be an absolute path");
@@ -69,11 +136,7 @@ export function isEditableProjectPath(
   if (!file) return false;
 
   if (format === "native-bounded") {
-    return (
-      file === "app.zon" ||
-      file === "src/app.native" ||
-      file === "src/core.ts"
-    );
+    return boundedNativeEditableFiles.includes(file as (typeof boundedNativeEditableFiles)[number]);
   }
 
   if (format === "native-multimodule") {
@@ -190,6 +253,18 @@ export async function sourceFiles(
   projectRoot: string,
   format: UtilityFormat,
 ): Promise<string[]> {
+  if (format === "native-bounded") {
+    const files = projectFilePolicy(format).digest;
+    const canonicalRoot = await realpath(projectRoot);
+    for (const file of files) {
+      await rejectSymlinkComponents(canonicalRoot, file);
+      const entry = await lstat(path.join(projectRoot, file));
+      if (entry.isSymbolicLink() || !entry.isFile()) {
+        throw new Error(`required bounded Native file is not a regular file: ${file}`);
+      }
+    }
+    return [...files];
+  }
   const files = new Set<string>();
   for (const file of ["app.zon"]) {
     const entry = await lstat(path.join(projectRoot, file));
@@ -250,19 +325,19 @@ export async function assertProjectPolicy(
   }
 
   if (format === "native-bounded") {
-    for (const required of ["src/app.native", "src/core.ts"]) {
-      if (!files.includes(required)) {
-        throw new Error(`bounded Native is missing required source: ${required}`);
+    const allowedRoot = new Set([
+      ...boundedNativeEditableFiles.map((file) => file.split("/")[0]!),
+      ...boundedNativeProtectedFiles.map((file) => file.split("/")[0]!),
+      ".native",
+      ".zig-cache",
+      "node_modules",
+      "zig-out",
+    ]);
+    for (const entry of await readdir(projectRoot, { withFileTypes: true })) {
+      if (entry.isSymbolicLink()) throw new Error(`symbolic links are forbidden: ${entry.name}`);
+      if (!allowedRoot.has(entry.name)) {
+        throw new Error(`bounded Native contains unauthorized path: ${entry.name}`);
       }
-    }
-    const unexpected = files.filter(
-      (file) =>
-        file !== "app.zon" &&
-        file !== "src/app.native" &&
-        file !== "src/core.ts",
-    );
-    if (unexpected.length > 0) {
-      throw new Error(`bounded Native contains unauthorized source: ${unexpected[0]}`);
     }
   }
 
