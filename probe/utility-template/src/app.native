@@ -1,0 +1,5 @@
+<column gap="16" padding="24" main="center" cross="center">
+  <text>Replicator packaged toolchain</text>
+  <text>{status}</text>
+  <button variant="primary" on-press="confirm">Confirm Utility</button>
+</column>

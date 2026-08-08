@@ -1,0 +1,44 @@
+resources=Contents/Resources
+data_root=probe-data-root
+node=Contents/Resources/toolchains/node/bin/node
+native_cli=Contents/Resources/toolchains/native-cli/bin/native.js
+native_sdk=Contents/Resources/toolchains/native-cli
+zig=Contents/Resources/toolchains/zig/zig
+worker=Contents/Resources/probe/echo-worker.js
+path_prefix=Contents/Resources/toolchains/node/bin
+$ Contents/Resources/toolchains/node/bin/node --version
+duration_seconds=0.090 exit_code=0
+v24.18.1
+$ Contents/Resources/toolchains/zig/zig version
+duration_seconds=0.119 exit_code=0
+0.16.0
+$ Contents/Resources/toolchains/node/bin/node Contents/Resources/toolchains/native-cli/bin/native.js --version
+duration_seconds=0.113 exit_code=0
+native 0.8.1 (commit b21849c, automation protocol 0x096c8aa4730c11ec)
+$ Contents/Resources/toolchains/node/bin/node Contents/Resources/probe/echo-worker.js
+duration_seconds=0.107 exit_code=0
+{"kind":"echoed","value":"packaged-worker-ok"}
+$ Contents/Resources/toolchains/node/bin/node Contents/Resources/toolchains/native-cli/bin/native.js check probe-data-root/Utilities/H1Probe/source
+duration_seconds=1.074 exit_code=0
+refreshed node_modules/@native-sdk/core (editor types for stock tsc; builds never read it)
+model contract: not yet built - bindings and app: icon names checked structurally only; run `native test` to enable typed checks
+src/app.native: ok
+info[manifest.valid]: app.zon is valid
+web layer: none (inferred: nothing in app.zon declares web use)
+checked 1 markup file, app.zon and src/core.ts (subset checker clean)
+$ Contents/Resources/toolchains/node/bin/node Contents/Resources/toolchains/native-cli/bin/native.js build probe-data-root/Utilities/H1Probe/source --yes
+duration_seconds=86.621 exit_code=0
+native build: built zig-out/bin/h1-package-probe (ReleaseFast)
+$ Contents/Resources/toolchains/node/bin/node Contents/Resources/toolchains/native-cli/bin/native.js package --target macos --output probe-data-root/Utilities/H1Probe/ready/H1 Package Probe.app --binary probe-data-root/Utilities/H1Probe/source/zig-out/bin/h1-package-probe --assets probe-data-root/Utilities/H1Probe/source/zig-out/assets.bundle --signing adhoc
+duration_seconds=0.273 exit_code=0
+info[package.created]: created macos artifact at probe-data-root/Utilities/H1Probe/ready/H1 Package Probe.app
+  web layer: none (inferred: nothing in app.zon declares web use)
+  signing: adhoc (signed, verified)
+launched_bundle=Utilities/H1Probe/ready/H1 Package Probe.app
+launch_duration_seconds=0.114
+launched_pid=18328
+$ /usr/sbin/screencapture -x probe-data-root/evidence/utility-launched.png
+duration_seconds=0.290 exit_code=0
+
+status=PASS
+total_duration_seconds=91.850

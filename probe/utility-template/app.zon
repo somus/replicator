@@ -1,0 +1,33 @@
+.{
+    .id = "dev.replicator.h1-package-probe",
+    .name = "h1-package-probe",
+    .display_name = "H1 Package Probe",
+    .description = "Standalone Utility built by the packaged Replicator toolchain.",
+    .version = "0.1.0",
+    .icons = .{"assets/icon.png"},
+    .platforms = .{"macos"},
+    .permissions = .{ "view", "command" },
+    .capabilities = .{ "native_views", "gpu_surfaces" },
+    .shell = .{
+        .windows = .{
+            .{
+                .label = "main",
+                .title = "H1 Package Probe",
+                .width = 520,
+                .height = 320,
+                .restore_state = false,
+                .restore_policy = "center_on_primary",
+                .views = .{
+                    .{ .label = "main-canvas", .kind = "gpu_surface", .fill = true, .role = "Package probe", .accessibility_label = "Package probe", .gpu_backend = "metal", .gpu_pixel_format = "bgra8_unorm", .gpu_present_mode = "timer", .gpu_alpha_mode = "opaque", .gpu_color_space = "srgb", .gpu_vsync = true },
+                },
+            },
+        },
+    },
+    .security = .{
+        .navigation = .{
+            .allowed_origins = .{ "zero://app", "zero://inline" },
+            .external_links = .{ .action = "deny" },
+        },
+    },
+    .web_engine = "system",
+}

@@ -1,0 +1,37 @@
+OFFICIAL NODE ARCHIVE CHECKSUM
+eb02f7fab96d3d67de40c5ec8566096fcb4c2026728787683ae5a97eb612b941  node-v24.18.1-darwin-arm64.tar.gz
+Matched https://nodejs.org/dist/v24.18.1/SHASUMS256.txt during assembly.
+
+ARCHITECTURES
+Replicator.app/Contents/MacOS/Replicator: Mach-O 64-bit executable arm64
+Replicator.app/Contents/Resources/toolchains/node/bin/node: Mach-O 64-bit executable arm64
+Replicator.app/Contents/Resources/toolchains/native-cli/node_modules/@native-sdk/cli-darwin-arm64/bin/native: Mach-O 64-bit executable arm64
+Replicator.app/Contents/Resources/toolchains/zig/zig: Mach-O 64-bit executable arm64
+probe-data-root/Utilities/H1Probe/ready/H1 Package Probe.app/Contents/MacOS/h1-package-probe: Mach-O 64-bit executable arm64
+
+SHA-256
+eb02f7fab96d3d67de40c5ec8566096fcb4c2026728787683ae5a97eb612b941  node-v24.18.1-darwin-arm64.tar.gz
+0cdc6999137a917c6703c4d512f946ee850957e929884d9363f2ec612433929e  Replicator.app/Contents/MacOS/Replicator
+eb98dc8e32d2352bf797b3cd0bdbf99a0bcf614b04ec767f24b45a355e4d5fbc  Replicator.app/Contents/Resources/toolchains/node/bin/node
+72e891193414005bd5149e123e93d08a08216ccfdc147401d59a4b6edc32d3ad  Replicator.app/Contents/Resources/toolchains/native-cli/node_modules/@native-sdk/cli-darwin-arm64/bin/native
+f2d57aa1424e8d59281965586814e52b2edda52e3477bfeb1c128e8673f0e5cd  Replicator.app/Contents/Resources/toolchains/zig/zig
+61719a2e5f67df48493f03a2a5f81bd376081b19b6c8604c86e37688c0610b47  probe-data-root/Utilities/H1Probe/ready/H1 Package Probe.app/Contents/MacOS/h1-package-probe
+535440c320b5b8478e5f56103dff18935eacc047b986032036dd2c0e6a7041dc  evidence/h1-package-probe/utility-launched.png (window-only crop)
+
+OUTER CODESIGN
+codesign --verify --deep --strict --verbose=2 Replicator.app
+Replicator.app: valid on disk
+Replicator.app: satisfies its Designated Requirement
+Identifier=dev.replicator.h1-package-probe.outer
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory flags=0x2(adhoc)
+CandidateCDHashFull sha256=0363a04297c8ea765eb6443f49a3e028d822e8dff25f036f0932e2d12414e1bc
+
+STANDALONE UTILITY CODESIGN
+codesign --verify --deep --strict --verbose=2 "H1 Package Probe.app"
+H1 Package Probe.app: valid on disk
+H1 Package Probe.app: satisfies its Designated Requirement
+Identifier=dev.replicator.h1-package-probe
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory flags=0x2(adhoc)
+CandidateCDHashFull sha256=3a52387c07b60e06b1f25e77500fe1b51d102317f629ed6bc0543048c53225b4
