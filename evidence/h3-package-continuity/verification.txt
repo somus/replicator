@@ -1,35 +1,37 @@
 STATUS
-release assembly: PASS
-shell syntax: PASS
-compiled worker: PASS
+updated-handoff release assembly: PASS
+Native test, validate, strict doctor, build, package: PASS
 outer codesign --deep --strict: PASS
-prepared Utility codesign --deep --strict: PASS
-post-ZIP extraction codesign --deep --strict: PASS
-minimized-PATH worker probe: PASS
-minimized-PATH outer launch: PASS
-secret and absolute development path scan: PASS (no matches)
+Prepared Demo codesign --deep --strict: PASS
+bundle-relative worker EOF probe: PASS
+minimized-environment GUI launch: PASS
+picker dismiss, four paths, overlong path, cancellation: PASS
+frozen docs and skills integrity: PASS
+credential and exact development-path scans: PASS (no matches)
 
 PINNED VERSIONS
 Node.js 24.18.1
 Agent SDK 0.3.226
-Native 0.8.1
+Native 0.8.1 (commit b21849c, automation protocol 0x096c8aa4730c11ec)
 Zig 0.16.0
 
-ARCHITECTURES
-Replicator outer executable: Mach-O 64-bit executable arm64
-Node executable: Mach-O 64-bit executable arm64
-Agent SDK executable: Mach-O 64-bit executable arm64
-Native executable: Mach-O 64-bit executable arm64
-Zig executable: Mach-O 64-bit executable arm64
+FROZEN GUIDANCE
+docs pages: 96
+component pages: 48
+docs snapshot: 19b736e496a5eed651a3d63062f16efb8048c77b437b34b7037a4cf5c3a05c72
+skills: 5
+skills snapshot: 3ffe3336d733015de962607feddf6a583fd36aa757f4b73d44483c07b67f9fc0
 
 RUNTIME ISOLATION
-PATH=/usr/bin:/bin:/usr/sbin:/sbin
-data root=Library/Application Support/Replicator
-Claude login=not used
-Bun=not used
-development checkout=not used
-credential=not present
+data root: Library/Application Support/Replicator
+PATH: bundled Node and Zig plus system paths
+Claude login: not used
+Bun: not used
+development checkout: not used
+credential: not present
 
 PACKAGE
-dcf7533726aa8c0d281b503153e0ee8830d364d537aceea47c1e66d2e9fa1707  Replicator.zip
-metadata-preserving ZIP: ditto --sequesterRsrc --keepParent
+ea8e58b00a82f342b0709318f385792bab70bf178c3c74bcd5a8ad4c88488eb7  Replicator.zip
+ZIP: ditto --sequesterRsrc --keepParent
+fixture caveat: retained H1 Utility; integration must replace with verified Focus Sprint
+strict-check caveat: 46 integration-owned UI binding warnings promoted to errors

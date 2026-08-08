@@ -1,0 +1,1121 @@
+{
+  "schemaVersion": 1,
+  "native": {
+    "version": "0.8.1",
+    "commit": "b21849c",
+    "automationProtocol": "0x096c8aa4730c11ec",
+    "versionOutput": "native 0.8.1 (commit b21849c, automation protocol 0x096c8aa4730c11ec)"
+  },
+  "generatedAt": "2026-08-08T08:19:11.760Z",
+  "list": {
+    "path": "skills-list.txt",
+    "bytes": 2901,
+    "sha256": "396b6dbbd22beb1ef3fe8130d744f5e0aefd4f4013c3890578868d0bd59a513e"
+  },
+  "skillCount": 5,
+  "snapshotSha256": "3ffe3336d733015de962607feddf6a583fd36aa757f4b73d44483c07b67f9fc0",
+  "skills": [
+    {
+      "id": "native-ui",
+      "full": false,
+      "path": "native-ui.md",
+      "bytes": 145560,
+      "sha256": "ff3cd24643e3b26eb9f03a6dc96b55f3e8de89d7e236f564c879888610e24d14",
+      "headings": [
+        {
+          "id": "author-native-ui-with-markup-zig",
+          "title": "Author native UI with markup + Zig",
+          "level": 1,
+          "startByte": 376,
+          "endByte": 1563
+        },
+        {
+          "id": "app-wiring",
+          "title": "App wiring",
+          "level": 2,
+          "startByte": 1563,
+          "endByte": 4185
+        },
+        {
+          "id": "webview-panes-canvas-live-web-content-in-one-window",
+          "title": "Webview panes: canvas + live web content in one window",
+          "level": 3,
+          "startByte": 4185,
+          "endByte": 5521
+        },
+        {
+          "id": "menu-bar-extra-status-item",
+          "title": "Menu-bar extra (status item)",
+          "level": 3,
+          "startByte": 5521,
+          "endByte": 7250
+        },
+        {
+          "id": "native-scrolling-macos",
+          "title": "Native scrolling (macOS)",
+          "level": 3,
+          "startByte": 7250,
+          "endByte": 9077
+        },
+        {
+          "id": "context-menus-one-declared-menu-platform-decided-presentation",
+          "title": "Context menus: one declared menu, platform-decided presentation",
+          "level": 3,
+          "startByte": 9077,
+          "endByte": 12993
+        },
+        {
+          "id": "elements",
+          "title": "Elements",
+          "level": 2,
+          "startByte": 12993,
+          "endByte": 27415
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 27415,
+          "endByte": 34587
+        },
+        {
+          "id": "chips-exclusive-selection-with-selected",
+          "title": "Chips: exclusive selection with `selected=`",
+          "level": 3,
+          "startByte": 34587,
+          "endByte": 35938
+        },
+        {
+          "id": "pickers-select-is-the-trigger-compose-the-options-as-an-anchored-dropdown",
+          "title": "Pickers: select is the trigger — compose the options as an ANCHORED dropdown",
+          "level": 3,
+          "startByte": 35938,
+          "endByte": 39419
+        },
+        {
+          "id": "splitters-split-panes-with-a-model-owned-fraction",
+          "title": "Splitters: split panes with a model-owned fraction",
+          "level": 3,
+          "startByte": 39419,
+          "endByte": 41852
+        },
+        {
+          "id": "trees-disclosure-rows-with-the-aria-tree-keymap",
+          "title": "Trees: disclosure rows with the ARIA tree keymap",
+          "level": 3,
+          "startByte": 41852,
+          "endByte": 43520
+        },
+        {
+          "id": "press-and-hold-on-hold",
+          "title": "Press-and-hold: on-hold",
+          "level": 3,
+          "startByte": 43520,
+          "endByte": 44544
+        },
+        {
+          "id": "select-then-act-double-press-and-row-level-enter",
+          "title": "Select, then act: double press and row-level Enter",
+          "level": 3,
+          "startByte": 44544,
+          "endByte": 45971
+        },
+        {
+          "id": "widget-budgets-and-virtualization",
+          "title": "Widget budgets and virtualization",
+          "level": 2,
+          "startByte": 45971,
+          "endByte": 48675
+        },
+        {
+          "id": "windowed-virtual-lists-zig-views-100k-rows-viewport-sized-budgets",
+          "title": "Windowed virtual lists (Zig views): 100k rows, viewport-sized budgets",
+          "level": 2,
+          "startByte": 48675,
+          "endByte": 53738
+        },
+        {
+          "id": "style-token-attributes",
+          "title": "Style token attributes",
+          "level": 2,
+          "startByte": 53738,
+          "endByte": 56268
+        },
+        {
+          "id": "expressions-the-complete-grammar",
+          "title": "Expressions — the complete grammar",
+          "level": 2,
+          "startByte": 56268,
+          "endByte": 60185
+        },
+        {
+          "id": "binding-resolution-rules",
+          "title": "Binding resolution rules",
+          "level": 2,
+          "startByte": 60185,
+          "endByte": 62322
+        },
+        {
+          "id": "derive-don-t-store",
+          "title": "Derive, don't store",
+          "level": 2,
+          "startByte": 62322,
+          "endByte": 65502
+        },
+        {
+          "id": "messages",
+          "title": "Messages",
+          "level": 2,
+          "startByte": 65502,
+          "endByte": 71374
+        },
+        {
+          "id": "keys-quiet-list-rows-and-the-app-level-fallback",
+          "title": "Keys: quiet list rows and the app-level fallback",
+          "level": 3,
+          "startByte": 71374,
+          "endByte": 74014
+        },
+        {
+          "id": "text-fields-the-elm-style-mirror-pattern",
+          "title": "Text fields: the elm-style mirror pattern",
+          "level": 2,
+          "startByte": 74014,
+          "endByte": 75084
+        },
+        {
+          "id": "clipboard-and-selection-free-do-not-reimplement",
+          "title": "Clipboard and selection (free — do not reimplement)",
+          "level": 3,
+          "startByte": 75084,
+          "endByte": 76776
+        },
+        {
+          "id": "effects-subprocesses-and-http-from-update",
+          "title": "Effects: subprocesses and HTTP from update",
+          "level": 2,
+          "startByte": 76776,
+          "endByte": 104468
+        },
+        {
+          "id": "secondary-windows-model-declared-windowsfn-windowview",
+          "title": "Secondary windows: model-declared (`windows_fn` + `window_view`)",
+          "level": 2,
+          "startByte": 104468,
+          "endByte": 108705
+        },
+        {
+          "id": "hidden-titlebar-titlebar-hiddeninset-hiddeninsettall-window-drag-onchrome",
+          "title": "Hidden titlebar: `titlebar = \"hidden_inset\"`/`\"hidden_inset_tall\"` + `window-drag` + `on_chrome`",
+          "level": 2,
+          "startByte": 108705,
+          "endByte": 111000
+        },
+        {
+          "id": "time-wall-clock-monotonic-with-a-testable-seam",
+          "title": "Time: wall clock + monotonic, with a testable seam",
+          "level": 2,
+          "startByte": 111000,
+          "endByte": 112276
+        },
+        {
+          "id": "images-runtime-registered-pixels-the-avatar-pattern",
+          "title": "Images: runtime-registered pixels + the avatar pattern",
+          "level": 2,
+          "startByte": 112276,
+          "endByte": 115302
+        },
+        {
+          "id": "structure-tags",
+          "title": "Structure tags",
+          "level": 2,
+          "startByte": 115302,
+          "endByte": 116856
+        },
+        {
+          "id": "templates-template-use",
+          "title": "Templates: `<template>` + `<use>`",
+          "level": 2,
+          "startByte": 116856,
+          "endByte": 121484
+        },
+        {
+          "id": "code-in-markup-code",
+          "title": "Code in markup: `<code>`",
+          "level": 2,
+          "startByte": 121484,
+          "endByte": 123883
+        },
+        {
+          "id": "markdown-in-markup-markdown",
+          "title": "Markdown in markup: `<markdown>`",
+          "level": 2,
+          "startByte": 123883,
+          "endByte": 126088
+        },
+        {
+          "id": "pipeline-composites-stepper-timeline-nav",
+          "title": "Pipeline composites: stepper, timeline, nav",
+          "level": 2,
+          "startByte": 126088,
+          "endByte": 128060
+        },
+        {
+          "id": "charts",
+          "title": "Charts",
+          "level": 2,
+          "startByte": 128060,
+          "endByte": 132473
+        },
+        {
+          "id": "rich-text-inline-spans-and-markdown",
+          "title": "Rich text: inline spans and markdown",
+          "level": 2,
+          "startByte": 132473,
+          "endByte": 137484
+        },
+        {
+          "id": "zig-0-16-not-0-15-the-std-idioms-that-changed",
+          "title": "Zig 0.16, not 0.15: the std idioms that changed",
+          "level": 2,
+          "startByte": 137484,
+          "endByte": 139565
+        },
+        {
+          "id": "validate-without-building",
+          "title": "Validate without building",
+          "level": 2,
+          "startByte": 139565,
+          "endByte": 141526
+        },
+        {
+          "id": "testing-pattern",
+          "title": "Testing pattern",
+          "level": 2,
+          "startByte": 141526,
+          "endByte": 144111
+        },
+        {
+          "id": "verify-live-through-the-automation-harness",
+          "title": "Verify live through the automation harness",
+          "level": 2,
+          "startByte": 144111,
+          "endByte": 145560
+        }
+      ]
+    },
+    {
+      "id": "ts-core",
+      "full": false,
+      "path": "ts-core.md",
+      "bytes": 97922,
+      "sha256": "2b05d8dad938999ff3832db98479f1046d3caa6086c9ef16182657ffda2dc32f",
+      "headings": [
+        {
+          "id": "author-app-cores-in-the-typescript-subset",
+          "title": "Author app cores in the TypeScript subset",
+          "level": 1,
+          "startByte": 880,
+          "endByte": 3346
+        },
+        {
+          "id": "the-contract",
+          "title": "The contract",
+          "level": 2,
+          "startByte": 3346,
+          "endByte": 5570
+        },
+        {
+          "id": "the-arena-mental-model",
+          "title": "The arena mental model",
+          "level": 2,
+          "startByte": 5570,
+          "endByte": 6376
+        },
+        {
+          "id": "what-the-subset-means",
+          "title": "What the subset means",
+          "level": 2,
+          "startByte": 6376,
+          "endByte": 9987
+        },
+        {
+          "id": "what-compiles-v1",
+          "title": "What compiles (v1)",
+          "level": 2,
+          "startByte": 9987,
+          "endByte": 33628
+        },
+        {
+          "id": "effects-are-cmd-data",
+          "title": "Effects are Cmd data",
+          "level": 2,
+          "startByte": 33628,
+          "endByte": 36699
+        },
+        {
+          "id": "the-named-engine-ops",
+          "title": "The named engine ops",
+          "level": 3,
+          "startByte": 36699,
+          "endByte": 40544
+        },
+        {
+          "id": "the-streaming-ops-spawn-audio-and-channels",
+          "title": "The streaming ops: spawn, audio, and channels",
+          "level": 3,
+          "startByte": 40544,
+          "endByte": 50918
+        },
+        {
+          "id": "the-window-verbs",
+          "title": "The window verbs",
+          "level": 3,
+          "startByte": 50918,
+          "endByte": 51856
+        },
+        {
+          "id": "the-init-command",
+          "title": "The init command",
+          "level": 3,
+          "startByte": 51856,
+          "endByte": 52327
+        },
+        {
+          "id": "subscriptions-are-sub-data",
+          "title": "Subscriptions are Sub data",
+          "level": 3,
+          "startByte": 52327,
+          "endByte": 54689
+        },
+        {
+          "id": "splitting-a-core-into-modules",
+          "title": "Splitting a core into modules",
+          "level": 2,
+          "startByte": 54689,
+          "endByte": 58927
+        },
+        {
+          "id": "text-is-bytes",
+          "title": "Text is bytes",
+          "level": 2,
+          "startByte": 58927,
+          "endByte": 60707
+        },
+        {
+          "id": "the-byte-text-string-methods",
+          "title": "The byte-text string methods",
+          "level": 3,
+          "startByte": 60707,
+          "endByte": 65943
+        },
+        {
+          "id": "text-input-from-markup",
+          "title": "Text input from markup",
+          "level": 2,
+          "startByte": 65943,
+          "endByte": 68075
+        },
+        {
+          "id": "continuous-controls-from-markup",
+          "title": "Continuous controls from markup",
+          "level": 2,
+          "startByte": 68075,
+          "endByte": 69513
+        },
+        {
+          "id": "the-host-event-wiring-channels",
+          "title": "The host-event wiring channels",
+          "level": 2,
+          "startByte": 69513,
+          "endByte": 72707
+        },
+        {
+          "id": "the-rules-the-checker-enforces",
+          "title": "The rules the checker enforces",
+          "level": 2,
+          "startByte": 72707,
+          "endByte": 90600
+        },
+        {
+          "id": "canonical-example",
+          "title": "Canonical example",
+          "level": 2,
+          "startByte": 90600,
+          "endByte": 92598
+        },
+        {
+          "id": "running-a-core-as-an-app",
+          "title": "Running a core as an app",
+          "level": 2,
+          "startByte": 92598,
+          "endByte": 95665
+        },
+        {
+          "id": "checking-your-work",
+          "title": "Checking your work",
+          "level": 2,
+          "startByte": 95665,
+          "endByte": 97922
+        }
+      ]
+    },
+    {
+      "id": "automation",
+      "full": false,
+      "path": "automation.md",
+      "bytes": 17896,
+      "sha256": "ebed470c2cd6b2aac799d275396e81c724d182a015adb4a3f35bdf916b1f1109",
+      "headings": [
+        {
+          "id": "automate-native-sdk-apps",
+          "title": "Automate Native SDK apps",
+          "level": 1,
+          "startByte": 390,
+          "endByte": 1167
+        },
+        {
+          "id": "what-automation-can-verify",
+          "title": "What automation can verify",
+          "level": 2,
+          "startByte": 1167,
+          "endByte": 1932
+        },
+        {
+          "id": "what-automation-cannot-verify",
+          "title": "What automation cannot verify",
+          "level": 2,
+          "startByte": 1932,
+          "endByte": 2159
+        },
+        {
+          "id": "prerequisites",
+          "title": "Prerequisites",
+          "level": 2,
+          "startByte": 2159,
+          "endByte": 2853
+        },
+        {
+          "id": "commands",
+          "title": "Commands",
+          "level": 2,
+          "startByte": 2853,
+          "endByte": 3859
+        },
+        {
+          "id": "snapshot-assertions-automate-assert",
+          "title": "Snapshot assertions (`automate assert`)",
+          "level": 2,
+          "startByte": 3859,
+          "endByte": 5105
+        },
+        {
+          "id": "standard-workflow",
+          "title": "Standard workflow",
+          "level": 2,
+          "startByte": 5105,
+          "endByte": 9613
+        },
+        {
+          "id": "screenshots",
+          "title": "Screenshots",
+          "level": 2,
+          "startByte": 9613,
+          "endByte": 11481
+        },
+        {
+          "id": "bridge-smoke-test-pattern",
+          "title": "Bridge smoke test pattern",
+          "level": 2,
+          "startByte": 11481,
+          "endByte": 12451
+        },
+        {
+          "id": "file-protocol",
+          "title": "File protocol",
+          "level": 2,
+          "startByte": 12451,
+          "endByte": 14769
+        },
+        {
+          "id": "debugging-automation-failures",
+          "title": "Debugging automation failures",
+          "level": 2,
+          "startByte": 14769,
+          "endByte": 16482
+        },
+        {
+          "id": "ci-and-smoke-tests",
+          "title": "CI and smoke tests",
+          "level": 2,
+          "startByte": 16482,
+          "endByte": 17486
+        },
+        {
+          "id": "notes",
+          "title": "Notes",
+          "level": 2,
+          "startByte": 17486,
+          "endByte": 17896
+        }
+      ]
+    },
+    {
+      "id": "core",
+      "full": true,
+      "path": "core-full.md",
+      "bytes": 36661,
+      "sha256": "1e7f8f294f5c2bbe7c43bac602acf13e584d1c25d5d78dc2f533f5975c328385",
+      "headings": [
+        {
+          "id": "build-native-sdk-apps",
+          "title": "Build Native SDK apps",
+          "level": 1,
+          "startByte": 728,
+          "endByte": 1788
+        },
+        {
+          "id": "mental-model",
+          "title": "Mental model",
+          "level": 2,
+          "startByte": 1788,
+          "endByte": 2765
+        },
+        {
+          "id": "task-router",
+          "title": "Task router",
+          "level": 2,
+          "startByte": 2765,
+          "endByte": 3631
+        },
+        {
+          "id": "quick-start",
+          "title": "Quick start",
+          "level": 2,
+          "startByte": 3631,
+          "endByte": 3956
+        },
+        {
+          "id": "workflow-for-existing-apps",
+          "title": "Workflow for existing apps",
+          "level": 2,
+          "startByte": 3956,
+          "endByte": 5091
+        },
+        {
+          "id": "core-app-model",
+          "title": "Core app model",
+          "level": 2,
+          "startByte": 5091,
+          "endByte": 6277
+        },
+        {
+          "id": "app-zon-essentials",
+          "title": "app.zon essentials",
+          "level": 2,
+          "startByte": 6277,
+          "endByte": 7491
+        },
+        {
+          "id": "common-implementation-recipes",
+          "title": "Common implementation recipes",
+          "level": 2,
+          "startByte": 7491,
+          "endByte": 7525
+        },
+        {
+          "id": "add-a-new-framework-app",
+          "title": "Add a new framework app",
+          "level": 3,
+          "startByte": 7525,
+          "endByte": 7849
+        },
+        {
+          "id": "add-a-native-bridge-command",
+          "title": "Add a native bridge command",
+          "level": 3,
+          "startByte": 7849,
+          "endByte": 8384
+        },
+        {
+          "id": "add-windows-child-webviews-or-dialogs",
+          "title": "Add windows, child WebViews, or dialogs",
+          "level": 3,
+          "startByte": 8384,
+          "endByte": 8762
+        },
+        {
+          "id": "choose-a-web-engine",
+          "title": "Choose a web engine",
+          "level": 3,
+          "startByte": 8762,
+          "endByte": 9036
+        },
+        {
+          "id": "package-an-app",
+          "title": "Package an app",
+          "level": 3,
+          "startByte": 9036,
+          "endByte": 9643
+        },
+        {
+          "id": "development-commands",
+          "title": "Development commands",
+          "level": 2,
+          "startByte": 9643,
+          "endByte": 10093
+        },
+        {
+          "id": "security-defaults",
+          "title": "Security defaults",
+          "level": 2,
+          "startByte": 10093,
+          "endByte": 10790
+        },
+        {
+          "id": "validate-changes",
+          "title": "Validate changes",
+          "level": 2,
+          "startByte": 10790,
+          "endByte": 11998
+        },
+        {
+          "id": "examples-to-inspect",
+          "title": "Examples to inspect",
+          "level": 2,
+          "startByte": 11998,
+          "endByte": 12384
+        },
+        {
+          "id": "when-answering-users",
+          "title": "When answering users",
+          "level": 2,
+          "startByte": 12384,
+          "endByte": 12798
+        },
+        {
+          "id": "references-frontend-assets-md",
+          "title": "references/frontend-assets.md",
+          "level": 1,
+          "startByte": 12798,
+          "endByte": 12831
+        },
+        {
+          "id": "frontend-and-assets",
+          "title": "Frontend and Assets",
+          "level": 1,
+          "startByte": 12831,
+          "endByte": 12979
+        },
+        {
+          "id": "recommended-source-pattern",
+          "title": "Recommended source pattern",
+          "level": 2,
+          "startByte": 12979,
+          "endByte": 13472
+        },
+        {
+          "id": "manifest-frontend-config",
+          "title": "Manifest frontend config",
+          "level": 2,
+          "startByte": 13472,
+          "endByte": 14144
+        },
+        {
+          "id": "dev-server-workflow",
+          "title": "Dev server workflow",
+          "level": 2,
+          "startByte": 14144,
+          "endByte": 14664
+        },
+        {
+          "id": "production-assets",
+          "title": "Production assets",
+          "level": 2,
+          "startByte": 14664,
+          "endByte": 15048
+        },
+        {
+          "id": "security-and-frontend-origins",
+          "title": "Security and frontend origins",
+          "level": 2,
+          "startByte": 15048,
+          "endByte": 15732
+        },
+        {
+          "id": "frontend-to-native-calls",
+          "title": "Frontend to native calls",
+          "level": 2,
+          "startByte": 15732,
+          "endByte": 16032
+        },
+        {
+          "id": "example-projects",
+          "title": "Example projects",
+          "level": 2,
+          "startByte": 16032,
+          "endByte": 16355
+        },
+        {
+          "id": "references-app-model-runtime-md",
+          "title": "references/app-model-runtime.md",
+          "level": 1,
+          "startByte": 16355,
+          "endByte": 16390
+        },
+        {
+          "id": "app-model-and-runtime",
+          "title": "App Model and Runtime",
+          "level": 1,
+          "startByte": 16390,
+          "endByte": 16517
+        },
+        {
+          "id": "app",
+          "title": "`App`",
+          "level": 2,
+          "startByte": 16517,
+          "endByte": 17345
+        },
+        {
+          "id": "webviewsource",
+          "title": "`WebViewSource`",
+          "level": 2,
+          "startByte": 17345,
+          "endByte": 17784
+        },
+        {
+          "id": "runtime-setup",
+          "title": "Runtime setup",
+          "level": 2,
+          "startByte": 17784,
+          "endByte": 18909
+        },
+        {
+          "id": "windows-from-zig",
+          "title": "Windows from Zig",
+          "level": 2,
+          "startByte": 18909,
+          "endByte": 19353
+        },
+        {
+          "id": "embeddedapp",
+          "title": "EmbeddedApp",
+          "level": 2,
+          "startByte": 19353,
+          "endByte": 20248
+        },
+        {
+          "id": "headless-tests",
+          "title": "Headless tests",
+          "level": 2,
+          "startByte": 20248,
+          "endByte": 20713
+        },
+        {
+          "id": "references-web-engines-packaging-debugging-md",
+          "title": "references/web-engines-packaging-debugging.md",
+          "level": 1,
+          "startByte": 20713,
+          "endByte": 20762
+        },
+        {
+          "id": "web-engines-packaging-and-debugging",
+          "title": "Web Engines, Packaging, and Debugging",
+          "level": 1,
+          "startByte": 20762,
+          "endByte": 20952
+        },
+        {
+          "id": "web-engine-choice",
+          "title": "Web engine choice",
+          "level": 2,
+          "startByte": 20952,
+          "endByte": 21631
+        },
+        {
+          "id": "cef-setup",
+          "title": "CEF setup",
+          "level": 2,
+          "startByte": 21631,
+          "endByte": 22181
+        },
+        {
+          "id": "packaging",
+          "title": "Packaging",
+          "level": 2,
+          "startByte": 22181,
+          "endByte": 22856
+        },
+        {
+          "id": "macos-packages",
+          "title": "macOS packages",
+          "level": 2,
+          "startByte": 22856,
+          "endByte": 23648
+        },
+        {
+          "id": "linux-and-windows-packages",
+          "title": "Linux and Windows packages",
+          "level": 2,
+          "startByte": 23648,
+          "endByte": 24033
+        },
+        {
+          "id": "doctor-and-validation",
+          "title": "Doctor and validation",
+          "level": 2,
+          "startByte": 24033,
+          "endByte": 24550
+        },
+        {
+          "id": "debugging",
+          "title": "Debugging",
+          "level": 2,
+          "startByte": 24550,
+          "endByte": 25266
+        },
+        {
+          "id": "common-failures",
+          "title": "Common failures",
+          "level": 2,
+          "startByte": 25266,
+          "endByte": 25901
+        },
+        {
+          "id": "references-project-anatomy-md",
+          "title": "references/project-anatomy.md",
+          "level": 1,
+          "startByte": 25901,
+          "endByte": 25934
+        },
+        {
+          "id": "project-anatomy",
+          "title": "Project Anatomy",
+          "level": 1,
+          "startByte": 25934,
+          "endByte": 26027
+        },
+        {
+          "id": "generated-project-files",
+          "title": "Generated project files",
+          "level": 2,
+          "startByte": 26027,
+          "endByte": 27125
+        },
+        {
+          "id": "app-zon-responsibilities",
+          "title": "app.zon responsibilities",
+          "level": 2,
+          "startByte": 27125,
+          "endByte": 29321
+        },
+        {
+          "id": "build-steps-to-know",
+          "title": "Build steps to know",
+          "level": 2,
+          "startByte": 29321,
+          "endByte": 29676
+        },
+        {
+          "id": "layering-rule",
+          "title": "Layering rule",
+          "level": 2,
+          "startByte": 29676,
+          "endByte": 30301
+        },
+        {
+          "id": "references-bridge-security-native-capabilities-md",
+          "title": "references/bridge-security-native-capabilities.md",
+          "level": 1,
+          "startByte": 30301,
+          "endByte": 30354
+        },
+        {
+          "id": "bridge-security-and-native-capabilities",
+          "title": "Bridge, Security, and Native Capabilities",
+          "level": 1,
+          "startByte": 30354,
+          "endByte": 30551
+        },
+        {
+          "id": "bridge-architecture",
+          "title": "Bridge architecture",
+          "level": 2,
+          "startByte": 30551,
+          "endByte": 30998
+        },
+        {
+          "id": "handler-pattern",
+          "title": "Handler pattern",
+          "level": 2,
+          "startByte": 30998,
+          "endByte": 31781
+        },
+        {
+          "id": "size-limits",
+          "title": "Size limits",
+          "level": 2,
+          "startByte": 31781,
+          "endByte": 32041
+        },
+        {
+          "id": "security-policy",
+          "title": "Security policy",
+          "level": 2,
+          "startByte": 32041,
+          "endByte": 32874
+        },
+        {
+          "id": "builtin-commands",
+          "title": "Builtin commands",
+          "level": 2,
+          "startByte": 32874,
+          "endByte": 34294
+        },
+        {
+          "id": "windows-from-javascript",
+          "title": "Windows from JavaScript",
+          "level": 2,
+          "startByte": 34294,
+          "endByte": 34702
+        },
+        {
+          "id": "layered-webviews",
+          "title": "Layered WebViews",
+          "level": 2,
+          "startByte": 34702,
+          "endByte": 35346
+        },
+        {
+          "id": "dialogs",
+          "title": "Dialogs",
+          "level": 2,
+          "startByte": 35346,
+          "endByte": 36051
+        },
+        {
+          "id": "error-handling",
+          "title": "Error handling",
+          "level": 2,
+          "startByte": 36051,
+          "endByte": 36661
+        }
+      ]
+    },
+    {
+      "id": "zig",
+      "full": false,
+      "path": "zig.md",
+      "bytes": 13272,
+      "sha256": "830542c7a9486c7dbef8264ae3bbe1ccdc7479bbabe721464a6eac0cbdc6eb12",
+      "headings": [
+        {
+          "id": "zig-0-16-for-native-sdk-code",
+          "title": "Zig 0.16 for Native SDK code",
+          "level": 1,
+          "startByte": 667,
+          "endByte": 2135
+        },
+        {
+          "id": "error-struct-heap-has-no-member-named-generalpurposeallocator-allocators-come-from-maininit-std-process-init",
+          "title": "error: struct 'heap' has no member named 'GeneralPurposeAllocator' — allocators come from `main(init: std.process.Init)`",
+          "level": 2,
+          "startByte": 2135,
+          "endByte": 3600
+        },
+        {
+          "id": "error-struct-fs-has-no-member-named-cwd-file-io-moved-to-std-io-dir",
+          "title": "error: struct 'fs' has no member named 'cwd' — file IO moved to `std.Io.Dir`",
+          "level": 2,
+          "startByte": 3600,
+          "endByte": 4760
+        },
+        {
+          "id": "error-struct-std-has-no-member-named-io-writers-are-std-io-writer-stdout-is-std-io-file-stdout",
+          "title": "error: struct 'std' has no member named 'io' — writers are `std.Io.Writer`, stdout is `std.Io.File.stdout()`",
+          "level": 2,
+          "startByte": 4760,
+          "endByte": 6158
+        },
+        {
+          "id": "error-struct-arraylist-alignedu8-null-has-no-member-named-init-arraylist-is-unmanaged",
+          "title": "error: struct 'array_list.Aligned(u8,null)' has no member named 'init' — ArrayList is unmanaged",
+          "level": 2,
+          "startByte": 6158,
+          "endByte": 7071
+        },
+        {
+          "id": "error-invalid-format-string-s-for-type-enums-print-with-t-format-methods-with-f",
+          "title": "error: invalid format string 's' for type — enums print with `{t}`, format methods with `{f}`",
+          "level": 2,
+          "startByte": 7071,
+          "endByte": 7943
+        },
+        {
+          "id": "error-struct-time-has-no-member-named-sleep-millitimestamp-clocks-live-on-io",
+          "title": "error: struct 'time' has no member named 'sleep' / 'milliTimestamp' — clocks live on Io",
+          "level": 2,
+          "startByte": 7943,
+          "endByte": 8665
+        },
+        {
+          "id": "error-struct-process-child-has-no-member-named-init-spawning-is-std-process-spawnio",
+          "title": "error: struct 'process.Child' has no member named 'init' — spawning is `std.process.spawn(io, ...)`",
+          "level": 2,
+          "startByte": 8665,
+          "endByte": 9366
+        },
+        {
+          "id": "error-struct-process-has-no-member-named-getenvmap-argsalloc-environment-and-args-come-from-init",
+          "title": "error: struct 'process' has no member named 'getEnvMap' / 'argsAlloc' — environment and args come from Init",
+          "level": 2,
+          "startByte": 9366,
+          "endByte": 9910
+        },
+        {
+          "id": "error-struct-mem-has-no-member-named-trimright-trimleft-renamed-trimend-trimstart",
+          "title": "error: struct 'mem' has no member named 'trimRight' / 'trimLeft' — renamed `trimEnd` / `trimStart`",
+          "level": 2,
+          "startByte": 9910,
+          "endByte": 10317
+        },
+        {
+          "id": "error-struct-std-has-no-member-named-net-sockets-live-on-std-io-net",
+          "title": "error: struct 'std' has no member named 'net' — sockets live on `std.Io.net`",
+          "level": 2,
+          "startByte": 10317,
+          "endByte": 10866
+        },
+        {
+          "id": "error-no-field-named-rootsourcefile-in-struct-build-executableoptions-build-zig-artifacts-take-modules",
+          "title": "error: no field named 'root_source_file' in struct 'Build.ExecutableOptions' — build.zig artifacts take modules",
+          "level": 2,
+          "startByte": 10866,
+          "endByte": 11651
+        },
+        {
+          "id": "reading-files-and-streams-incrementally",
+          "title": "Reading files and streams incrementally",
+          "level": 2,
+          "startByte": 11651,
+          "endByte": 12224
+        },
+        {
+          "id": "tests-the-io-is-std-testing-io",
+          "title": "Tests: the Io is `std.testing.io`",
+          "level": 2,
+          "startByte": 12224,
+          "endByte": 12896
+        },
+        {
+          "id": "unchanged-do-not-migrate-these",
+          "title": "Unchanged — do not \"migrate\" these",
+          "level": 2,
+          "startByte": 12896,
+          "endByte": 13272
+        }
+      ]
+    }
+  ]
+}

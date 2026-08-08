@@ -1,0 +1,35 @@
+# Avatar
+
+A pill-clipped image leaf with an initials fallback: the element's content renders as initials, and `image` takes one `{binding}` to a `u64` ImageId the app registered at runtime — from a Zig core with `fx.registerImageBytes`, or declared once in `app.zon`'s `assets.images`, which registers each file at launch. The id `0` is the "no image" sentinel, so an app shows initials while the image loads — and keeps them on a failed fetch or decode — by only writing the id into its model on successful registration.
+
+## Markup
+
+```html
+<row gap="12" cross="center">
+  <avatar>ZN</avatar>
+  <avatar>CT</avatar>
+  <avatar image="{profile_image}" label="Profile picture">NS</avatar>
+</row>
+```
+
+## Programmatic construction (Zig)
+
+In a Zig view, the `canvas.Ui` builder constructs the same tree programmatically:
+
+```zig
+ui.avatar(.{}, "ZN")
+```
+
+With a registered image the engine clips it to the avatar circle (`cover` fit); the initials remain the fallback while the id is 0:
+
+```zig
+ui.avatar(.{ .image = image_id }, "ZN")
+```
+
+## Attributes
+
+| Attribute | Description |
+| --- | --- |
+| `text` | Text value for text-bearing elements; a literal or one {binding}. |
+| `image` | avatar and image: one {binding} to a u64 ImageId the app registered at runtime (Cmd.imageLoad, fx.loadImage, fx.registerImageBytes); 0 draws nothing (an avatar falls back to its initials). Required on the image leaf. |
+| `label` | Accessible name; when set it REPLACES the element's text as the announced name - screen readers and automation snapshots see the label, never the text it shadows. |

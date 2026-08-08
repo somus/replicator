@@ -1,0 +1,5446 @@
+{
+  "schemaVersion": 1,
+  "catalog": {
+    "url": "https://native-sdk.dev/llms.txt",
+    "sha256": "0e0ff923cde598b8fc16536d821f33674516a7fca3beb10bbb8fefbd97506051",
+    "generatedAt": "2026-08-08T08:17:14.933Z"
+  },
+  "pageCount": 96,
+  "componentPageCount": 48,
+  "snapshotSha256": "19b736e496a5eed651a3d63062f16efb8048c77b437b34b7037a4cf5c3a05c72",
+  "pages": [
+    {
+      "id": "docs/app-model.md",
+      "title": "App Model",
+      "sourceUrl": "https://native-sdk.dev/docs/app-model.md",
+      "path": "docs/app-model.md",
+      "bytes": 9430,
+      "sha256": "99ad83c732b82397f70486bfab8fcded0327d29d865cb4680fd64d9f5a92b18d",
+      "headings": [
+        {
+          "id": "app-model",
+          "title": "App Model",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1239
+        },
+        {
+          "id": "the-loop-in-full",
+          "title": "The loop in full",
+          "level": 2,
+          "startByte": 1239,
+          "endByte": 2923
+        },
+        {
+          "id": "wiring",
+          "title": "Wiring",
+          "level": 2,
+          "startByte": 2923,
+          "endByte": 4379
+        },
+        {
+          "id": "rebuilds-and-widget-identity",
+          "title": "Rebuilds and widget identity",
+          "level": 2,
+          "startByte": 4379,
+          "endByte": 5588
+        },
+        {
+          "id": "hot-reload-in-development",
+          "title": "Hot reload in development",
+          "level": 2,
+          "startByte": 5588,
+          "endByte": 5923
+        },
+        {
+          "id": "compile-the-markup-for-release",
+          "title": "Compile the markup for release",
+          "level": 2,
+          "startByte": 5923,
+          "endByte": 6656
+        },
+        {
+          "id": "hybrid-views-a-zig-root-composing-markup-fragments",
+          "title": "Hybrid views: a Zig root composing markup fragments",
+          "level": 2,
+          "startByte": 6656,
+          "endByte": 8367
+        },
+        {
+          "id": "side-effects",
+          "title": "Side effects",
+          "level": 2,
+          "startByte": 8367,
+          "endByte": 9023
+        },
+        {
+          "id": "dropping-down",
+          "title": "Dropping down",
+          "level": 2,
+          "startByte": 9023,
+          "endByte": 9430
+        }
+      ]
+    },
+    {
+      "id": "docs/app-zon.md",
+      "title": "Config",
+      "sourceUrl": "https://native-sdk.dev/docs/app-zon.md",
+      "path": "docs/app-zon.md",
+      "bytes": 23966,
+      "sha256": "b02a552601cdb4e7ee131908ee7111f4f5f91881cc783ede6efb59d213122497",
+      "headings": [
+        {
+          "id": "config",
+          "title": "Config",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 197
+        },
+        {
+          "id": "example-native-rendered-app",
+          "title": "Example: native-rendered app",
+          "level": 2,
+          "startByte": 197,
+          "endByte": 1671
+        },
+        {
+          "id": "example-app-with-web-content-menus-and-shortcuts",
+          "title": "Example: app with web content, menus, and shortcuts",
+          "level": 2,
+          "startByte": 1671,
+          "endByte": 4502
+        },
+        {
+          "id": "fields",
+          "title": "Fields",
+          "level": 2,
+          "startByte": 4502,
+          "endByte": 9151
+        },
+        {
+          "id": "webviewlayer",
+          "title": "`webview_layer`",
+          "level": 2,
+          "startByte": 9151,
+          "endByte": 10376
+        },
+        {
+          "id": "shell",
+          "title": "`shell`",
+          "level": 2,
+          "startByte": 10376,
+          "endByte": 18780
+        },
+        {
+          "id": "commands",
+          "title": "`commands`",
+          "level": 2,
+          "startByte": 18780,
+          "endByte": 19920
+        },
+        {
+          "id": "shortcuts",
+          "title": "`shortcuts`",
+          "level": 2,
+          "startByte": 19920,
+          "endByte": 20839
+        },
+        {
+          "id": "menus",
+          "title": "`menus`",
+          "level": 2,
+          "startByte": 20839,
+          "endByte": 21678
+        },
+        {
+          "id": "file-associations-and-url-schemes",
+          "title": "File associations and URL schemes",
+          "level": 2,
+          "startByte": 21678,
+          "endByte": 22764
+        },
+        {
+          "id": "frontend-dev",
+          "title": "`frontend.dev`",
+          "level": 2,
+          "startByte": 22764,
+          "endByte": 23873
+        },
+        {
+          "id": "validation",
+          "title": "Validation",
+          "level": 2,
+          "startByte": 23873,
+          "endByte": 23966
+        }
+      ]
+    },
+    {
+      "id": "docs/automation.md",
+      "title": "Automation",
+      "sourceUrl": "https://native-sdk.dev/docs/automation.md",
+      "path": "docs/automation.md",
+      "bytes": 14145,
+      "sha256": "fab46c8a23b48a7fa9ee0cfcd324775a1c06306bb35d190f54382cb019ae0ee4",
+      "headings": [
+        {
+          "id": "automation",
+          "title": "Automation",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 411
+        },
+        {
+          "id": "enabling-automation",
+          "title": "Enabling automation",
+          "level": 2,
+          "startByte": 411,
+          "endByte": 918
+        },
+        {
+          "id": "file-protocol",
+          "title": "File protocol",
+          "level": 2,
+          "startByte": 918,
+          "endByte": 3043
+        },
+        {
+          "id": "commands",
+          "title": "Commands",
+          "level": 2,
+          "startByte": 3043,
+          "endByte": 9161
+        },
+        {
+          "id": "cli-usage",
+          "title": "CLI usage",
+          "level": 2,
+          "startByte": 9161,
+          "endByte": 9258
+        },
+        {
+          "id": "wait-for-the-app-to-be-ready-polls-snapshot-txt-for-ready-true",
+          "title": "Wait for the app to be ready (polls snapshot.txt for ready=true)",
+          "level": 1,
+          "startByte": 9258,
+          "endByte": 9347
+        },
+        {
+          "id": "assert-on-the-snapshot-each-argument-is-a-regex-that-must-match",
+          "title": "Assert on the snapshot: each argument is a regex that must match",
+          "level": 1,
+          "startByte": 9347,
+          "endByte": 9414
+        },
+        {
+          "id": "polls-up-to-timeout-ms-default-30000-absent-inverts",
+          "title": "(polls up to --timeout-ms, default 30000; --absent inverts)",
+          "level": 1,
+          "startByte": 9414,
+          "endByte": 9594
+        },
+        {
+          "id": "list-running-automation-enabled-apps",
+          "title": "List running automation-enabled apps",
+          "level": 1,
+          "startByte": 9594,
+          "endByte": 9655
+        },
+        {
+          "id": "dump-the-current-snapshot",
+          "title": "Dump the current snapshot",
+          "level": 1,
+          "startByte": 9655,
+          "endByte": 9709
+        },
+        {
+          "id": "render-a-gpusurface-view-to-screenshot-main-canvas-png",
+          "title": "Render a gpu_surface view to screenshot-main-canvas.png",
+          "level": 1,
+          "startByte": 9709,
+          "endByte": 9807
+        },
+        {
+          "id": "reload-the-webview",
+          "title": "Reload the WebView",
+          "level": 1,
+          "startByte": 9807,
+          "endByte": 9852
+        },
+        {
+          "id": "resize-the-main-window-surface",
+          "title": "Resize the main window surface",
+          "level": 1,
+          "startByte": 9852,
+          "endByte": 9917
+        },
+        {
+          "id": "dispatch-command-source-events",
+          "title": "Dispatch command-source events",
+          "level": 1,
+          "startByte": 9917,
+          "endByte": 10087
+        },
+        {
+          "id": "drive-retained-canvas-widgets",
+          "title": "Drive retained canvas widgets",
+          "level": 1,
+          "startByte": 10087,
+          "endByte": 10436
+        },
+        {
+          "id": "drive-focus-between-native-controls-and-webviews",
+          "title": "Drive focus between native controls and WebViews",
+          "level": 1,
+          "startByte": 10436,
+          "endByte": 10583
+        },
+        {
+          "id": "toggle-per-stage-frame-timing-the-snapshot-then-carries-a",
+          "title": "Toggle per-stage frame timing; the snapshot then carries a",
+          "level": 1,
+          "startByte": 10583,
+          "endByte": 10644
+        },
+        {
+          "id": "frameprofile-line-rolling-p50-p90-max-us-per-pipeline-stage",
+          "title": "frame_profile line (rolling p50/p90/max us per pipeline stage)",
+          "level": 1,
+          "startByte": 10644,
+          "endByte": 10818
+        },
+        {
+          "id": "send-a-bridge-command-and-get-the-response",
+          "title": "Send a bridge command and get the response",
+          "level": 1,
+          "startByte": 10818,
+          "endByte": 10962
+        },
+        {
+          "id": "testing-with-automation",
+          "title": "Testing with automation",
+          "level": 2,
+          "startByte": 10962,
+          "endByte": 11577
+        },
+        {
+          "id": "write-back",
+          "title": "Write-back",
+          "level": 2,
+          "startByte": 11577,
+          "endByte": 12328
+        },
+        {
+          "id": "where-does-this-widget-come-from-id-from-the-snapshot-or-hit-test-a-point",
+          "title": "Where does this widget come from? (id from the snapshot, or hit-test a point)",
+          "level": 1,
+          "startByte": 12328,
+          "endByte": 13843
+        },
+        {
+          "id": "custom-directory",
+          "title": "Custom directory",
+          "level": 2,
+          "startByte": 13843,
+          "endByte": 14145
+        }
+      ]
+    },
+    {
+      "id": "docs/bridge.md",
+      "title": "Bridge",
+      "sourceUrl": "https://native-sdk.dev/docs/bridge.md",
+      "path": "docs/bridge.md",
+      "bytes": 5098,
+      "sha256": "b925edd9e5e9d59c9d9aba977e21cdc51b42251d1729986f9b81ce06647b1062",
+      "headings": [
+        {
+          "id": "bridge",
+          "title": "Bridge",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 282
+        },
+        {
+          "id": "architecture",
+          "title": "Architecture",
+          "level": 2,
+          "startByte": 282,
+          "endByte": 860
+        },
+        {
+          "id": "defining-a-handler",
+          "title": "Defining a handler",
+          "level": 2,
+          "startByte": 860,
+          "endByte": 1593
+        },
+        {
+          "id": "wiring-the-dispatcher",
+          "title": "Wiring the dispatcher",
+          "level": 2,
+          "startByte": 1593,
+          "endByte": 1909
+        },
+        {
+          "id": "calling-from-javascript",
+          "title": "Calling from JavaScript",
+          "level": 2,
+          "startByte": 1909,
+          "endByte": 2098
+        },
+        {
+          "id": "invocation",
+          "title": "Invocation",
+          "level": 2,
+          "startByte": 2098,
+          "endByte": 2473
+        },
+        {
+          "id": "size-limits",
+          "title": "Size limits",
+          "level": 2,
+          "startByte": 2473,
+          "endByte": 3036
+        },
+        {
+          "id": "error-codes",
+          "title": "Error codes",
+          "level": 2,
+          "startByte": 3036,
+          "endByte": 4037
+        },
+        {
+          "id": "bridge-types",
+          "title": "Bridge types",
+          "level": 2,
+          "startByte": 4037,
+          "endByte": 5098
+        }
+      ]
+    },
+    {
+      "id": "docs/bridge/builtin-commands.md",
+      "title": "Builtin Commands",
+      "sourceUrl": "https://native-sdk.dev/docs/bridge/builtin-commands.md",
+      "path": "docs/bridge/builtin-commands.md",
+      "bytes": 22286,
+      "sha256": "b0f123437af3a017dcdb36bfd2d1d8d04ea7760ff7640d329bfebe43281221f3",
+      "headings": [
+        {
+          "id": "builtin-commands",
+          "title": "Builtin Commands",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 362
+        },
+        {
+          "id": "command-routing",
+          "title": "Command Routing",
+          "level": 2,
+          "startByte": 362,
+          "endByte": 1836
+        },
+        {
+          "id": "platform-support-commands",
+          "title": "Platform Support Commands",
+          "level": 2,
+          "startByte": 1836,
+          "endByte": 3466
+        },
+        {
+          "id": "window-commands",
+          "title": "Window commands",
+          "level": 2,
+          "startByte": 3466,
+          "endByte": 4502
+        },
+        {
+          "id": "view-commands",
+          "title": "View Commands",
+          "level": 2,
+          "startByte": 4502,
+          "endByte": 7399
+        },
+        {
+          "id": "webview-commands",
+          "title": "WebView Commands",
+          "level": 2,
+          "startByte": 7399,
+          "endByte": 9380
+        },
+        {
+          "id": "dialog-commands",
+          "title": "Dialog commands",
+          "level": 2,
+          "startByte": 9380,
+          "endByte": 10103
+        },
+        {
+          "id": "os-commands",
+          "title": "OS Commands",
+          "level": 2,
+          "startByte": 10103,
+          "endByte": 11856
+        },
+        {
+          "id": "credential-commands",
+          "title": "Credential Commands",
+          "level": 2,
+          "startByte": 11856,
+          "endByte": 13131
+        },
+        {
+          "id": "clipboard-commands",
+          "title": "Clipboard Commands",
+          "level": 2,
+          "startByte": 13131,
+          "endByte": 14429
+        },
+        {
+          "id": "enabling-builtin-commands",
+          "title": "Enabling builtin commands",
+          "level": 2,
+          "startByte": 14429,
+          "endByte": 19284
+        },
+        {
+          "id": "javascript-usage",
+          "title": "JavaScript usage",
+          "level": 2,
+          "startByte": 19284,
+          "endByte": 22286
+        }
+      ]
+    },
+    {
+      "id": "docs/building-components.md",
+      "title": "Building Components",
+      "sourceUrl": "https://native-sdk.dev/docs/building-components.md",
+      "path": "docs/building-components.md",
+      "bytes": 13097,
+      "sha256": "2cbfa286deaa7120d9032323e722c4902296e0da873fffb2c52515f0263acacf",
+      "headings": [
+        {
+          "id": "building-components",
+          "title": "Building Components",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1003
+        },
+        {
+          "id": "a-component-in-markup",
+          "title": "A component in markup",
+          "level": 2,
+          "startByte": 1003,
+          "endByte": 2946
+        },
+        {
+          "id": "moving-it-to-a-component-file",
+          "title": "Moving it to a component file",
+          "level": 2,
+          "startByte": 2946,
+          "endByte": 4333
+        },
+        {
+          "id": "passing-children-with-a-slot",
+          "title": "Passing children with a slot",
+          "level": 2,
+          "startByte": 4333,
+          "endByte": 5253
+        },
+        {
+          "id": "when-a-component-needs-zig",
+          "title": "When a component needs Zig",
+          "level": 2,
+          "startByte": 5253,
+          "endByte": 7483
+        },
+        {
+          "id": "theming-your-component",
+          "title": "Theming your component",
+          "level": 2,
+          "startByte": 7483,
+          "endByte": 9866
+        },
+        {
+          "id": "distributing-components-across-an-app",
+          "title": "Distributing components across an app",
+          "level": 2,
+          "startByte": 9866,
+          "endByte": 11268
+        },
+        {
+          "id": "use-eject-or-build",
+          "title": "Use, eject, or build",
+          "level": 2,
+          "startByte": 11268,
+          "endByte": 13097
+        }
+      ]
+    },
+    {
+      "id": "docs/built-in-components.md",
+      "title": "Built-in Components",
+      "sourceUrl": "https://native-sdk.dev/docs/built-in-components.md",
+      "path": "docs/built-in-components.md",
+      "bytes": 1118,
+      "sha256": "1599e9ae067933b156e8806072591161e53abd00bd27480d0a8fd3eb690de93a",
+      "headings": [
+        {
+          "id": "built-in-components",
+          "title": "Built-in Components",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1118
+        }
+      ]
+    },
+    {
+      "id": "docs/capabilities.md",
+      "title": "Capabilities",
+      "sourceUrl": "https://native-sdk.dev/docs/capabilities.md",
+      "path": "docs/capabilities.md",
+      "bytes": 17653,
+      "sha256": "ab7f06cb8892708e6b26a31b7677d72ecbce706b8d387e9f76f74b14d8642e0e",
+      "headings": [
+        {
+          "id": "capabilities",
+          "title": "Capabilities",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1383
+        },
+        {
+          "id": "current-capability-pack",
+          "title": "Current capability pack",
+          "level": 2,
+          "startByte": 1383,
+          "endByte": 7892
+        },
+        {
+          "id": "audio-streaming-and-the-track-cache",
+          "title": "Audio streaming and the track cache",
+          "level": 2,
+          "startByte": 7892,
+          "endByte": 9843
+        },
+        {
+          "id": "spectrum-analysis",
+          "title": "Spectrum analysis",
+          "level": 2,
+          "startByte": 9843,
+          "endByte": 12433
+        },
+        {
+          "id": "support-discovery",
+          "title": "Support discovery",
+          "level": 2,
+          "startByte": 12433,
+          "endByte": 13262
+        },
+        {
+          "id": "security",
+          "title": "Security",
+          "level": 2,
+          "startByte": 13262,
+          "endByte": 15587
+        },
+        {
+          "id": "javascript",
+          "title": "JavaScript",
+          "level": 2,
+          "startByte": 15587,
+          "endByte": 16790
+        },
+        {
+          "id": "model-cores",
+          "title": "Model cores",
+          "level": 2,
+          "startByte": 16790,
+          "endByte": 17054
+        },
+        {
+          "id": "typescript",
+          "title": "TypeScript",
+          "level": 3,
+          "startByte": 17054,
+          "endByte": 17276
+        },
+        {
+          "id": "zig",
+          "title": "Zig",
+          "level": 3,
+          "startByte": 17276,
+          "endByte": 17653
+        }
+      ]
+    },
+    {
+      "id": "docs/cli.md",
+      "title": "CLI",
+      "sourceUrl": "https://native-sdk.dev/docs/cli.md",
+      "path": "docs/cli.md",
+      "bytes": 16599,
+      "sha256": "6b118c9bcd3f0451314a7b25835892f9dd31e3f2fc5c0baef28358dfdd397740",
+      "headings": [
+        {
+          "id": "cli",
+          "title": "CLI",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 215
+        },
+        {
+          "id": "core-loop",
+          "title": "Core loop",
+          "level": 2,
+          "startByte": 215,
+          "endByte": 229
+        },
+        {
+          "id": "native-init",
+          "title": "`native init`",
+          "level": 3,
+          "startByte": 229,
+          "endByte": 1416
+        },
+        {
+          "id": "native-dev",
+          "title": "`native dev`",
+          "level": 3,
+          "startByte": 1416,
+          "endByte": 3343
+        },
+        {
+          "id": "native-build",
+          "title": "`native build`",
+          "level": 3,
+          "startByte": 3343,
+          "endByte": 3502
+        },
+        {
+          "id": "native-test",
+          "title": "`native test`",
+          "level": 3,
+          "startByte": 3502,
+          "endByte": 3735
+        },
+        {
+          "id": "native-check",
+          "title": "`native check`",
+          "level": 3,
+          "startByte": 3735,
+          "endByte": 4727
+        },
+        {
+          "id": "app-lifecycle",
+          "title": "App lifecycle",
+          "level": 2,
+          "startByte": 4727,
+          "endByte": 4745
+        },
+        {
+          "id": "native-eject",
+          "title": "`native eject`",
+          "level": 3,
+          "startByte": 4745,
+          "endByte": 5112
+        },
+        {
+          "id": "native-eject-component",
+          "title": "`native eject component`",
+          "level": 3,
+          "startByte": 5112,
+          "endByte": 5971
+        },
+        {
+          "id": "native-doctor",
+          "title": "`native doctor`",
+          "level": 3,
+          "startByte": 5971,
+          "endByte": 6242
+        },
+        {
+          "id": "native-validate",
+          "title": "`native validate`",
+          "level": 3,
+          "startByte": 6242,
+          "endByte": 6351
+        },
+        {
+          "id": "native-package",
+          "title": "`native package`",
+          "level": 3,
+          "startByte": 6351,
+          "endByte": 8352
+        },
+        {
+          "id": "platform-shortcuts",
+          "title": "Platform shortcuts",
+          "level": 3,
+          "startByte": 8352,
+          "endByte": 8667
+        },
+        {
+          "id": "native-bundle-assets",
+          "title": "`native bundle-assets`",
+          "level": 3,
+          "startByte": 8667,
+          "endByte": 8800
+        },
+        {
+          "id": "tooling",
+          "title": "Tooling",
+          "level": 2,
+          "startByte": 8800,
+          "endByte": 8812
+        },
+        {
+          "id": "native-markup",
+          "title": "`native markup`",
+          "level": 3,
+          "startByte": 8812,
+          "endByte": 9742
+        },
+        {
+          "id": "native-automate",
+          "title": "`native automate`",
+          "level": 3,
+          "startByte": 9742,
+          "endByte": 13629
+        },
+        {
+          "id": "native-skills",
+          "title": "`native skills`",
+          "level": 3,
+          "startByte": 13629,
+          "endByte": 14499
+        },
+        {
+          "id": "native-cef",
+          "title": "`native cef`",
+          "level": 3,
+          "startByte": 14499,
+          "endByte": 16062
+        },
+        {
+          "id": "native-version",
+          "title": "`native version`",
+          "level": 3,
+          "startByte": 16062,
+          "endByte": 16137
+        },
+        {
+          "id": "environment-variables",
+          "title": "Environment variables",
+          "level": 2,
+          "startByte": 16137,
+          "endByte": 16599
+        }
+      ]
+    },
+    {
+      "id": "docs/cli/dev.md",
+      "title": "Dev Server",
+      "sourceUrl": "https://native-sdk.dev/docs/cli/dev.md",
+      "path": "docs/cli/dev.md",
+      "bytes": 2774,
+      "sha256": "62b2b60470e4d5dc3163e9b1c4ec1053dfc091af64fbe4818b7bbe8e0d18ac26",
+      "headings": [
+        {
+          "id": "dev-server",
+          "title": "Dev Server",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 960
+        },
+        {
+          "id": "usage",
+          "title": "Usage",
+          "level": 2,
+          "startByte": 960,
+          "endByte": 1401
+        },
+        {
+          "id": "flags",
+          "title": "Flags",
+          "level": 2,
+          "startByte": 1401,
+          "endByte": 2156
+        },
+        {
+          "id": "configuration-in-app-zon",
+          "title": "Configuration in app.zon",
+          "level": 2,
+          "startByte": 2156,
+          "endByte": 2479
+        },
+        {
+          "id": "framework-recipes",
+          "title": "Framework recipes",
+          "level": 2,
+          "startByte": 2479,
+          "endByte": 2774
+        }
+      ]
+    },
+    {
+      "id": "docs/commands.md",
+      "title": "Commands",
+      "sourceUrl": "https://native-sdk.dev/docs/commands.md",
+      "path": "docs/commands.md",
+      "bytes": 3607,
+      "sha256": "c2339f0673cd392a3c6304d4338e816275df456e5f750de68b284ad4202286b6",
+      "headings": [
+        {
+          "id": "commands",
+          "title": "Commands",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 676
+        },
+        {
+          "id": "sources",
+          "title": "Sources",
+          "level": 2,
+          "startByte": 676,
+          "endByte": 1853
+        },
+        {
+          "id": "command-names",
+          "title": "Command names",
+          "level": 2,
+          "startByte": 1853,
+          "endByte": 3140
+        },
+        {
+          "id": "bridge-invocation",
+          "title": "Bridge invocation",
+          "level": 2,
+          "startByte": 3140,
+          "endByte": 3607
+        }
+      ]
+    },
+    {
+      "id": "docs/components.md",
+      "title": "Components",
+      "sourceUrl": "https://native-sdk.dev/docs/components.md",
+      "path": "docs/components.md",
+      "bytes": 5030,
+      "sha256": "40accf5153a62e9d00792ee771dba32453e5dbc776c1fb516162b1a9d6e979d1",
+      "headings": [
+        {
+          "id": "components",
+          "title": "Components",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 5030
+        }
+      ]
+    },
+    {
+      "id": "docs/components/accordion.md",
+      "title": "Accordion",
+      "sourceUrl": "https://native-sdk.dev/docs/components/accordion.md",
+      "path": "docs/components/accordion.md",
+      "bytes": 2424,
+      "sha256": "1e1fe91c2cef4f8987f6eb352ee4154b79c68831af9fc5a4682d6bc4f1179473",
+      "headings": [
+        {
+          "id": "accordion",
+          "title": "Accordion",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 582
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 582,
+          "endByte": 1362
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1362,
+          "endByte": 1955
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1955,
+          "endByte": 2424
+        }
+      ]
+    },
+    {
+      "id": "docs/components/alert.md",
+      "title": "Alert",
+      "sourceUrl": "https://native-sdk.dev/docs/components/alert.md",
+      "path": "docs/components/alert.md",
+      "bytes": 1797,
+      "sha256": "4c42b26441cd500f620836fd8f3a6aaae140b61caf4089357436ba6ac9801594",
+      "headings": [
+        {
+          "id": "alert",
+          "title": "Alert",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 452
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 452,
+          "endByte": 1079
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1079,
+          "endByte": 1571
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1571,
+          "endByte": 1797
+        }
+      ]
+    },
+    {
+      "id": "docs/components/avatar.md",
+      "title": "Avatar",
+      "sourceUrl": "https://native-sdk.dev/docs/components/avatar.md",
+      "path": "docs/components/avatar.md",
+      "bytes": 1585,
+      "sha256": "180e4a6819b6d3008159b2ff1172b3ee0db0a5aac14e2958f21f038bd94c8299",
+      "headings": [
+        {
+          "id": "avatar",
+          "title": "Avatar",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 529
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 529,
+          "endByte": 704
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 704,
+          "endByte": 1041
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1041,
+          "endByte": 1585
+        }
+      ]
+    },
+    {
+      "id": "docs/components/badge.md",
+      "title": "Badge",
+      "sourceUrl": "https://native-sdk.dev/docs/components/badge.md",
+      "path": "docs/components/badge.md",
+      "bytes": 1832,
+      "sha256": "ce4f11687347504f0f33fac8f0614b3ba98b76cdf5f4157e1f06d9f43a6f230e",
+      "headings": [
+        {
+          "id": "badge",
+          "title": "Badge",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 347
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 347,
+          "endByte": 631
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 631,
+          "endByte": 1163
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1163,
+          "endByte": 1832
+        }
+      ]
+    },
+    {
+      "id": "docs/components/breadcrumb.md",
+      "title": "Breadcrumb",
+      "sourceUrl": "https://native-sdk.dev/docs/components/breadcrumb.md",
+      "path": "docs/components/breadcrumb.md",
+      "bytes": 2210,
+      "sha256": "1630144db2f9939c5505ade6dd99cd3b8a1f8d6313a6ad6ecdf04f61df0a0dca",
+      "headings": [
+        {
+          "id": "breadcrumb",
+          "title": "Breadcrumb",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 355
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 355,
+          "endByte": 1080
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1080,
+          "endByte": 1675
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1675,
+          "endByte": 2210
+        }
+      ]
+    },
+    {
+      "id": "docs/components/bubble.md",
+      "title": "Bubble",
+      "sourceUrl": "https://native-sdk.dev/docs/components/bubble.md",
+      "path": "docs/components/bubble.md",
+      "bytes": 4387,
+      "sha256": "bbfa2bd376c2df30e44d3f92a2ca757d177331f7b197a4746b854c88c7bc2e27",
+      "headings": [
+        {
+          "id": "bubble",
+          "title": "Bubble",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1030
+        },
+        {
+          "id": "grouped-runs",
+          "title": "Grouped runs",
+          "level": 2,
+          "startByte": 1030,
+          "endByte": 1856
+        },
+        {
+          "id": "reactions",
+          "title": "Reactions",
+          "level": 2,
+          "startByte": 1856,
+          "endByte": 2883
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2883,
+          "endByte": 3906
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3906,
+          "endByte": 4387
+        }
+      ]
+    },
+    {
+      "id": "docs/components/button-group.md",
+      "title": "Button Group",
+      "sourceUrl": "https://native-sdk.dev/docs/components/button-group.md",
+      "path": "docs/components/button-group.md",
+      "bytes": 2734,
+      "sha256": "87baacc229f2b4d3d8216140b02f6cd889d959ec46cbcb9dc084458f4ace8ce4",
+      "headings": [
+        {
+          "id": "button-group",
+          "title": "Button Group",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 669
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 669,
+          "endByte": 898
+        },
+        {
+          "id": "variants-and-icon-segments",
+          "title": "Variants and icon segments",
+          "level": 2,
+          "startByte": 898,
+          "endByte": 1532
+        },
+        {
+          "id": "spacing-out",
+          "title": "Spacing out",
+          "level": 2,
+          "startByte": 1532,
+          "endByte": 1941
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1941,
+          "endByte": 2308
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2308,
+          "endByte": 2734
+        }
+      ]
+    },
+    {
+      "id": "docs/components/button.md",
+      "title": "Button",
+      "sourceUrl": "https://native-sdk.dev/docs/components/button.md",
+      "path": "docs/components/button.md",
+      "bytes": 4442,
+      "sha256": "ac6e174bf27afb10f8c620a614af92ea8742ffe90afd4bda2185936c210e976e",
+      "headings": [
+        {
+          "id": "button",
+          "title": "Button",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 266
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 266,
+          "endByte": 652
+        },
+        {
+          "id": "sizes",
+          "title": "Sizes",
+          "level": 2,
+          "startByte": 652,
+          "endByte": 1147
+        },
+        {
+          "id": "icons",
+          "title": "Icons",
+          "level": 2,
+          "startByte": 1147,
+          "endByte": 1600
+        },
+        {
+          "id": "states",
+          "title": "States",
+          "level": 2,
+          "startByte": 1600,
+          "endByte": 1731
+        },
+        {
+          "id": "button-group",
+          "title": "Button Group",
+          "level": 2,
+          "startByte": 1731,
+          "endByte": 1940
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1940,
+          "endByte": 2493
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2493,
+          "endByte": 4442
+        }
+      ]
+    },
+    {
+      "id": "docs/components/card.md",
+      "title": "Card",
+      "sourceUrl": "https://native-sdk.dev/docs/components/card.md",
+      "path": "docs/components/card.md",
+      "bytes": 2100,
+      "sha256": "5575c357b6473f02804e2486cf11a053b3cf2aa9abe22c2dfdd1792c62987d92",
+      "headings": [
+        {
+          "id": "card",
+          "title": "Card",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 509
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 509,
+          "endByte": 915
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 915,
+          "endByte": 1534
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1534,
+          "endByte": 2100
+        }
+      ]
+    },
+    {
+      "id": "docs/components/chart.md",
+      "title": "Chart",
+      "sourceUrl": "https://native-sdk.dev/docs/components/chart.md",
+      "path": "docs/components/chart.md",
+      "bytes": 10280,
+      "sha256": "f0bbdc3b17dd2ac48aea03857e9cb6c2d5a4d6161a31b5864bc90e9c43d910b4",
+      "headings": [
+        {
+          "id": "chart",
+          "title": "Chart",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 737
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 737,
+          "endByte": 2565
+        },
+        {
+          "id": "bar",
+          "title": "Bar",
+          "level": 2,
+          "startByte": 2565,
+          "endByte": 3059
+        },
+        {
+          "id": "area",
+          "title": "Area",
+          "level": 2,
+          "startByte": 3059,
+          "endByte": 3693
+        },
+        {
+          "id": "axis-labels",
+          "title": "Axis labels",
+          "level": 2,
+          "startByte": 3693,
+          "endByte": 4331
+        },
+        {
+          "id": "hover-details",
+          "title": "Hover details",
+          "level": 2,
+          "startByte": 4331,
+          "endByte": 4883
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 4883,
+          "endByte": 6921
+        },
+        {
+          "id": "series",
+          "title": "Series",
+          "level": 3,
+          "startByte": 6921,
+          "endByte": 7671
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 7671,
+          "endByte": 8441
+        },
+        {
+          "id": "options",
+          "title": "Options",
+          "level": 2,
+          "startByte": 8441,
+          "endByte": 10280
+        }
+      ]
+    },
+    {
+      "id": "docs/components/checkbox.md",
+      "title": "Checkbox",
+      "sourceUrl": "https://native-sdk.dev/docs/components/checkbox.md",
+      "path": "docs/components/checkbox.md",
+      "bytes": 2044,
+      "sha256": "7f00f66f7f4d25f4238dccbcd141a5e4768279281bab890e9d455ce502243a1c",
+      "headings": [
+        {
+          "id": "checkbox",
+          "title": "Checkbox",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 529
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 529,
+          "endByte": 1130
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1130,
+          "endByte": 1614
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1614,
+          "endByte": 2044
+        }
+      ]
+    },
+    {
+      "id": "docs/components/code.md",
+      "title": "Code",
+      "sourceUrl": "https://native-sdk.dev/docs/components/code.md",
+      "path": "docs/components/code.md",
+      "bytes": 5792,
+      "sha256": "96590288414e80266a655c50f05b0fc0805cfae884cdbbe56e593c7c4415e2be",
+      "headings": [
+        {
+          "id": "code",
+          "title": "Code",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 798
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 798,
+          "endByte": 1321
+        },
+        {
+          "id": "added-and-removed-lines",
+          "title": "Added and removed lines",
+          "level": 2,
+          "startByte": 1321,
+          "endByte": 2908
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2908,
+          "endByte": 3788
+        },
+        {
+          "id": "languages",
+          "title": "Languages",
+          "level": 2,
+          "startByte": 3788,
+          "endByte": 4027
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 4027,
+          "endByte": 5792
+        }
+      ]
+    },
+    {
+      "id": "docs/components/combobox.md",
+      "title": "Combobox",
+      "sourceUrl": "https://native-sdk.dev/docs/components/combobox.md",
+      "path": "docs/components/combobox.md",
+      "bytes": 3132,
+      "sha256": "c4844191841d909fd7137ab33675e8033027196c0ed217273a6b90b8f00f8a07",
+      "headings": [
+        {
+          "id": "combobox",
+          "title": "Combobox",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 698
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 698,
+          "endByte": 1318
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1318,
+          "endByte": 2223
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2223,
+          "endByte": 3132
+        }
+      ]
+    },
+    {
+      "id": "docs/components/dialog.md",
+      "title": "Dialog",
+      "sourceUrl": "https://native-sdk.dev/docs/components/dialog.md",
+      "path": "docs/components/dialog.md",
+      "bytes": 3985,
+      "sha256": "3cd28ff8057ae9caa18f426a2c066aff251d09b60f6b05b5a313850ad4799fa9",
+      "headings": [
+        {
+          "id": "dialog",
+          "title": "Dialog",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 683
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 683,
+          "endByte": 1924
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1924,
+          "endByte": 3052
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3052,
+          "endByte": 3985
+        }
+      ]
+    },
+    {
+      "id": "docs/components/drawer.md",
+      "title": "Drawer",
+      "sourceUrl": "https://native-sdk.dev/docs/components/drawer.md",
+      "path": "docs/components/drawer.md",
+      "bytes": 2828,
+      "sha256": "e57b39dc3c9c139272c2fd487cb42c599ea5e3b66b2a0889d790d7417bb53afd",
+      "headings": [
+        {
+          "id": "drawer",
+          "title": "Drawer",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 492
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 492,
+          "endByte": 1123
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1123,
+          "endByte": 1919
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1919,
+          "endByte": 2828
+        }
+      ]
+    },
+    {
+      "id": "docs/components/dropdown-menu.md",
+      "title": "Dropdown Menu",
+      "sourceUrl": "https://native-sdk.dev/docs/components/dropdown-menu.md",
+      "path": "docs/components/dropdown-menu.md",
+      "bytes": 5811,
+      "sha256": "5eecc074040a0a63d3d7e6c06b90360e59bad8961981ee13202315ac4a113fda",
+      "headings": [
+        {
+          "id": "dropdown-menu",
+          "title": "Dropdown Menu",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 553
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 553,
+          "endByte": 1433
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1433,
+          "endByte": 2304
+        },
+        {
+          "id": "static-menu-surface",
+          "title": "Static menu surface",
+          "level": 2,
+          "startByte": 2304,
+          "endByte": 3552
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3552,
+          "endByte": 5811
+        }
+      ]
+    },
+    {
+      "id": "docs/components/icon.md",
+      "title": "Icon",
+      "sourceUrl": "https://native-sdk.dev/docs/components/icon.md",
+      "path": "docs/components/icon.md",
+      "bytes": 4189,
+      "sha256": "c94480846622ca0e8c027abb4cd6fbfffbf609c5ede38c24328bf011560aeacf",
+      "headings": [
+        {
+          "id": "icon",
+          "title": "Icon",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 544
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 544,
+          "endByte": 801
+        },
+        {
+          "id": "app-icons-and-bound-names",
+          "title": "App icons and bound names",
+          "level": 2,
+          "startByte": 801,
+          "endByte": 2018
+        },
+        {
+          "id": "registry",
+          "title": "Registry",
+          "level": 2,
+          "startByte": 2018,
+          "endByte": 2710
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2710,
+          "endByte": 3260
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3260,
+          "endByte": 4189
+        }
+      ]
+    },
+    {
+      "id": "docs/components/input-group.md",
+      "title": "Input Group",
+      "sourceUrl": "https://native-sdk.dev/docs/components/input-group.md",
+      "path": "docs/components/input-group.md",
+      "bytes": 2658,
+      "sha256": "661316125d475fbc8890fd7ef9c4b18a7628b9c1485f59f7ba2404be4e2c4b44",
+      "headings": [
+        {
+          "id": "input-group",
+          "title": "Input Group",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 587
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 587,
+          "endByte": 1255
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1255,
+          "endByte": 1981
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1981,
+          "endByte": 2492
+        },
+        {
+          "id": "input-group-actions",
+          "title": "input-group-actions",
+          "level": 3,
+          "startByte": 2492,
+          "endByte": 2658
+        }
+      ]
+    },
+    {
+      "id": "docs/components/input.md",
+      "title": "Input",
+      "sourceUrl": "https://native-sdk.dev/docs/components/input.md",
+      "path": "docs/components/input.md",
+      "bytes": 4209,
+      "sha256": "3769b0aeb70735ac8cea9531d06aa9b5fb0406bc3f3dae21040d225b4e71ab10",
+      "headings": [
+        {
+          "id": "input",
+          "title": "Input",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 434
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 434,
+          "endByte": 1455
+        },
+        {
+          "id": "search-field",
+          "title": "Search field",
+          "level": 2,
+          "startByte": 1455,
+          "endByte": 2178
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2178,
+          "endByte": 3070
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3070,
+          "endByte": 4209
+        }
+      ]
+    },
+    {
+      "id": "docs/components/list.md",
+      "title": "List",
+      "sourceUrl": "https://native-sdk.dev/docs/components/list.md",
+      "path": "docs/components/list.md",
+      "bytes": 5972,
+      "sha256": "6856217b567e02efce3e92296a862899e13ca47002ad87305582640befd743cb",
+      "headings": [
+        {
+          "id": "list",
+          "title": "List",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 362
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 362,
+          "endByte": 791
+        },
+        {
+          "id": "selection-and-activation",
+          "title": "Selection and activation",
+          "level": 2,
+          "startByte": 791,
+          "endByte": 2840
+        },
+        {
+          "id": "virtualization",
+          "title": "Virtualization",
+          "level": 2,
+          "startByte": 2840,
+          "endByte": 3566
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 3566,
+          "endByte": 4151
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 4151,
+          "endByte": 5972
+        }
+      ]
+    },
+    {
+      "id": "docs/components/markdown.md",
+      "title": "Markdown",
+      "sourceUrl": "https://native-sdk.dev/docs/components/markdown.md",
+      "path": "docs/components/markdown.md",
+      "bytes": 4593,
+      "sha256": "98f15e4fbbaedd86948060cbd19016c2d815cef647f62234d84a66583ee00acd",
+      "headings": [
+        {
+          "id": "markdown",
+          "title": "Markdown",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 731
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 731,
+          "endByte": 912
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 912,
+          "endByte": 1962
+        },
+        {
+          "id": "html-subset",
+          "title": "HTML subset",
+          "level": 2,
+          "startByte": 1962,
+          "endByte": 3602
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3602,
+          "endByte": 4593
+        }
+      ]
+    },
+    {
+      "id": "docs/components/media-surface.md",
+      "title": "Media Surface",
+      "sourceUrl": "https://native-sdk.dev/docs/components/media-surface.md",
+      "path": "docs/components/media-surface.md",
+      "bytes": 4060,
+      "sha256": "1f3e3c9edf1def776650cfbea7fe55faff1bf9753b74882fe9abf6535e244ce2",
+      "headings": [
+        {
+          "id": "media-surface",
+          "title": "Media Surface",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1573
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 1573,
+          "endByte": 2017
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2017,
+          "endByte": 2341
+        },
+        {
+          "id": "producing-frames",
+          "title": "Producing frames",
+          "level": 2,
+          "startByte": 2341,
+          "endByte": 2857
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2857,
+          "endByte": 4060
+        }
+      ]
+    },
+    {
+      "id": "docs/components/pagination.md",
+      "title": "Pagination",
+      "sourceUrl": "https://native-sdk.dev/docs/components/pagination.md",
+      "path": "docs/components/pagination.md",
+      "bytes": 2873,
+      "sha256": "57247f772d25a3a62d4cbf898c96e625732a4fb5071359d7a2a7566df68c8dd2",
+      "headings": [
+        {
+          "id": "pagination",
+          "title": "Pagination",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 522
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 522,
+          "endByte": 1191
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1191,
+          "endByte": 1868
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1868,
+          "endByte": 2873
+        }
+      ]
+    },
+    {
+      "id": "docs/components/panel.md",
+      "title": "Panel",
+      "sourceUrl": "https://native-sdk.dev/docs/components/panel.md",
+      "path": "docs/components/panel.md",
+      "bytes": 1523,
+      "sha256": "556d0b1bb19698b5361a94048a576cc0a9f115993d0a0442f87ec0adbd328f18",
+      "headings": [
+        {
+          "id": "panel",
+          "title": "Panel",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 449
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 449,
+          "endByte": 660
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 660,
+          "endByte": 1036
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1036,
+          "endByte": 1523
+        }
+      ]
+    },
+    {
+      "id": "docs/components/progress.md",
+      "title": "Progress",
+      "sourceUrl": "https://native-sdk.dev/docs/components/progress.md",
+      "path": "docs/components/progress.md",
+      "bytes": 963,
+      "sha256": "082671d503ded42cbbf5338c869066b604f6363e9d45f21439985fc87e140e25",
+      "headings": [
+        {
+          "id": "progress",
+          "title": "Progress",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 388
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 388,
+          "endByte": 463
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 463,
+          "endByte": 667
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 667,
+          "endByte": 963
+        }
+      ]
+    },
+    {
+      "id": "docs/components/radio.md",
+      "title": "Radio",
+      "sourceUrl": "https://native-sdk.dev/docs/components/radio.md",
+      "path": "docs/components/radio.md",
+      "bytes": 2181,
+      "sha256": "b503027cf528f7c08c1a1972227981fc80998107ca86cb634957149c011c78c3",
+      "headings": [
+        {
+          "id": "radio",
+          "title": "Radio",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 499
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 499,
+          "endByte": 1236
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1236,
+          "endByte": 1751
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1751,
+          "endByte": 2181
+        }
+      ]
+    },
+    {
+      "id": "docs/components/resizable.md",
+      "title": "Resizable",
+      "sourceUrl": "https://native-sdk.dev/docs/components/resizable.md",
+      "path": "docs/components/resizable.md",
+      "bytes": 1396,
+      "sha256": "c8f84da2b2efa8f048612e927abb3e7fd0079fb31d7293e9ab1431d9f9e42ced",
+      "headings": [
+        {
+          "id": "resizable",
+          "title": "Resizable",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 481
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 481,
+          "endByte": 659
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 659,
+          "endByte": 1009
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1009,
+          "endByte": 1396
+        }
+      ]
+    },
+    {
+      "id": "docs/components/scroll.md",
+      "title": "Scroll",
+      "sourceUrl": "https://native-sdk.dev/docs/components/scroll.md",
+      "path": "docs/components/scroll.md",
+      "bytes": 7028,
+      "sha256": "18a6b4086ddb07d1d88c2bf09b6418155e1818fd6ce6ef49f7b4193a499319b0",
+      "headings": [
+        {
+          "id": "scroll",
+          "title": "Scroll",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 2555
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 2555,
+          "endByte": 4115
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 4115,
+          "endByte": 4905
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 4905,
+          "endByte": 7028
+        }
+      ]
+    },
+    {
+      "id": "docs/components/select.md",
+      "title": "Select",
+      "sourceUrl": "https://native-sdk.dev/docs/components/select.md",
+      "path": "docs/components/select.md",
+      "bytes": 4455,
+      "sha256": "fb6f71e6185a3aa52a21019c3a49f9a2cb07f2209ae4417fb047920f0db0ab17",
+      "headings": [
+        {
+          "id": "select",
+          "title": "Select",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 758
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 758,
+          "endByte": 2765
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2765,
+          "endByte": 3644
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3644,
+          "endByte": 4455
+        }
+      ]
+    },
+    {
+      "id": "docs/components/separator.md",
+      "title": "Separator",
+      "sourceUrl": "https://native-sdk.dev/docs/components/separator.md",
+      "path": "docs/components/separator.md",
+      "bytes": 1634,
+      "sha256": "6b9604e02babcf2176638fe9b94c8381cd0e8f2225b50d6822a3c69c909bc20c",
+      "headings": [
+        {
+          "id": "separator",
+          "title": "Separator",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 252
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 252,
+          "endByte": 677
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 677,
+          "endByte": 1295
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1295,
+          "endByte": 1634
+        }
+      ]
+    },
+    {
+      "id": "docs/components/sheet.md",
+      "title": "Sheet",
+      "sourceUrl": "https://native-sdk.dev/docs/components/sheet.md",
+      "path": "docs/components/sheet.md",
+      "bytes": 2792,
+      "sha256": "c18f284ea74d9a94ee8e10277a3c19dd1e1db97839fc5d950517f5b88b028f1f",
+      "headings": [
+        {
+          "id": "sheet",
+          "title": "Sheet",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 506
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 506,
+          "endByte": 1144
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1144,
+          "endByte": 1884
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1884,
+          "endByte": 2792
+        }
+      ]
+    },
+    {
+      "id": "docs/components/skeleton.md",
+      "title": "Skeleton",
+      "sourceUrl": "https://native-sdk.dev/docs/components/skeleton.md",
+      "path": "docs/components/skeleton.md",
+      "bytes": 1593,
+      "sha256": "bec89cd824e225cc0699510d83e5768f1b0de198de8b33c07f4d3a0c773d3004",
+      "headings": [
+        {
+          "id": "skeleton",
+          "title": "Skeleton",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 527
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 527,
+          "endByte": 774
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 774,
+          "endByte": 1254
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1254,
+          "endByte": 1593
+        }
+      ]
+    },
+    {
+      "id": "docs/components/slider.md",
+      "title": "Slider",
+      "sourceUrl": "https://native-sdk.dev/docs/components/slider.md",
+      "path": "docs/components/slider.md",
+      "bytes": 2659,
+      "sha256": "b7b5d658b031d13f194a4b44892f0a81e2ba1a54ea4e743c6a3b5205f89ff4d0",
+      "headings": [
+        {
+          "id": "slider",
+          "title": "Slider",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 908
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 908,
+          "endByte": 1772
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1772,
+          "endByte": 2218
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2218,
+          "endByte": 2659
+        }
+      ]
+    },
+    {
+      "id": "docs/components/spacer.md",
+      "title": "Spacer",
+      "sourceUrl": "https://native-sdk.dev/docs/components/spacer.md",
+      "path": "docs/components/spacer.md",
+      "bytes": 1607,
+      "sha256": "59dcc8c3bd72916c51ad53bb36291bfa4a1ea2edcb6decd5973564d3a39ae710",
+      "headings": [
+        {
+          "id": "spacer",
+          "title": "Spacer",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 394
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 394,
+          "endByte": 689
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 689,
+          "endByte": 1220
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1220,
+          "endByte": 1607
+        }
+      ]
+    },
+    {
+      "id": "docs/components/spinner.md",
+      "title": "Spinner",
+      "sourceUrl": "https://native-sdk.dev/docs/components/spinner.md",
+      "path": "docs/components/spinner.md",
+      "bytes": 1097,
+      "sha256": "dd9ae061b1e4e3a5fbb34f9b665ff4bc4e9876fe064e326c26784642014d2143",
+      "headings": [
+        {
+          "id": "spinner",
+          "title": "Spinner",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 260
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 260,
+          "endByte": 399
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 399,
+          "endByte": 758
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 758,
+          "endByte": 1097
+        }
+      ]
+    },
+    {
+      "id": "docs/components/split.md",
+      "title": "Split",
+      "sourceUrl": "https://native-sdk.dev/docs/components/split.md",
+      "path": "docs/components/split.md",
+      "bytes": 4911,
+      "sha256": "0db292e2777f86c08bf433856eb2e0a51d5e98ec9c26108a5821694ef4ef765b",
+      "headings": [
+        {
+          "id": "split",
+          "title": "Split",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 676
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 676,
+          "endByte": 1408
+        },
+        {
+          "id": "animated-resize",
+          "title": "Animated resize",
+          "level": 2,
+          "startByte": 1408,
+          "endByte": 2670
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2670,
+          "endByte": 3309
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3309,
+          "endByte": 4911
+        }
+      ]
+    },
+    {
+      "id": "docs/components/status-bar.md",
+      "title": "Status Bar",
+      "sourceUrl": "https://native-sdk.dev/docs/components/status-bar.md",
+      "path": "docs/components/status-bar.md",
+      "bytes": 1423,
+      "sha256": "0e0af2706c50f8b0d05000baf2af32fb8154fa09cb9b3911076253f45caa66c1",
+      "headings": [
+        {
+          "id": "status-bar",
+          "title": "Status Bar",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 282
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 282,
+          "endByte": 516
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 516,
+          "endByte": 978
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 978,
+          "endByte": 1423
+        }
+      ]
+    },
+    {
+      "id": "docs/components/stepper.md",
+      "title": "Stepper",
+      "sourceUrl": "https://native-sdk.dev/docs/components/stepper.md",
+      "path": "docs/components/stepper.md",
+      "bytes": 1994,
+      "sha256": "49134e68ad4c7526193ac511cc84a0fabae4c412cc22e6db2e719ae4b7c8da8e",
+      "headings": [
+        {
+          "id": "stepper",
+          "title": "Stepper",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 550
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 550,
+          "endByte": 740
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 740,
+          "endByte": 1008
+        },
+        {
+          "id": "eject",
+          "title": "Eject",
+          "level": 2,
+          "startByte": 1008,
+          "endByte": 1490
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1490,
+          "endByte": 1994
+        }
+      ]
+    },
+    {
+      "id": "docs/components/switch.md",
+      "title": "Switch",
+      "sourceUrl": "https://native-sdk.dev/docs/components/switch.md",
+      "path": "docs/components/switch.md",
+      "bytes": 1522,
+      "sha256": "8fbd551b6864833538e0d50a9dba649fe6ad949f4627b6d1431c49b2ae2aff21",
+      "headings": [
+        {
+          "id": "switch",
+          "title": "Switch",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 224
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 224,
+          "endByte": 526
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 526,
+          "endByte": 1092
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 1092,
+          "endByte": 1522
+        }
+      ]
+    },
+    {
+      "id": "docs/components/table.md",
+      "title": "Table",
+      "sourceUrl": "https://native-sdk.dev/docs/components/table.md",
+      "path": "docs/components/table.md",
+      "bytes": 3494,
+      "sha256": "952c22bac26c1fa1dc559652364b6303de0b483bcac5d393d9cf0622565d8e26",
+      "headings": [
+        {
+          "id": "table",
+          "title": "Table",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 623
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 623,
+          "endByte": 1325
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1325,
+          "endByte": 2797
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2797,
+          "endByte": 3494
+        }
+      ]
+    },
+    {
+      "id": "docs/components/tabs.md",
+      "title": "Tabs",
+      "sourceUrl": "https://native-sdk.dev/docs/components/tabs.md",
+      "path": "docs/components/tabs.md",
+      "bytes": 2538,
+      "sha256": "29f22767a6e94289f1079b14d898f87d3f202d7b5101bf5577e465809b806ab7",
+      "headings": [
+        {
+          "id": "tabs",
+          "title": "Tabs",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 772
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 772,
+          "endByte": 1450
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1450,
+          "endByte": 2198
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2198,
+          "endByte": 2538
+        }
+      ]
+    },
+    {
+      "id": "docs/components/textarea.md",
+      "title": "Textarea",
+      "sourceUrl": "https://native-sdk.dev/docs/components/textarea.md",
+      "path": "docs/components/textarea.md",
+      "bytes": 1812,
+      "sha256": "2d19e8e3eac8bb2796c128289e2b9ab586e5e35158aead70144c2adf84c0d479",
+      "headings": [
+        {
+          "id": "textarea",
+          "title": "Textarea",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 549
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 549,
+          "endByte": 684
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 684,
+          "endByte": 991
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 991,
+          "endByte": 1812
+        }
+      ]
+    },
+    {
+      "id": "docs/components/timeline.md",
+      "title": "Timeline",
+      "sourceUrl": "https://native-sdk.dev/docs/components/timeline.md",
+      "path": "docs/components/timeline.md",
+      "bytes": 3643,
+      "sha256": "8329a7154754c9675e0f05f94566d68a76b298b98a0782cb60ff89eee7115171",
+      "headings": [
+        {
+          "id": "timeline",
+          "title": "Timeline",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 512
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 512,
+          "endByte": 960
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 960,
+          "endByte": 1669
+        },
+        {
+          "id": "eject",
+          "title": "Eject",
+          "level": 2,
+          "startByte": 1669,
+          "endByte": 2277
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2277,
+          "endByte": 2726
+        },
+        {
+          "id": "items",
+          "title": "Items",
+          "level": 3,
+          "startByte": 2726,
+          "endByte": 3643
+        }
+      ]
+    },
+    {
+      "id": "docs/components/toggle.md",
+      "title": "Toggle",
+      "sourceUrl": "https://native-sdk.dev/docs/components/toggle.md",
+      "path": "docs/components/toggle.md",
+      "bytes": 2709,
+      "sha256": "029d3f11b682f51cc6c01041932c6c94b382513aa5b78d2615b2ad121a801621",
+      "headings": [
+        {
+          "id": "toggle",
+          "title": "Toggle",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 579
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 579,
+          "endByte": 907
+        },
+        {
+          "id": "toggle-2",
+          "title": "Toggle",
+          "level": 2,
+          "startByte": 907,
+          "endByte": 1326
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1326,
+          "endByte": 2219
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2219,
+          "endByte": 2709
+        }
+      ]
+    },
+    {
+      "id": "docs/components/tooltip.md",
+      "title": "Tooltip",
+      "sourceUrl": "https://native-sdk.dev/docs/components/tooltip.md",
+      "path": "docs/components/tooltip.md",
+      "bytes": 5160,
+      "sha256": "32545e5cdbb519ebf9818b6852abb108a02be29a03b17b47306168def93f983d",
+      "headings": [
+        {
+          "id": "tooltip",
+          "title": "Tooltip",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 596
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 596,
+          "endByte": 771
+        },
+        {
+          "id": "hover-intent",
+          "title": "Hover intent",
+          "level": 2,
+          "startByte": 771,
+          "endByte": 3255
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 3255,
+          "endByte": 3612
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3612,
+          "endByte": 5160
+        }
+      ]
+    },
+    {
+      "id": "docs/components/tree.md",
+      "title": "Tree",
+      "sourceUrl": "https://native-sdk.dev/docs/components/tree.md",
+      "path": "docs/components/tree.md",
+      "bytes": 4892,
+      "sha256": "d081646678f29550b76b4f6a4a4fe6383b02277943ab7c4bcc9534fb08fbd05b",
+      "headings": [
+        {
+          "id": "tree",
+          "title": "Tree",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 706
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 706,
+          "endByte": 1936
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1936,
+          "endByte": 3244
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 3244,
+          "endByte": 4892
+        }
+      ]
+    },
+    {
+      "id": "docs/components/video.md",
+      "title": "Video",
+      "sourceUrl": "https://native-sdk.dev/docs/components/video.md",
+      "path": "docs/components/video.md",
+      "bytes": 4530,
+      "sha256": "ddc1ef615667b9dcb9a29a3f44ef6a4f80637d7927146073cbfac991b06c4002",
+      "headings": [
+        {
+          "id": "video",
+          "title": "Video",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1773
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 1773,
+          "endByte": 2163
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 2163,
+          "endByte": 2333
+        },
+        {
+          "id": "custom-controls",
+          "title": "Custom controls",
+          "level": 2,
+          "startByte": 2333,
+          "endByte": 2874
+        },
+        {
+          "id": "attributes",
+          "title": "Attributes",
+          "level": 2,
+          "startByte": 2874,
+          "endByte": 4530
+        }
+      ]
+    },
+    {
+      "id": "docs/components/virtual-list.md",
+      "title": "Virtual List",
+      "sourceUrl": "https://native-sdk.dev/docs/components/virtual-list.md",
+      "path": "docs/components/virtual-list.md",
+      "bytes": 9612,
+      "sha256": "a253eb4c4fd256a66bfd8beac3d4dc6c51402d59683045d3aa9809e157a46fa9",
+      "headings": [
+        {
+          "id": "virtual-list",
+          "title": "Virtual List",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 784
+        },
+        {
+          "id": "markup",
+          "title": "Markup",
+          "level": 2,
+          "startByte": 784,
+          "endByte": 1511
+        },
+        {
+          "id": "programmatic-construction-zig",
+          "title": "Programmatic construction (Zig)",
+          "level": 2,
+          "startByte": 1511,
+          "endByte": 3006
+        },
+        {
+          "id": "the-data-window-seam",
+          "title": "The data-window seam",
+          "level": 2,
+          "startByte": 3006,
+          "endByte": 3663
+        },
+        {
+          "id": "reach-end",
+          "title": "Reach-end",
+          "level": 2,
+          "startByte": 3663,
+          "endByte": 4671
+        },
+        {
+          "id": "options",
+          "title": "Options",
+          "level": 2,
+          "startByte": 4671,
+          "endByte": 8355
+        },
+        {
+          "id": "variable-extent-rows",
+          "title": "Variable-extent rows",
+          "level": 2,
+          "startByte": 8355,
+          "endByte": 9612
+        }
+      ]
+    },
+    {
+      "id": "docs/debugging.md",
+      "title": "Debugging",
+      "sourceUrl": "https://native-sdk.dev/docs/debugging.md",
+      "path": "docs/debugging.md",
+      "bytes": 4079,
+      "sha256": "00714565defbc0786aeac12dc8cf7e75949efd21c3e3040b15706f72171a6239",
+      "headings": [
+        {
+          "id": "debugging",
+          "title": "Debugging",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 142
+        },
+        {
+          "id": "trace-modes",
+          "title": "Trace modes",
+          "level": 2,
+          "startByte": 142,
+          "endByte": 922
+        },
+        {
+          "id": "trace-sinks",
+          "title": "Trace sinks",
+          "level": 2,
+          "startByte": 922,
+          "endByte": 1679
+        },
+        {
+          "id": "log-format",
+          "title": "Log format",
+          "level": 2,
+          "startByte": 1679,
+          "endByte": 2125
+        },
+        {
+          "id": "log-paths",
+          "title": "Log paths",
+          "level": 2,
+          "startByte": 2125,
+          "endByte": 2762
+        },
+        {
+          "id": "panic-capture",
+          "title": "Panic capture",
+          "level": 2,
+          "startByte": 2762,
+          "endByte": 3295
+        },
+        {
+          "id": "debug-overlay",
+          "title": "Debug overlay",
+          "level": 2,
+          "startByte": 3295,
+          "endByte": 3647
+        },
+        {
+          "id": "environment-variables",
+          "title": "Environment variables",
+          "level": 2,
+          "startByte": 3647,
+          "endByte": 4079
+        }
+      ]
+    },
+    {
+      "id": "docs/debugging/doctor.md",
+      "title": "native doctor",
+      "sourceUrl": "https://native-sdk.dev/docs/debugging/doctor.md",
+      "path": "docs/debugging/doctor.md",
+      "bytes": 1946,
+      "sha256": "20eaa6f6aa14bef55c725fdf4c03f8efdd3743bacc6a1759fafcca2625f4b935",
+      "headings": [
+        {
+          "id": "native-doctor",
+          "title": "native doctor",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 94
+        },
+        {
+          "id": "what-it-checks",
+          "title": "What it checks",
+          "level": 2,
+          "startByte": 94,
+          "endByte": 941
+        },
+        {
+          "id": "usage",
+          "title": "Usage",
+          "level": 2,
+          "startByte": 941,
+          "endByte": 959
+        },
+        {
+          "id": "informational-always-exits-0",
+          "title": "Informational (always exits 0)",
+          "level": 1,
+          "startByte": 959,
+          "endByte": 1007
+        },
+        {
+          "id": "strict-mode-exits-non-zero-on-any-warning",
+          "title": "Strict mode (exits non-zero on any warning)",
+          "level": 1,
+          "startByte": 1007,
+          "endByte": 1096
+        },
+        {
+          "id": "check-cef-setup",
+          "title": "Check CEF setup",
+          "level": 1,
+          "startByte": 1096,
+          "endByte": 1152
+        },
+        {
+          "id": "flags",
+          "title": "Flags",
+          "level": 2,
+          "startByte": 1152,
+          "endByte": 1946
+        }
+      ]
+    },
+    {
+      "id": "docs/dialogs.md",
+      "title": "Dialogs",
+      "sourceUrl": "https://native-sdk.dev/docs/dialogs.md",
+      "path": "docs/dialogs.md",
+      "bytes": 4016,
+      "sha256": "43d06cf2f3d01294a1d6dd08da3a1d3e836592a476f270d6eec2b17d230406ec",
+      "headings": [
+        {
+          "id": "dialogs",
+          "title": "Dialogs",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 268
+        },
+        {
+          "id": "open-file-dialog",
+          "title": "Open file dialog",
+          "level": 2,
+          "startByte": 268,
+          "endByte": 1135
+        },
+        {
+          "id": "save-file-dialog",
+          "title": "Save file dialog",
+          "level": 2,
+          "startByte": 1135,
+          "endByte": 1851
+        },
+        {
+          "id": "message-dialog",
+          "title": "Message dialog",
+          "level": 2,
+          "startByte": 1851,
+          "endByte": 3046
+        },
+        {
+          "id": "filefilter",
+          "title": "FileFilter",
+          "level": 2,
+          "startByte": 3046,
+          "endByte": 3241
+        },
+        {
+          "id": "from-javascript",
+          "title": "From JavaScript",
+          "level": 2,
+          "startByte": 3241,
+          "endByte": 4016
+        }
+      ]
+    },
+    {
+      "id": "docs/dynamic-images.md",
+      "title": "Dynamic Images",
+      "sourceUrl": "https://native-sdk.dev/docs/dynamic-images.md",
+      "path": "docs/dynamic-images.md",
+      "bytes": 11069,
+      "sha256": "7946d8c8965fcc0ce29ab6880d9d2fa5d4db5528d06c2440a9ee212f901fb5fc",
+      "headings": [
+        {
+          "id": "dynamic-images",
+          "title": "Dynamic Images",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 773
+        },
+        {
+          "id": "load-then-show",
+          "title": "Load, then show",
+          "level": 2,
+          "startByte": 773,
+          "endByte": 3644
+        },
+        {
+          "id": "the-source-cascade",
+          "title": "The source cascade",
+          "level": 2,
+          "startByte": 3644,
+          "endByte": 5038
+        },
+        {
+          "id": "one-result-honest-classes",
+          "title": "One result, honest classes",
+          "level": 2,
+          "startByte": 5038,
+          "endByte": 7189
+        },
+        {
+          "id": "releasing-images-the-gallery-eviction",
+          "title": "Releasing images: the gallery eviction",
+          "level": 2,
+          "startByte": 7189,
+          "endByte": 8434
+        },
+        {
+          "id": "limits-honestly",
+          "title": "Limits, honestly",
+          "level": 2,
+          "startByte": 8434,
+          "endByte": 9492
+        },
+        {
+          "id": "recorded-sessions-replay-byte-identical-offline",
+          "title": "Recorded sessions replay byte-identical, offline",
+          "level": 2,
+          "startByte": 9492,
+          "endByte": 11069
+        }
+      ]
+    },
+    {
+      "id": "docs/embed.md",
+      "title": "Embedded App",
+      "sourceUrl": "https://native-sdk.dev/docs/embed.md",
+      "path": "docs/embed.md",
+      "bytes": 11725,
+      "sha256": "995689bc070a0136927d62ef7d579aa7dbc136252eaf545c95e3fd2aaf890a7e",
+      "headings": [
+        {
+          "id": "embedded-app",
+          "title": "Embedded App",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 188
+        },
+        {
+          "id": "usage",
+          "title": "Usage",
+          "level": 2,
+          "startByte": 188,
+          "endByte": 532
+        },
+        {
+          "id": "methods",
+          "title": "Methods",
+          "level": 2,
+          "startByte": 532,
+          "endByte": 1506
+        },
+        {
+          "id": "how-it-works",
+          "title": "How it works",
+          "level": 2,
+          "startByte": 1506,
+          "endByte": 1762
+        },
+        {
+          "id": "mobile-examples",
+          "title": "Mobile examples",
+          "level": 2,
+          "startByte": 1762,
+          "endByte": 2854
+        },
+        {
+          "id": "mobile-host-contract",
+          "title": "Mobile host contract",
+          "level": 2,
+          "startByte": 2854,
+          "endByte": 6124
+        },
+        {
+          "id": "declared-platform-chrome",
+          "title": "Declared platform chrome",
+          "level": 2,
+          "startByte": 6124,
+          "endByte": 8365
+        },
+        {
+          "id": "platform-push-pop-navigation",
+          "title": "Platform push/pop navigation",
+          "level": 2,
+          "startByte": 8365,
+          "endByte": 11335
+        },
+        {
+          "id": "testing-with-embeddedapp",
+          "title": "Testing with EmbeddedApp",
+          "level": 2,
+          "startByte": 11335,
+          "endByte": 11725
+        }
+      ]
+    },
+    {
+      "id": "docs/extensions.md",
+      "title": "Extensions",
+      "sourceUrl": "https://native-sdk.dev/docs/extensions.md",
+      "path": "docs/extensions.md",
+      "bytes": 5231,
+      "sha256": "39ebb74d92e8219a824946869e55e75b1ba59c7fd8b496394c7cf003722b382b",
+      "headings": [
+        {
+          "id": "extensions",
+          "title": "Extensions",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 123
+        },
+        {
+          "id": "module-structure",
+          "title": "Module structure",
+          "level": 2,
+          "startByte": 123,
+          "endByte": 784
+        },
+        {
+          "id": "registering-modules",
+          "title": "Registering modules",
+          "level": 2,
+          "startByte": 784,
+          "endByte": 1338
+        },
+        {
+          "id": "module-fields",
+          "title": "Module fields",
+          "level": 2,
+          "startByte": 1338,
+          "endByte": 2547
+        },
+        {
+          "id": "registry-methods",
+          "title": "Registry methods",
+          "level": 2,
+          "startByte": 2547,
+          "endByte": 3322
+        },
+        {
+          "id": "capability-kinds",
+          "title": "Capability kinds",
+          "level": 2,
+          "startByte": 3322,
+          "endByte": 4311
+        },
+        {
+          "id": "native-js-engine-experimental",
+          "title": "Native JS engine (experimental)",
+          "level": 2,
+          "startByte": 4311,
+          "endByte": 5231
+        }
+      ]
+    },
+    {
+      "id": "docs/fonts.md",
+      "title": "Fonts",
+      "sourceUrl": "https://native-sdk.dev/docs/fonts.md",
+      "path": "docs/fonts.md",
+      "bytes": 9536,
+      "sha256": "56d2f764ceea14f9a4722e52ca502fd6a03a7622f984e23697f5de60d75954a8",
+      "headings": [
+        {
+          "id": "fonts",
+          "title": "Fonts",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 518
+        },
+        {
+          "id": "registering-a-face",
+          "title": "Registering a face",
+          "level": 2,
+          "startByte": 518,
+          "endByte": 2687
+        },
+        {
+          "id": "validation-is-loud-and-registration-time-only",
+          "title": "Validation is loud and registration-time only",
+          "level": 2,
+          "startByte": 2687,
+          "endByte": 5406
+        },
+        {
+          "id": "ownership-and-lifecycle",
+          "title": "Ownership and lifecycle",
+          "level": 2,
+          "startByte": 5406,
+          "endByte": 6417
+        },
+        {
+          "id": "how-text-finds-the-face",
+          "title": "How text finds the face",
+          "level": 2,
+          "startByte": 6417,
+          "endByte": 8508
+        },
+        {
+          "id": "platform-truth",
+          "title": "Platform truth",
+          "level": 2,
+          "startByte": 8508,
+          "endByte": 9431
+        },
+        {
+          "id": "the-typescript-tier",
+          "title": "The TypeScript tier",
+          "level": 2,
+          "startByte": 9431,
+          "endByte": 9536
+        }
+      ]
+    },
+    {
+      "id": "docs/frontend.md",
+      "title": "Web Content",
+      "sourceUrl": "https://native-sdk.dev/docs/frontend.md",
+      "path": "docs/frontend.md",
+      "bytes": 4351,
+      "sha256": "607d27c6f5a0336811ff7e6a2716f3083529cf56e0c052a536471bff7ce33a4e",
+      "headings": [
+        {
+          "id": "web-content",
+          "title": "Web Content",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 981
+        },
+        {
+          "id": "dynamic-source-function",
+          "title": "Dynamic source function",
+          "level": 2,
+          "startByte": 981,
+          "endByte": 1517
+        },
+        {
+          "id": "frontend-config",
+          "title": "frontend.Config",
+          "level": 2,
+          "startByte": 1517,
+          "endByte": 2419
+        },
+        {
+          "id": "configure-in-app-zon",
+          "title": "Configure in app.zon",
+          "level": 2,
+          "startByte": 2419,
+          "endByte": 2738
+        },
+        {
+          "id": "dev-server",
+          "title": "Dev server",
+          "level": 2,
+          "startByte": 2738,
+          "endByte": 3212
+        },
+        {
+          "id": "framework-recipes",
+          "title": "Framework recipes",
+          "level": 2,
+          "startByte": 3212,
+          "endByte": 3508
+        },
+        {
+          "id": "examples",
+          "title": "Examples",
+          "level": 2,
+          "startByte": 3508,
+          "endByte": 3920
+        },
+        {
+          "id": "production-source",
+          "title": "Production source",
+          "level": 2,
+          "startByte": 3920,
+          "endByte": 4094
+        },
+        {
+          "id": "nativesdkfrontendassets",
+          "title": "NATIVE_SDK_FRONTEND_ASSETS",
+          "level": 2,
+          "startByte": 4094,
+          "endByte": 4351
+        }
+      ]
+    },
+    {
+      "id": "docs/introduction.md",
+      "title": "Introduction",
+      "sourceUrl": "https://native-sdk.dev/docs/introduction.md",
+      "path": "docs/introduction.md",
+      "bytes": 3887,
+      "sha256": "95a0a4e80796fb966bd3108329d49f16c367b1b3a926274763ab549dc608e8be",
+      "headings": [
+        {
+          "id": "introduction",
+          "title": "Introduction",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 815
+        },
+        {
+          "id": "beautiful-by-default",
+          "title": "Beautiful by default",
+          "level": 2,
+          "startByte": 815,
+          "endByte": 1229
+        },
+        {
+          "id": "customizable-by-design",
+          "title": "Customizable by design",
+          "level": 2,
+          "startByte": 1229,
+          "endByte": 1576
+        },
+        {
+          "id": "native-from-the-start",
+          "title": "Native from the start",
+          "level": 2,
+          "startByte": 1576,
+          "endByte": 2075
+        },
+        {
+          "id": "predictable-state",
+          "title": "Predictable state",
+          "level": 2,
+          "startByte": 2075,
+          "endByte": 2467
+        },
+        {
+          "id": "simple-authoring",
+          "title": "Simple authoring",
+          "level": 2,
+          "startByte": 2467,
+          "endByte": 3170
+        },
+        {
+          "id": "ai-is-part-of-the-workflow",
+          "title": "AI is part of the workflow",
+          "level": 2,
+          "startByte": 3170,
+          "endByte": 3641
+        },
+        {
+          "id": "where-to-go-next",
+          "title": "Where to go next",
+          "level": 2,
+          "startByte": 3641,
+          "endByte": 3887
+        }
+      ]
+    },
+    {
+      "id": "docs/keyboard-shortcuts.md",
+      "title": "Keyboard Shortcuts",
+      "sourceUrl": "https://native-sdk.dev/docs/keyboard-shortcuts.md",
+      "path": "docs/keyboard-shortcuts.md",
+      "bytes": 2594,
+      "sha256": "fd6c1659c8586345ea26536c4bbaa8871fe5cf9977caab72c877a59ed058c7d1",
+      "headings": [
+        {
+          "id": "keyboard-shortcuts",
+          "title": "Keyboard Shortcuts",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 234
+        },
+        {
+          "id": "manifest",
+          "title": "Manifest",
+          "level": 2,
+          "startByte": 234,
+          "endByte": 862
+        },
+        {
+          "id": "runtime",
+          "title": "Runtime",
+          "level": 2,
+          "startByte": 862,
+          "endByte": 1392
+        },
+        {
+          "id": "events",
+          "title": "Events",
+          "level": 2,
+          "startByte": 1392,
+          "endByte": 2068
+        },
+        {
+          "id": "keys",
+          "title": "Keys",
+          "level": 2,
+          "startByte": 2068,
+          "endByte": 2594
+        }
+      ]
+    },
+    {
+      "id": "docs/media-producers.md",
+      "title": "Media Producers",
+      "sourceUrl": "https://native-sdk.dev/docs/media-producers.md",
+      "path": "docs/media-producers.md",
+      "bytes": 4786,
+      "sha256": "7897e1662413674fe2f0ebac44b662dfdb473e2f7d05058038cd310d7a3f77bf",
+      "headings": [
+        {
+          "id": "media-producers",
+          "title": "Media Producers",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 449
+        },
+        {
+          "id": "the-shape",
+          "title": "The shape",
+          "level": 2,
+          "startByte": 449,
+          "endByte": 1598
+        },
+        {
+          "id": "the-contract",
+          "title": "The contract",
+          "level": 2,
+          "startByte": 1598,
+          "endByte": 3483
+        },
+        {
+          "id": "determinism-honestly",
+          "title": "Determinism, honestly",
+          "level": 2,
+          "startByte": 3483,
+          "endByte": 4045
+        },
+        {
+          "id": "the-mpv-shape-sketch",
+          "title": "The mpv shape (sketch)",
+          "level": 2,
+          "startByte": 4045,
+          "endByte": 4786
+        }
+      ]
+    },
+    {
+      "id": "docs/menus.md",
+      "title": "Menus",
+      "sourceUrl": "https://native-sdk.dev/docs/menus.md",
+      "path": "docs/menus.md",
+      "bytes": 2137,
+      "sha256": "9bbaa124a41584c47eb37d6967fe0ec3ddd78906d7515f47370391e30d0b83fc",
+      "headings": [
+        {
+          "id": "menus",
+          "title": "Menus",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1389
+        },
+        {
+          "id": "context-menus",
+          "title": "Context menus",
+          "level": 2,
+          "startByte": 1389,
+          "endByte": 2137
+        }
+      ]
+    },
+    {
+      "id": "docs/native-controls.md",
+      "title": "Native Controls",
+      "sourceUrl": "https://native-sdk.dev/docs/native-controls.md",
+      "path": "docs/native-controls.md",
+      "bytes": 6143,
+      "sha256": "0ab6cd9448d1ab575a31117ca013d3b863253e6ec150f592ef398840c54df27e",
+      "headings": [
+        {
+          "id": "native-controls",
+          "title": "Native Controls",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 2478
+        },
+        {
+          "id": "supported-kinds",
+          "title": "Supported Kinds",
+          "level": 2,
+          "startByte": 2478,
+          "endByte": 5015
+        },
+        {
+          "id": "layout",
+          "title": "Layout",
+          "level": 2,
+          "startByte": 5015,
+          "endByte": 6143
+        }
+      ]
+    },
+    {
+      "id": "docs/native-surfaces.md",
+      "title": "Native Surfaces",
+      "sourceUrl": "https://native-sdk.dev/docs/native-surfaces.md",
+      "path": "docs/native-surfaces.md",
+      "bytes": 9311,
+      "sha256": "a1431ba601c2e153c9bd9189386064cdb44401c0f437ab5e0168fe6361146285",
+      "headings": [
+        {
+          "id": "native-surfaces",
+          "title": "Native Surfaces",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 390
+        },
+        {
+          "id": "surface-types",
+          "title": "Surface Types",
+          "level": 2,
+          "startByte": 390,
+          "endByte": 1873
+        },
+        {
+          "id": "the-default-shape-one-canvas",
+          "title": "The default shape: one canvas",
+          "level": 2,
+          "startByte": 1873,
+          "endByte": 2480
+        },
+        {
+          "id": "window-shape",
+          "title": "Window Shape",
+          "level": 2,
+          "startByte": 2480,
+          "endByte": 3554
+        },
+        {
+          "id": "canvas-webview-in-one-window",
+          "title": "Canvas + WebView In One Window",
+          "level": 2,
+          "startByte": 3554,
+          "endByte": 5594
+        },
+        {
+          "id": "imperative-view-api",
+          "title": "Imperative View API",
+          "level": 2,
+          "startByte": 5594,
+          "endByte": 6282
+        },
+        {
+          "id": "command-routing",
+          "title": "Command Routing",
+          "level": 2,
+          "startByte": 6282,
+          "endByte": 6837
+        },
+        {
+          "id": "compatibility",
+          "title": "Compatibility",
+          "level": 2,
+          "startByte": 6837,
+          "endByte": 7300
+        },
+        {
+          "id": "platform-support",
+          "title": "Platform Support",
+          "level": 2,
+          "startByte": 7300,
+          "endByte": 9090
+        },
+        {
+          "id": "related-docs",
+          "title": "Related Docs",
+          "level": 2,
+          "startByte": 9090,
+          "endByte": 9311
+        }
+      ]
+    },
+    {
+      "id": "docs/native-ui.md",
+      "title": "Native UI",
+      "sourceUrl": "https://native-sdk.dev/docs/native-ui.md",
+      "path": "docs/native-ui.md",
+      "bytes": 87202,
+      "sha256": "c93f8e6faf7501d314db754c51f1a6598fccb30e3ba8219ec5e1baedeb4d5ca6",
+      "headings": [
+        {
+          "id": "native-ui",
+          "title": "Native UI",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1226
+        },
+        {
+          "id": "a-complete-view",
+          "title": "A complete view",
+          "level": 2,
+          "startByte": 1226,
+          "endByte": 1870
+        },
+        {
+          "id": "elements",
+          "title": "Elements",
+          "level": 2,
+          "startByte": 1870,
+          "endByte": 18739
+        },
+        {
+          "id": "styling-with-design-tokens",
+          "title": "Styling with design tokens",
+          "level": 2,
+          "startByte": 18739,
+          "endByte": 20728
+        },
+        {
+          "id": "structure-tags",
+          "title": "Structure tags",
+          "level": 2,
+          "startByte": 20728,
+          "endByte": 21661
+        },
+        {
+          "id": "templates",
+          "title": "Templates",
+          "level": 2,
+          "startByte": 21661,
+          "endByte": 23555
+        },
+        {
+          "id": "components",
+          "title": "Components",
+          "level": 2,
+          "startByte": 23555,
+          "endByte": 26121
+        },
+        {
+          "id": "expressions",
+          "title": "Expressions",
+          "level": 2,
+          "startByte": 26121,
+          "endByte": 30612
+        },
+        {
+          "id": "messages",
+          "title": "Messages",
+          "level": 2,
+          "startByte": 30612,
+          "endByte": 39719
+        },
+        {
+          "id": "keyboard-routing-focus-registers-quiet-list-rows-and-the-app-level-fallback",
+          "title": "Keyboard routing: focus registers, quiet list rows, and the app-level fallback",
+          "level": 2,
+          "startByte": 39719,
+          "endByte": 44383
+        },
+        {
+          "id": "trackpad-pinch",
+          "title": "Trackpad pinch",
+          "level": 2,
+          "startByte": 44383,
+          "endByte": 47290
+        },
+        {
+          "id": "native-scrolling-and-context-menus",
+          "title": "Native scrolling and context menus",
+          "level": 2,
+          "startByte": 47290,
+          "endByte": 50100
+        },
+        {
+          "id": "effects",
+          "title": "Effects",
+          "level": 2,
+          "startByte": 50100,
+          "endByte": 57329
+        },
+        {
+          "id": "secondary-windows",
+          "title": "Secondary windows",
+          "level": 2,
+          "startByte": 57329,
+          "endByte": 60838
+        },
+        {
+          "id": "hidden-titlebar-drag-regions-and-chrome-insets",
+          "title": "Hidden titlebar: drag regions and chrome insets",
+          "level": 2,
+          "startByte": 60838,
+          "endByte": 63941
+        },
+        {
+          "id": "images",
+          "title": "Images",
+          "level": 2,
+          "startByte": 63941,
+          "endByte": 67697
+        },
+        {
+          "id": "rich-text-inline-spans-and-markdown",
+          "title": "Rich text: inline spans and markdown",
+          "level": 2,
+          "startByte": 67697,
+          "endByte": 75320
+        },
+        {
+          "id": "pipeline-components-stepper-timeline-and-nav",
+          "title": "Pipeline components: stepper, timeline, and nav",
+          "level": 2,
+          "startByte": 75320,
+          "endByte": 78311
+        },
+        {
+          "id": "charts",
+          "title": "Charts",
+          "level": 2,
+          "startByte": 78311,
+          "endByte": 82190
+        },
+        {
+          "id": "accessibility",
+          "title": "Accessibility",
+          "level": 2,
+          "startByte": 82190,
+          "endByte": 83866
+        },
+        {
+          "id": "tooling",
+          "title": "Tooling",
+          "level": 2,
+          "startByte": 83866,
+          "endByte": 84931
+        },
+        {
+          "id": "the-model-view-contract",
+          "title": "The model–view contract",
+          "level": 3,
+          "startByte": 84931,
+          "endByte": 87202
+        }
+      ]
+    },
+    {
+      "id": "docs/packages.md",
+      "title": "Package Distribution",
+      "sourceUrl": "https://native-sdk.dev/docs/packages.md",
+      "path": "docs/packages.md",
+      "bytes": 3162,
+      "sha256": "e7eec15fa148fa164d516be743da4696508f5f9eb09abca8f0a72c6de6317ee6",
+      "headings": [
+        {
+          "id": "package-distribution",
+          "title": "Package Distribution",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 356
+        },
+        {
+          "id": "install",
+          "title": "Install",
+          "level": 2,
+          "startByte": 356,
+          "endByte": 473
+        },
+        {
+          "id": "how-the-npm-install-works",
+          "title": "How the npm install works",
+          "level": 2,
+          "startByte": 473,
+          "endByte": 1424
+        },
+        {
+          "id": "packages",
+          "title": "Packages",
+          "level": 2,
+          "startByte": 1424,
+          "endByte": 3162
+        }
+      ]
+    },
+    {
+      "id": "docs/packaging.md",
+      "title": "Packaging",
+      "sourceUrl": "https://native-sdk.dev/docs/packaging.md",
+      "path": "docs/packaging.md",
+      "bytes": 12135,
+      "sha256": "08a436d3077f786cc31b673bcce135203a7253d6382563849193c17abcce03a9",
+      "headings": [
+        {
+          "id": "packaging",
+          "title": "Packaging",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 916
+        },
+        {
+          "id": "quick-start",
+          "title": "Quick start",
+          "level": 2,
+          "startByte": 916,
+          "endByte": 1560
+        },
+        {
+          "id": "build-options",
+          "title": "Build options",
+          "level": 2,
+          "startByte": 1560,
+          "endByte": 3234
+        },
+        {
+          "id": "app-zon-packaging-fields",
+          "title": "app.zon packaging fields",
+          "level": 2,
+          "startByte": 3234,
+          "endByte": 4651
+        },
+        {
+          "id": "app-icons",
+          "title": "App icons",
+          "level": 2,
+          "startByte": 4651,
+          "endByte": 5563
+        },
+        {
+          "id": "macos",
+          "title": "macOS",
+          "level": 2,
+          "startByte": 5563,
+          "endByte": 5573
+        },
+        {
+          "id": "app-bundle",
+          "title": "App bundle",
+          "level": 3,
+          "startByte": 5573,
+          "endByte": 6426
+        },
+        {
+          "id": "linux",
+          "title": "Linux",
+          "level": 2,
+          "startByte": 6426,
+          "endByte": 6436
+        },
+        {
+          "id": "package-structure",
+          "title": "Package structure",
+          "level": 3,
+          "startByte": 6436,
+          "endByte": 7060
+        },
+        {
+          "id": "windows",
+          "title": "Windows",
+          "level": 2,
+          "startByte": 7060,
+          "endByte": 7645
+        },
+        {
+          "id": "frontend-assets",
+          "title": "Frontend assets",
+          "level": 2,
+          "startByte": 7645,
+          "endByte": 7665
+        },
+        {
+          "id": "bundle-assets",
+          "title": "Bundle assets",
+          "level": 3,
+          "startByte": 7665,
+          "endByte": 7963
+        },
+        {
+          "id": "configure-in-app-zon",
+          "title": "Configure in app.zon",
+          "level": 3,
+          "startByte": 7963,
+          "endByte": 8559
+        },
+        {
+          "id": "cef-bundling",
+          "title": "CEF bundling",
+          "level": 2,
+          "startByte": 8559,
+          "endByte": 9598
+        },
+        {
+          "id": "icon-generation",
+          "title": "Icon generation",
+          "level": 2,
+          "startByte": 9598,
+          "endByte": 10438
+        },
+        {
+          "id": "validation",
+          "title": "Validation",
+          "level": 2,
+          "startByte": 10438,
+          "endByte": 10830
+        },
+        {
+          "id": "platform-shortcut-commands",
+          "title": "Platform shortcut commands",
+          "level": 2,
+          "startByte": 10830,
+          "endByte": 11178
+        },
+        {
+          "id": "platform-targets",
+          "title": "Platform targets",
+          "level": 2,
+          "startByte": 11178,
+          "endByte": 12135
+        }
+      ]
+    },
+    {
+      "id": "docs/packaging/signing.md",
+      "title": "Code Signing",
+      "sourceUrl": "https://native-sdk.dev/docs/packaging/signing.md",
+      "path": "docs/packaging/signing.md",
+      "bytes": 4649,
+      "sha256": "6737c1a83ba72db05d5c4a740d1f04583b8b4c3b5fc5f6ff131d25bec6933013",
+      "headings": [
+        {
+          "id": "code-signing",
+          "title": "Code Signing",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 73
+        },
+        {
+          "id": "macos-signing",
+          "title": "macOS signing",
+          "level": 2,
+          "startByte": 73,
+          "endByte": 704
+        },
+        {
+          "id": "what-gatekeeper-shows-for-an-ad-hoc-package",
+          "title": "What Gatekeeper shows for an ad-hoc package",
+          "level": 2,
+          "startByte": 704,
+          "endByte": 2129
+        },
+        {
+          "id": "signing-flags",
+          "title": "Signing flags",
+          "level": 2,
+          "startByte": 2129,
+          "endByte": 2773
+        },
+        {
+          "id": "notarization",
+          "title": "Notarization",
+          "level": 2,
+          "startByte": 2773,
+          "endByte": 3382
+        },
+        {
+          "id": "chromium-apps",
+          "title": "Chromium apps",
+          "level": 2,
+          "startByte": 3382,
+          "endByte": 4392
+        },
+        {
+          "id": "dmg-creation",
+          "title": "DMG creation",
+          "level": 2,
+          "startByte": 4392,
+          "endByte": 4472
+        },
+        {
+          "id": "entitlements",
+          "title": "Entitlements",
+          "level": 2,
+          "startByte": 4472,
+          "endByte": 4649
+        }
+      ]
+    },
+    {
+      "id": "docs/platform-support.md",
+      "title": "Platform Support",
+      "sourceUrl": "https://native-sdk.dev/docs/platform-support.md",
+      "path": "docs/platform-support.md",
+      "bytes": 33403,
+      "sha256": "c84448facf31a9b95330d321452715ed7e9783dd59c995f7b59200e8f587997d",
+      "headings": [
+        {
+          "id": "platform-support",
+          "title": "Platform Support",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 431
+        },
+        {
+          "id": "support-matrix",
+          "title": "Support Matrix",
+          "level": 2,
+          "startByte": 431,
+          "endByte": 13744
+        },
+        {
+          "id": "desktop-hosts",
+          "title": "Desktop Hosts",
+          "level": 2,
+          "startByte": 13744,
+          "endByte": 18728
+        },
+        {
+          "id": "how-support-is-verified",
+          "title": "How Support Is Verified",
+          "level": 2,
+          "startByte": 18728,
+          "endByte": 20167
+        },
+        {
+          "id": "runtime-queries",
+          "title": "Runtime Queries",
+          "level": 2,
+          "startByte": 20167,
+          "endByte": 21031
+        },
+        {
+          "id": "native-surfaces",
+          "title": "Native Surfaces",
+          "level": 2,
+          "startByte": 21031,
+          "endByte": 23013
+        },
+        {
+          "id": "mobile",
+          "title": "Mobile",
+          "level": 2,
+          "startByte": 23013,
+          "endByte": 23390
+        },
+        {
+          "id": "the-ios-host-tier",
+          "title": "The iOS host tier",
+          "level": 3,
+          "startByte": 23390,
+          "endByte": 25717
+        },
+        {
+          "id": "the-android-host-tier",
+          "title": "The Android host tier",
+          "level": 3,
+          "startByte": 25717,
+          "endByte": 28404
+        },
+        {
+          "id": "embedded-hosts",
+          "title": "Embedded hosts",
+          "level": 3,
+          "startByte": 28404,
+          "endByte": 33219
+        },
+        {
+          "id": "related-docs",
+          "title": "Related Docs",
+          "level": 2,
+          "startByte": 33219,
+          "endByte": 33403
+        }
+      ]
+    },
+    {
+      "id": "docs/quick-start.md",
+      "title": "Quick Start",
+      "sourceUrl": "https://native-sdk.dev/docs/quick-start.md",
+      "path": "docs/quick-start.md",
+      "bytes": 15624,
+      "sha256": "f7818e675a8a0f0e42cb560d7fe62d7e5e15bfbaa608de031ba2ea3d7052a0f1",
+      "headings": [
+        {
+          "id": "quick-start",
+          "title": "Quick Start",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 471
+        },
+        {
+          "id": "prerequisites",
+          "title": "Prerequisites",
+          "level": 2,
+          "startByte": 471,
+          "endByte": 931
+        },
+        {
+          "id": "get-the-cli",
+          "title": "Get the CLI",
+          "level": 2,
+          "startByte": 931,
+          "endByte": 1624
+        },
+        {
+          "id": "create-an-app",
+          "title": "Create an app",
+          "level": 2,
+          "startByte": 1624,
+          "endByte": 4242
+        },
+        {
+          "id": "run-it",
+          "title": "Run it",
+          "level": 2,
+          "startByte": 4242,
+          "endByte": 10620
+        },
+        {
+          "id": "edit-while-it-runs",
+          "title": "Edit while it runs",
+          "level": 2,
+          "startByte": 10620,
+          "endByte": 11214
+        },
+        {
+          "id": "the-fastest-loop-the-core-under-node",
+          "title": "The fastest loop: the core under node",
+          "level": 2,
+          "startByte": 11214,
+          "endByte": 12534
+        },
+        {
+          "id": "check-it",
+          "title": "Check it",
+          "level": 2,
+          "startByte": 12534,
+          "endByte": 13804
+        },
+        {
+          "id": "build-a-release-binary",
+          "title": "Build a release binary",
+          "level": 2,
+          "startByte": 13804,
+          "endByte": 14365
+        },
+        {
+          "id": "escape-hatch-own-the-build",
+          "title": "Escape hatch: own the build",
+          "level": 2,
+          "startByte": 14365,
+          "endByte": 14712
+        },
+        {
+          "id": "next-steps",
+          "title": "Next steps",
+          "level": 2,
+          "startByte": 14712,
+          "endByte": 15624
+        }
+      ]
+    },
+    {
+      "id": "docs/runtime.md",
+      "title": "App & Runtime",
+      "sourceUrl": "https://native-sdk.dev/docs/runtime.md",
+      "path": "docs/runtime.md",
+      "bytes": 11090,
+      "sha256": "d552e7436d10113a08b86fbc08cf58d15a2ffd8391c513ac0ac64f1c321d043a",
+      "headings": [
+        {
+          "id": "app-runtime",
+          "title": "App & Runtime",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 492
+        },
+        {
+          "id": "the-app-struct",
+          "title": "The App struct",
+          "level": 2,
+          "startByte": 492,
+          "endByte": 2385
+        },
+        {
+          "id": "startup-shape",
+          "title": "Startup shape",
+          "level": 2,
+          "startByte": 2385,
+          "endByte": 3607
+        },
+        {
+          "id": "webviewsource",
+          "title": "WebViewSource",
+          "level": 2,
+          "startByte": 3607,
+          "endByte": 4992
+        },
+        {
+          "id": "lifecycle-events",
+          "title": "Lifecycle events",
+          "level": 2,
+          "startByte": 4992,
+          "endByte": 5708
+        },
+        {
+          "id": "the-runner-pattern",
+          "title": "The runner pattern",
+          "level": 2,
+          "startByte": 5708,
+          "endByte": 6523
+        },
+        {
+          "id": "runtimeoptions",
+          "title": "RuntimeOptions",
+          "level": 2,
+          "startByte": 6523,
+          "endByte": 9025
+        },
+        {
+          "id": "runtime-methods",
+          "title": "Runtime methods",
+          "level": 2,
+          "startByte": 9025,
+          "endByte": 11090
+        }
+      ]
+    },
+    {
+      "id": "docs/security.md",
+      "title": "Security",
+      "sourceUrl": "https://native-sdk.dev/docs/security.md",
+      "path": "docs/security.md",
+      "bytes": 15977,
+      "sha256": "d8e5d5a8325edc82d3d3f0b90bc36f35c22aee91c9c82047421f58a88294ce59",
+      "headings": [
+        {
+          "id": "security",
+          "title": "Security",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 443
+        },
+        {
+          "id": "permissions-and-capabilities",
+          "title": "Permissions and capabilities",
+          "level": 2,
+          "startByte": 443,
+          "endByte": 772
+        },
+        {
+          "id": "available-permissions",
+          "title": "Available permissions",
+          "level": 3,
+          "startByte": 772,
+          "endByte": 2366
+        },
+        {
+          "id": "available-capabilities",
+          "title": "Available capabilities",
+          "level": 3,
+          "startByte": 2366,
+          "endByte": 4618
+        },
+        {
+          "id": "native-commands",
+          "title": "Native commands",
+          "level": 2,
+          "startByte": 4618,
+          "endByte": 5204
+        },
+        {
+          "id": "builtin-bridge-policy",
+          "title": "Builtin bridge policy",
+          "level": 2,
+          "startByte": 5204,
+          "endByte": 11393
+        },
+        {
+          "id": "bridge-error-codes",
+          "title": "Bridge error codes",
+          "level": 2,
+          "startByte": 11393,
+          "endByte": 12614
+        },
+        {
+          "id": "navigation-policy",
+          "title": "Navigation policy",
+          "level": 2,
+          "startByte": 12614,
+          "endByte": 13101
+        },
+        {
+          "id": "external-links",
+          "title": "External links",
+          "level": 2,
+          "startByte": 13101,
+          "endByte": 13734
+        },
+        {
+          "id": "csp-guidance",
+          "title": "CSP guidance",
+          "level": 2,
+          "startByte": 13734,
+          "endByte": 14448
+        },
+        {
+          "id": "security-model-summary",
+          "title": "Security model summary",
+          "level": 2,
+          "startByte": 14448,
+          "endByte": 15977
+        }
+      ]
+    },
+    {
+      "id": "docs/skills.md",
+      "title": "Agent Skills",
+      "sourceUrl": "https://native-sdk.dev/docs/skills.md",
+      "path": "docs/skills.md",
+      "bytes": 4546,
+      "sha256": "e74485681d3f7304df66a44ba0f1bb5535a65c5b87f8971a74b687a3afeb0cba",
+      "headings": [
+        {
+          "id": "agent-skills",
+          "title": "Agent Skills",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 403
+        },
+        {
+          "id": "install-for-your-agent",
+          "title": "Install for your agent",
+          "level": 2,
+          "startByte": 403,
+          "endByte": 903
+        },
+        {
+          "id": "getting-skills-from-the-cli",
+          "title": "Getting skills from the CLI",
+          "level": 2,
+          "startByte": 903,
+          "endByte": 2432
+        },
+        {
+          "id": "what-ships",
+          "title": "What ships",
+          "level": 2,
+          "startByte": 2432,
+          "endByte": 4023
+        },
+        {
+          "id": "skills-in-the-agent-workflow",
+          "title": "Skills in the agent workflow",
+          "level": 2,
+          "startByte": 4023,
+          "endByte": 4546
+        }
+      ]
+    },
+    {
+      "id": "docs/state.md",
+      "title": "State & Data Flow",
+      "sourceUrl": "https://native-sdk.dev/docs/state.md",
+      "path": "docs/state.md",
+      "bytes": 9414,
+      "sha256": "1bd866f2871858dc8a6bc5ac3fba002a8bd9baeec3c2f62c50a96087c9f0d1c2",
+      "headings": [
+        {
+          "id": "state-data-flow",
+          "title": "State & Data Flow",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 436
+        },
+        {
+          "id": "derive-don-t-store",
+          "title": "Derive, don't store",
+          "level": 2,
+          "startByte": 436,
+          "endByte": 1530
+        },
+        {
+          "id": "how-bindings-resolve",
+          "title": "How bindings resolve",
+          "level": 2,
+          "startByte": 1530,
+          "endByte": 2888
+        },
+        {
+          "id": "format-at-view-time-in-the-arena",
+          "title": "Format at view time, in the arena",
+          "level": 2,
+          "startByte": 2888,
+          "endByte": 4750
+        },
+        {
+          "id": "text-fields-the-mirror-pattern",
+          "title": "Text fields: the mirror pattern",
+          "level": 2,
+          "startByte": 4750,
+          "endByte": 6690
+        },
+        {
+          "id": "echo-runtime-applied-values-back",
+          "title": "Echo runtime-applied values back",
+          "level": 2,
+          "startByte": 6690,
+          "endByte": 7713
+        },
+        {
+          "id": "time-a-testable-seam",
+          "title": "Time: a testable seam",
+          "level": 2,
+          "startByte": 7713,
+          "endByte": 9026
+        },
+        {
+          "id": "async-state",
+          "title": "Async state",
+          "level": 2,
+          "startByte": 9026,
+          "endByte": 9414
+        }
+      ]
+    },
+    {
+      "id": "docs/terminal.md",
+      "title": "Terminal",
+      "sourceUrl": "https://native-sdk.dev/docs/terminal.md",
+      "path": "docs/terminal.md",
+      "bytes": 18875,
+      "sha256": "6eb09a0038f01a0a5d7891f46f20e821a9c05d7c6637a6482b0b6a311f68e527",
+      "headings": [
+        {
+          "id": "terminal",
+          "title": "Terminal",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 970
+        },
+        {
+          "id": "the-terminal-element",
+          "title": "The `<terminal>` element",
+          "level": 2,
+          "startByte": 970,
+          "endByte": 4077
+        },
+        {
+          "id": "enabling-live-sessions",
+          "title": "Enabling live sessions",
+          "level": 3,
+          "startByte": 4077,
+          "endByte": 5173
+        },
+        {
+          "id": "spawn-then-stream",
+          "title": "Spawn, then stream",
+          "level": 2,
+          "startByte": 5173,
+          "endByte": 8073
+        },
+        {
+          "id": "the-vocabulary",
+          "title": "The vocabulary",
+          "level": 2,
+          "startByte": 8073,
+          "endByte": 9938
+        },
+        {
+          "id": "output-is-coalesced-never-per-read",
+          "title": "Output is coalesced, never per-read",
+          "level": 2,
+          "startByte": 9938,
+          "endByte": 10510
+        },
+        {
+          "id": "one-exit-honest-classes",
+          "title": "One exit, honest classes",
+          "level": 2,
+          "startByte": 10510,
+          "endByte": 11854
+        },
+        {
+          "id": "rendering-the-grid",
+          "title": "Rendering the grid",
+          "level": 2,
+          "startByte": 11854,
+          "endByte": 12806
+        },
+        {
+          "id": "recorded-sessions-replay-byte-identical-offline",
+          "title": "Recorded sessions replay byte-identical, offline",
+          "level": 2,
+          "startByte": 12806,
+          "endByte": 14576
+        },
+        {
+          "id": "platform-support",
+          "title": "Platform support",
+          "level": 2,
+          "startByte": 14576,
+          "endByte": 15598
+        },
+        {
+          "id": "windows-semantics-stated-plainly",
+          "title": "Windows semantics, stated plainly",
+          "level": 3,
+          "startByte": 15598,
+          "endByte": 18875
+        }
+      ]
+    },
+    {
+      "id": "docs/testing.md",
+      "title": "Testing",
+      "sourceUrl": "https://native-sdk.dev/docs/testing.md",
+      "path": "docs/testing.md",
+      "bytes": 6185,
+      "sha256": "ec7723785dab0164d404f952d68d50ca2f82e150389c8e614860eda186554e9d",
+      "headings": [
+        {
+          "id": "testing",
+          "title": "Testing",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 449
+        },
+        {
+          "id": "full-loop-ui-tests",
+          "title": "Full-loop UI tests",
+          "level": 2,
+          "startByte": 449,
+          "endByte": 2216
+        },
+        {
+          "id": "testharness",
+          "title": "TestHarness",
+          "level": 2,
+          "startByte": 2216,
+          "endByte": 3154
+        },
+        {
+          "id": "headless-tests",
+          "title": "Headless tests",
+          "level": 2,
+          "startByte": 3154,
+          "endByte": 4426
+        },
+        {
+          "id": "webview-smoke-tests",
+          "title": "WebView smoke tests",
+          "level": 2,
+          "startByte": 4426,
+          "endByte": 5850
+        },
+        {
+          "id": "nullplatform",
+          "title": "NullPlatform",
+          "level": 2,
+          "startByte": 5850,
+          "endByte": 6185
+        }
+      ]
+    },
+    {
+      "id": "docs/testing/ci.md",
+      "title": "Testing in CI",
+      "sourceUrl": "https://native-sdk.dev/docs/testing/ci.md",
+      "path": "docs/testing/ci.md",
+      "bytes": 5576,
+      "sha256": "69862c3c6fe6516a0d6c272d97dd9806de3559e02be29f633018d7887e96cfa2",
+      "headings": [
+        {
+          "id": "testing-in-ci",
+          "title": "Testing in CI",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 374
+        },
+        {
+          "id": "three-tiers-of-confidence",
+          "title": "Three tiers of confidence",
+          "level": 2,
+          "startByte": 374,
+          "endByte": 1576
+        },
+        {
+          "id": "deterministic-screenshots-as-goldens",
+          "title": "Deterministic screenshots as goldens",
+          "level": 2,
+          "startByte": 1576,
+          "endByte": 2141
+        },
+        {
+          "id": "snapshot-assertions-with-automate-assert",
+          "title": "Snapshot assertions with `automate assert`",
+          "level": 2,
+          "startByte": 2141,
+          "endByte": 3117
+        },
+        {
+          "id": "wait-for-a-state-transition-then-prove-nothing-degraded",
+          "title": "Wait for a state transition, then prove nothing degraded.",
+          "level": 1,
+          "startByte": 3117,
+          "endByte": 3304
+        },
+        {
+          "id": "the-generated-workflow",
+          "title": "The generated workflow",
+          "level": 2,
+          "startByte": 3304,
+          "endByte": 5576
+        }
+      ]
+    },
+    {
+      "id": "docs/theming.md",
+      "title": "Theming",
+      "sourceUrl": "https://native-sdk.dev/docs/theming.md",
+      "path": "docs/theming.md",
+      "bytes": 8388,
+      "sha256": "99fe0b84a9b08a0ef1b02ac0891b73472937f93e4045a2a5286e43d4ef8c545c",
+      "headings": [
+        {
+          "id": "theming",
+          "title": "Theming",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 442
+        },
+        {
+          "id": "theme-packs",
+          "title": "Theme packs",
+          "level": 2,
+          "startByte": 442,
+          "endByte": 2011
+        },
+        {
+          "id": "pin-your-design-system-in-ci",
+          "title": "Pin your design system in CI",
+          "level": 2,
+          "startByte": 2011,
+          "endByte": 2664
+        },
+        {
+          "id": "the-overrides-layer",
+          "title": "The overrides layer",
+          "level": 2,
+          "startByte": 2664,
+          "endByte": 3687
+        },
+        {
+          "id": "the-token-groups",
+          "title": "The token groups",
+          "level": 2,
+          "startByte": 3687,
+          "endByte": 5306
+        },
+        {
+          "id": "authoring-a-full-design-system",
+          "title": "Authoring a full design system",
+          "level": 2,
+          "startByte": 5306,
+          "endByte": 6929
+        },
+        {
+          "id": "what-themes-cannot-do",
+          "title": "What themes cannot do",
+          "level": 2,
+          "startByte": 6929,
+          "endByte": 7210
+        },
+        {
+          "id": "theme-eject-or-build",
+          "title": "Theme, eject, or build",
+          "level": 2,
+          "startByte": 7210,
+          "endByte": 8388
+        }
+      ]
+    },
+    {
+      "id": "docs/tray.md",
+      "title": "System Tray",
+      "sourceUrl": "https://native-sdk.dev/docs/tray.md",
+      "path": "docs/tray.md",
+      "bytes": 8122,
+      "sha256": "c69291f25859072165f0b0ac808fc7c0a6760ada26d78b94d6a616f7b09b6081",
+      "headings": [
+        {
+          "id": "system-tray",
+          "title": "System Tray",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 605
+        },
+        {
+          "id": "trayoptions",
+          "title": "TrayOptions",
+          "level": 2,
+          "startByte": 605,
+          "endByte": 1274
+        },
+        {
+          "id": "traymenuitem",
+          "title": "TrayMenuItem",
+          "level": 2,
+          "startByte": 1274,
+          "endByte": 2065
+        },
+        {
+          "id": "platformservices-methods",
+          "title": "PlatformServices methods",
+          "level": 2,
+          "startByte": 2065,
+          "endByte": 2633
+        },
+        {
+          "id": "handling-tray-actions",
+          "title": "Handling tray actions",
+          "level": 2,
+          "startByte": 2633,
+          "endByte": 3820
+        },
+        {
+          "id": "menu-bar-extras-in-uiapp",
+          "title": "Menu-bar extras in `UiApp`",
+          "level": 2,
+          "startByte": 3820,
+          "endByte": 4661
+        },
+        {
+          "id": "model-driven-title-and-menu",
+          "title": "Model-driven title and menu",
+          "level": 2,
+          "startByte": 4661,
+          "endByte": 5874
+        },
+        {
+          "id": "the-menu-bar-app-lifecycle",
+          "title": "The menu-bar app lifecycle",
+          "level": 2,
+          "startByte": 5874,
+          "endByte": 8122
+        }
+      ]
+    },
+    {
+      "id": "docs/typescript.md",
+      "title": "TypeScript Cores",
+      "sourceUrl": "https://native-sdk.dev/docs/typescript.md",
+      "path": "docs/typescript.md",
+      "bytes": 32889,
+      "sha256": "fc9395070c288236a046eafe3c95e3fb1f5f9dcaea2a77997ac383d6974289cc",
+      "headings": [
+        {
+          "id": "typescript-cores",
+          "title": "TypeScript Cores",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1650
+        },
+        {
+          "id": "the-contract",
+          "title": "The contract",
+          "level": 2,
+          "startByte": 1650,
+          "endByte": 5391
+        },
+        {
+          "id": "why-the-immutable-style-is-free",
+          "title": "Why the immutable style is free",
+          "level": 2,
+          "startByte": 5391,
+          "endByte": 6182
+        },
+        {
+          "id": "the-subset-posture",
+          "title": "The subset posture",
+          "level": 2,
+          "startByte": 6182,
+          "endByte": 13760
+        },
+        {
+          "id": "effects-are-cmd-data",
+          "title": "Effects are Cmd data",
+          "level": 2,
+          "startByte": 13760,
+          "endByte": 24230
+        },
+        {
+          "id": "subscriptions-are-sub-data",
+          "title": "Subscriptions are Sub data",
+          "level": 2,
+          "startByte": 24230,
+          "endByte": 26092
+        },
+        {
+          "id": "text-input-from-markup",
+          "title": "Text input from markup",
+          "level": 2,
+          "startByte": 26092,
+          "endByte": 26841
+        },
+        {
+          "id": "splitting-a-core-into-modules",
+          "title": "Splitting a core into modules",
+          "level": 2,
+          "startByte": 26841,
+          "endByte": 29242
+        },
+        {
+          "id": "the-dev-loop",
+          "title": "The dev loop",
+          "level": 2,
+          "startByte": 29242,
+          "endByte": 30681
+        },
+        {
+          "id": "editor-support",
+          "title": "Editor support",
+          "level": 2,
+          "startByte": 30681,
+          "endByte": 31714
+        },
+        {
+          "id": "outgrowing-the-subset",
+          "title": "Outgrowing the subset",
+          "level": 2,
+          "startByte": 31714,
+          "endByte": 32238
+        },
+        {
+          "id": "where-the-subset-ends",
+          "title": "Where the subset ends",
+          "level": 2,
+          "startByte": 32238,
+          "endByte": 32647
+        },
+        {
+          "id": "reference",
+          "title": "Reference",
+          "level": 2,
+          "startByte": 32647,
+          "endByte": 32889
+        }
+      ]
+    },
+    {
+      "id": "docs/typescript/packages.md",
+      "title": "Where Packages Go",
+      "sourceUrl": "https://native-sdk.dev/docs/typescript/packages.md",
+      "path": "docs/typescript/packages.md",
+      "bytes": 8846,
+      "sha256": "5a08808520af069fb63a92a67fe3066be133601a55a2a5343cc73b4b8015d1f4",
+      "headings": [
+        {
+          "id": "where-packages-go",
+          "title": "Where Packages Go",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 1533
+        },
+        {
+          "id": "calling-apis-ai-endpoints-included",
+          "title": "Calling APIs, AI endpoints included",
+          "level": 2,
+          "startByte": 1533,
+          "endByte": 5090
+        },
+        {
+          "id": "full-npm-ecosystem-uis",
+          "title": "Full npm ecosystem UIs",
+          "level": 2,
+          "startByte": 5090,
+          "endByte": 5856
+        },
+        {
+          "id": "node-as-a-worker",
+          "title": "Node as a worker",
+          "level": 2,
+          "startByte": 5856,
+          "endByte": 7045
+        },
+        {
+          "id": "pure-utilities",
+          "title": "Pure utilities",
+          "level": 2,
+          "startByte": 7045,
+          "endByte": 8846
+        }
+      ]
+    },
+    {
+      "id": "docs/updates.md",
+      "title": "Updates",
+      "sourceUrl": "https://native-sdk.dev/docs/updates.md",
+      "path": "docs/updates.md",
+      "bytes": 1048,
+      "sha256": "41323a56c627dc79483a95e5326a2074255da7cd6e48216495b9f40e0159487b",
+      "headings": [
+        {
+          "id": "updates",
+          "title": "Updates",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 526
+        },
+        {
+          "id": "fields",
+          "title": "Fields",
+          "level": 2,
+          "startByte": 526,
+          "endByte": 1048
+        }
+      ]
+    },
+    {
+      "id": "docs/web-engines.md",
+      "title": "Web Engines",
+      "sourceUrl": "https://native-sdk.dev/docs/web-engines.md",
+      "path": "docs/web-engines.md",
+      "bytes": 7646,
+      "sha256": "fbad69fd4df2cdb8ffb1be8eb58881547f0956f2375a596f276ca908577b0750",
+      "headings": [
+        {
+          "id": "web-engines",
+          "title": "Web Engines",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 366
+        },
+        {
+          "id": "support-matrix",
+          "title": "Support Matrix",
+          "level": 2,
+          "startByte": 366,
+          "endByte": 1189
+        },
+        {
+          "id": "system-webview",
+          "title": "System WebView",
+          "level": 2,
+          "startByte": 1189,
+          "endByte": 1774
+        },
+        {
+          "id": "chromium-cef",
+          "title": "Chromium (CEF)",
+          "level": 2,
+          "startByte": 1774,
+          "endByte": 2777
+        },
+        {
+          "id": "setup",
+          "title": "Setup",
+          "level": 3,
+          "startByte": 2777,
+          "endByte": 4442
+        },
+        {
+          "id": "build-overrides",
+          "title": "Build Overrides",
+          "level": 3,
+          "startByte": 4442,
+          "endByte": 5222
+        },
+        {
+          "id": "bundling",
+          "title": "Bundling",
+          "level": 3,
+          "startByte": 5222,
+          "endByte": 5733
+        },
+        {
+          "id": "smoke-tests",
+          "title": "Smoke Tests",
+          "level": 3,
+          "startByte": 5733,
+          "endByte": 6614
+        },
+        {
+          "id": "choosing-an-engine",
+          "title": "Choosing An Engine",
+          "level": 2,
+          "startByte": 6614,
+          "endByte": 7463
+        },
+        {
+          "id": "in-app-zon",
+          "title": "In app.zon",
+          "level": 2,
+          "startByte": 7463,
+          "endByte": 7646
+        }
+      ]
+    },
+    {
+      "id": "docs/webviews.md",
+      "title": "Multiple WebViews",
+      "sourceUrl": "https://native-sdk.dev/docs/webviews.md",
+      "path": "docs/webviews.md",
+      "bytes": 6334,
+      "sha256": "a0e00a056bfdfc2aeb99d519c96d8be369a3e66e5b72ebc54d1cefd0880ee6ef",
+      "headings": [
+        {
+          "id": "multiple-webviews",
+          "title": "Multiple WebViews",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 864
+        },
+        {
+          "id": "javascript-api",
+          "title": "JavaScript API",
+          "level": 2,
+          "startByte": 864,
+          "endByte": 3015
+        },
+        {
+          "id": "lifecycle",
+          "title": "Lifecycle",
+          "level": 2,
+          "startByte": 3015,
+          "endByte": 3764
+        },
+        {
+          "id": "commands",
+          "title": "Commands",
+          "level": 2,
+          "startByte": 3764,
+          "endByte": 5693
+        },
+        {
+          "id": "backend-support",
+          "title": "Backend Support",
+          "level": 2,
+          "startByte": 5693,
+          "endByte": 6334
+        }
+      ]
+    },
+    {
+      "id": "docs/windows.md",
+      "title": "Windows",
+      "sourceUrl": "https://native-sdk.dev/docs/windows.md",
+      "path": "docs/windows.md",
+      "bytes": 11943,
+      "sha256": "491b55952f534b7996122474d3d084b10416e47a453570a3d235973f46def471",
+      "headings": [
+        {
+          "id": "windows",
+          "title": "Windows",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 870
+        },
+        {
+          "id": "overlay-windows",
+          "title": "Overlay windows",
+          "level": 2,
+          "startByte": 870,
+          "endByte": 3554
+        },
+        {
+          "id": "creating-windows-from-zig",
+          "title": "Creating windows from Zig",
+          "level": 2,
+          "startByte": 3554,
+          "endByte": 4792
+        },
+        {
+          "id": "creating-windows-from-javascript",
+          "title": "Creating windows from JavaScript",
+          "level": 2,
+          "startByte": 4792,
+          "endByte": 5911
+        },
+        {
+          "id": "window-types",
+          "title": "Window types",
+          "level": 2,
+          "startByte": 5911,
+          "endByte": 7152
+        },
+        {
+          "id": "close-policy",
+          "title": "Close policy",
+          "level": 2,
+          "startByte": 7152,
+          "endByte": 9932
+        },
+        {
+          "id": "platform-limits",
+          "title": "Platform limits",
+          "level": 2,
+          "startByte": 9932,
+          "endByte": 10330
+        },
+        {
+          "id": "window-state-persistence",
+          "title": "Window state persistence",
+          "level": 2,
+          "startByte": 10330,
+          "endByte": 11589
+        },
+        {
+          "id": "declaring-windows-in-app-zon",
+          "title": "Declaring windows in app.zon",
+          "level": 2,
+          "startByte": 11589,
+          "endByte": 11943
+        }
+      ]
+    },
+    {
+      "id": "docs/zig.md",
+      "title": "Zig 0.16 Notes",
+      "sourceUrl": "https://native-sdk.dev/docs/zig.md",
+      "path": "docs/zig.md",
+      "bytes": 10416,
+      "sha256": "95e0db12a62eb252c2044c74ebf9892415e39dd7641ad0287156dcefdc3216d3",
+      "headings": [
+        {
+          "id": "zig-0-16-notes",
+          "title": "Zig 0.16 Notes",
+          "level": 1,
+          "startByte": 0,
+          "endByte": 947
+        },
+        {
+          "id": "the-one-big-idea",
+          "title": "The one big idea",
+          "level": 2,
+          "startByte": 947,
+          "endByte": 1751
+        },
+        {
+          "id": "error-to-fix-index",
+          "title": "Error-to-fix index",
+          "level": 2,
+          "startByte": 1751,
+          "endByte": 3993
+        },
+        {
+          "id": "main-receives-std-process-init",
+          "title": "main receives std.process.Init",
+          "level": 2,
+          "startByte": 3993,
+          "endByte": 4744
+        },
+        {
+          "id": "file-io-lives-on-std-io-dir",
+          "title": "File IO lives on std.Io.Dir",
+          "level": 2,
+          "startByte": 4744,
+          "endByte": 5439
+        },
+        {
+          "id": "printing-and-writers",
+          "title": "Printing and writers",
+          "level": 2,
+          "startByte": 5439,
+          "endByte": 6193
+        },
+        {
+          "id": "arraylist-is-unmanaged",
+          "title": "ArrayList is unmanaged",
+          "level": 2,
+          "startByte": 6193,
+          "endByte": 6904
+        },
+        {
+          "id": "format-specifiers-t-and-f",
+          "title": "Format specifiers `{t}` and `{f}`",
+          "level": 2,
+          "startByte": 6904,
+          "endByte": 7578
+        },
+        {
+          "id": "time-and-sleeping",
+          "title": "Time and sleeping",
+          "level": 2,
+          "startByte": 7578,
+          "endByte": 8107
+        },
+        {
+          "id": "child-processes",
+          "title": "Child processes",
+          "level": 2,
+          "startByte": 8107,
+          "endByte": 8543
+        },
+        {
+          "id": "environment-and-arguments",
+          "title": "Environment and arguments",
+          "level": 2,
+          "startByte": 8543,
+          "endByte": 8854
+        },
+        {
+          "id": "build-zig-artifacts-take-modules",
+          "title": "build.zig artifacts take modules",
+          "level": 2,
+          "startByte": 8854,
+          "endByte": 9393
+        },
+        {
+          "id": "tests-get-their-io-from-std-testing-io",
+          "title": "Tests get their Io from std.testing.io",
+          "level": 2,
+          "startByte": 9393,
+          "endByte": 9817
+        },
+        {
+          "id": "one-more-habit-build-and-test-both",
+          "title": "One more habit: build and test both",
+          "level": 2,
+          "startByte": 9817,
+          "endByte": 10124
+        },
+        {
+          "id": "what-didn-t-change",
+          "title": "What didn't change",
+          "level": 2,
+          "startByte": 10124,
+          "endByte": 10416
+        }
+      ]
+    }
+  ]
+}
