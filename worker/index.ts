@@ -42,6 +42,7 @@ async function recoverInterruptedAttempt(): Promise<void> {
   const current = await registry.read();
   const utility = current.utilities.find((candidate) => candidate.activeAttempt);
   if (!utility?.activeAttempt) return;
+  if (utility.state === "awaiting_clarification" && utility.activeAttempt.pendingClarification) return;
   if (utility.activeAttempt.kind === "revision" && utility.activeAttempt.snapshot) {
     const root = path.join(dataRoot, utility.folder);
     const snapshot = path.join(root, utility.activeAttempt.snapshot);
@@ -85,6 +86,13 @@ type ActiveAttempt = {
     reject: (error: Error) => void;
   };
 };
+
+class ClarificationPause extends Error {
+  constructor() {
+    super("Request Attempt is awaiting Clarification");
+    this.name = "ClarificationPause";
+  }
+}
 
 let active: ActiveAttempt | undefined;
 let shutdownRequested = false;
@@ -363,6 +371,7 @@ async function ensureUtility(command: StartAttemptCommand, attemptId: string): P
       startedAt: timestamp,
       activeElapsedMs: 0,
       clarificationBatches: 0,
+      command,
       ...(command.kind === "revision" ? { snapshot: `snapshots/${attemptId}` } : {}),
     };
     utility.state = "planning";
@@ -414,11 +423,13 @@ async function waitForClarification(attempt: ActiveAttempt, utility: UtilityReco
     stored.state = "awaiting_clarification";
     stored.activeAttempt.clarificationBatches = batchNumber;
     stored.activeAttempt.activeElapsedMs = activeElapsed(attempt);
+    stored.activeAttempt.pendingClarification = { batchId, questions };
     stored.timeline.push({ id: batchId, kind: "clarification", createdAt: nowIso(), content: { batchId, questions } });
     stored.updatedAt = nowIso();
   });
   emit({ type: "state_changed", attemptId: attempt.id, state: "awaiting_clarification" });
   emit({ type: "clarification_required", attemptId: attempt.id, batchId, questions });
+  if (process.argv[2] !== undefined) throw new ClarificationPause();
   return await new Promise<Record<string, string>>((resolve, reject) => {
     attempt.clarification = { batchId, questions, resolve, reject };
   });
@@ -472,11 +483,13 @@ async function acceptPlan(
   sessionConfigDir: string,
 ): Promise<{ plan: AcceptedPlan; sessionId: string }> {
   let sessionId = utility.session.activeId || undefined;
-  let answers: Record<string, string> | undefined;
+  const lastAnsweredClarification = [...utility.timeline].reverse().find((entry) => entry.kind === "clarification" && entry.content.answers);
+  let answers = lastAnsweredClarification?.content.answers;
+  let batchNumber = utility.activeAttempt?.clarificationBatches ?? 0;
   const references = agentReferences(attempt.command);
   const route = routeModel("planning", utility.format, attempt.command.modelOverride, attempt.command.effortOverride);
   const instruction = systemInstruction("planning", utility.format);
-  for (let batch = 0; batch <= 2; batch += 1) {
+  for (;;) {
     const turn = await withDeadline(attempt, FINALIZATION_RESERVE_MS, () => runStructuredAgentTurn({
       cwd: sourceRoot,
       sessionConfigDir,
@@ -513,8 +526,9 @@ async function acceptPlan(
     }));
     sessionId = turn.sessionId;
     if (turn.output.outcome === "plan") return { plan: turn.output.plan, sessionId };
-    answers = await waitForClarification(attempt, utility, turn.output.questions, batch + 1);
-    await saveClarification(utility.id, `batch_${batch + 1}`, answers);
+    batchNumber += 1;
+    answers = await waitForClarification(attempt, utility, turn.output.questions, batchNumber);
+    await saveClarification(utility.id, `batch_${batchNumber}`, answers);
     delete attempt.clarification;
     resumeClock(attempt);
     await setState(utility.id, attempt.id, "planning");
@@ -565,11 +579,16 @@ async function finishFailure(attempt: ActiveAttempt, utility: UtilityRecord, err
   if (!interrupted) logError(error);
 }
 
-async function runAttempt(attempt: ActiveAttempt): Promise<void> {
+async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promise<void> {
   let utility: UtilityRecord | undefined;
   try {
-    utility = await ensureUtility(attempt.command, attempt.id);
-    await prepareSource(attempt.command, attempt.id, utility);
+    if (resumeExisting) {
+      utility = (await registry.read()).utilities.find((candidate) => candidate.activeAttempt?.id === attempt.id);
+      if (!utility) throw new Error("Request Attempt is unavailable for resume");
+    } else {
+      utility = await ensureUtility(attempt.command, attempt.id);
+      await prepareSource(attempt.command, attempt.id, utility);
+    }
     emit({ type: "state_changed", attemptId: attempt.id, state: "planning" });
 
     const sourceRoot = path.join(dataRoot, utility.folder, "source");
@@ -752,6 +771,7 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
     emit({ type: "artifact_ready", attemptId: attempt.id, artifact, screenshots, scenarioResults });
     emit({ type: "state_changed", attemptId: attempt.id, state: "ready" });
   } catch (error) {
+    if (error instanceof ClarificationPause) return;
     if (utility) await finishFailure(attempt, utility, error);
     else logError(error);
   } finally {
@@ -761,15 +781,41 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
 }
 
 async function answerClarification(command: AnswerClarificationCommand): Promise<void> {
-  if (!active || active.id !== command.attemptId || !active.clarification) throw new Error("Clarification is not awaiting answers");
-  if (active.clarification.batchId !== command.batchId) throw new Error("Clarification batch does not match");
-  if (Object.keys(command.answers).length !== active.clarification.questions.length) throw new Error("Every Clarification question requires one answer");
-  for (const question of active.clarification.questions) {
+  const persisted = (await registry.read()).utilities.find((candidate) => candidate.activeAttempt?.id === command.attemptId);
+  const pending = active?.id === command.attemptId && active.clarification
+    ? { batchId: active.clarification.batchId, questions: active.clarification.questions }
+    : persisted?.activeAttempt?.pendingClarification;
+  if (!pending) throw new Error("Clarification is not awaiting answers");
+  if (pending.batchId !== command.batchId) throw new Error("Clarification batch does not match");
+  if (Object.keys(command.answers).length !== pending.questions.length) throw new Error("Every Clarification question requires one answer");
+  for (const question of pending.questions) {
     const answer = command.answers[question.id];
     if (!answer) throw new Error(`Clarification answer is missing: ${question.id}`);
     if (question.answerKind === "choice" && !question.options?.includes(answer)) throw new Error(`Clarification answer is not an offered option: ${question.id}`);
   }
-  active.clarification.resolve(command.answers);
+  if (active?.id === command.attemptId && active.clarification) {
+    active.clarification.resolve(command.answers);
+    return;
+  }
+  if (!persisted?.activeAttempt?.command) throw new Error("Clarification Request Attempt cannot be resumed");
+  await saveClarification(persisted.id, command.batchId, command.answers);
+  await registry.update((current) => {
+    const utility = current.utilities.find((candidate) => candidate.id === persisted.id);
+    if (!utility?.activeAttempt || utility.activeAttempt.id !== command.attemptId) throw new Error("Request Attempt is no longer active");
+    delete utility.activeAttempt.pendingClarification;
+    utility.state = "planning";
+    utility.updatedAt = nowIso();
+  });
+  const attempt: ActiveAttempt = {
+    id: command.attemptId,
+    command: persisted.activeAttempt.command,
+    abortController: new AbortController(),
+    activeStartedAt: Date.now(),
+    activeElapsedMs: persisted.activeAttempt.activeElapsedMs,
+    cancelRequested: false,
+  };
+  active = attempt;
+  await runAttempt(attempt, true);
 }
 
 async function cancelAttempt(attemptId: string): Promise<void> {

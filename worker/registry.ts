@@ -7,6 +7,8 @@ import type {
   ReferenceImageMetadata,
   RequestKind,
   ScenarioResult,
+  StartAttemptCommand,
+  ClarificationQuestion,
   UtilityFormat,
   UtilityState,
 } from "./protocol.js";
@@ -25,6 +27,8 @@ export type ActiveAttemptRecord = {
   startedAt: string;
   activeElapsedMs: number;
   clarificationBatches: number;
+  command?: StartAttemptCommand;
+  pendingClarification?: { batchId: string; questions: ClarificationQuestion[] };
   snapshot?: string;
   phase?: "planning" | "building" | "verifying" | "preparing";
   currentDigest?: string;
