@@ -340,7 +340,7 @@ const planningOutputSchema: Record<string, unknown> = {
               additionalProperties: false,
               required: ["action"],
               properties: {
-                action: { enum: ["launch", "click", "input", "wait", "assert_text", "assert_visible", "screenshot"] },
+                action: { enum: ["launch", "click", "input", "assert_text", "assert_visible", "screenshot"] },
                 target: { type: "string" },
                 value: { type: "string" },
                 milliseconds: { type: "number", minimum: 0, maximum: 5_000 },
@@ -404,12 +404,7 @@ function validateBehaviorContract(value: unknown, kind: "build" | "revision"): B
     for (const rawStep of scenario.steps) {
       const step = record(rawStep);
       if (step.action === "launch") continue;
-      if (step.action === "wait") {
-        if (typeof step.milliseconds !== "number" || step.milliseconds < 0 || step.milliseconds > 5_000) {
-          throw new Error("Behavior Scenario waits must be between 0 and 5000 ms");
-        }
-        continue;
-      }
+      if (step.action === "wait") throw new Error("Behavior Scenario fixed waits are not executable; use an assertion");
       if (step.action === "screenshot") {
         text(step.name, "Behavior Scenario screenshot name");
         continue;
@@ -674,7 +669,7 @@ function planningPrompt(command: StartAttemptCommand, previousContract: Behavior
     answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
     `Packaged Native guidance catalog: ${guidanceCatalog}`,
     "Return one material Clarification batch only when ambiguity would change the result. Otherwise return one complete native-bounded plan with requirements, decisions, the smallest exact nativeGuidance selection, and one to three executable scenarios.",
-    "Use only launch, click, input, wait, assert_text, assert_visible, and screenshot. Each wait is at most 5000 ms. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
+    "Use only launch, click, input, assert_text, assert_visible, and screenshot. Fixed waits are not executable; assertions own bounded polling. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
   ].filter(Boolean).join("\n");
 }
 
