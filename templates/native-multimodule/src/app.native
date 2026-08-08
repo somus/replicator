@@ -1,5 +1,27 @@
 <column gap="12" padding="16">
-  <text>Generated App</text>
-  <text grow="1">{message}</text>
-  <button variant="primary" on-press="activate">Activate</button>
+  <row gap="8" cross="center">
+    <text grow="1" size="heading">CSV Inspector</text>
+    <button size="sm" variant="ghost" on-press="reset">Reset</button>
+  </row>
+
+  <textarea text="{csvText}" on-input="edit_csv" label="CSV input" height="120"></textarea>
+  <status-bar>{summaryText} | selection {selectionAnchor}:{selectionFocus}</status-bar>
+
+  <table grow="1">
+    <table-row>
+      <table-cell grow="1" size="sm" foreground="text_muted">{headerText}</table-cell>
+      <table-cell width="140" size="sm" foreground="text_muted" text-alignment="end">Status</table-cell>
+    </table-row>
+    <for each="dataRows" as="row" key="id">
+      <table-row>
+        <table-cell grow="1">{row.text}</table-cell>
+        <table-cell width="140" text-alignment="end" foreground="warning">{row.flag}</table-cell>
+      </table-row>
+    </for>
+    <else>
+      <table-row>
+        <table-cell grow="1" foreground="text_muted">No data rows</table-cell>
+      </table-row>
+    </else>
+  </table>
 </column>

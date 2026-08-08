@@ -2,7 +2,7 @@
     .id = "dev.replicator.generated-app",
     .name = "generated-app",
     .display_name = "Generated App",
-    .description = "A Utility created by Replicator.",
+    .description = "A multi-module native Utility created by Replicator.",
     .version = "0.1.0",
     .platforms = .{ "macos" },
     .permissions = .{ "view", "command" },
