@@ -99,7 +99,7 @@
       </column>
     </scroll>
 
-    <column height="160" padding="16" gap="9" background="surface" label="Request composer">
+    <column height="170" padding="16" gap="9" background="surface" label="Request composer">
       <row gap="8" cross="center">
         <text grow="1"><span weight="bold">{requestTitle}</span></text>
         <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="attach_reference" label="Attach Reference Image">Reference Image</button>
