@@ -9,6 +9,8 @@
     .platforms = .{ "macos" },
     .permissions = .{ "view", "command" },
     .capabilities = .{ "native_views", "gpu_surfaces" },
+    .theme = "geist",
+    .theme_accent = "#69E6BA",
     .shell = .{
         .windows = .{
             .{

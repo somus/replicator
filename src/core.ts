@@ -424,7 +424,7 @@ function startAttempt(model: Model, request: Uint8Array): Uint8Array {
   const requestId = revision ? asciiBytes(",\"requestId\":\"revision-1\",\"kind\":\"revision\",\"requestText\":") : asciiBytes(",\"requestId\":\"build-1\",\"kind\":\"build\",\"requestText\":");
   const middle = asciiBytes(",\"references\":"); const references = model.referenceJson.length > 0 ? model.referenceJson : asciiBytes("[]");
   let referencePathsSize = asciiBytes(",\"referencePaths\":[]").length;
-  for (let index = 0; index < model.pickerSelections.length; index += 1) referencePathsSize += quoteJson(model.pickerSelections[index]).length + 1;
+  for (let index = 0; index < model.pickerSelections.length; index += 1) referencePathsSize += quoteJson(model.pickerSelections[index]).length + (index > 0 ? 1 : 0);
   const suffix = revision
     ? asciiBytes(",\"currentSourceDigest\":")
     : asciiBytes("}\n");

@@ -1,8 +1,8 @@
 <split value="{sidebarSplit}" on-resize="sidebar_resized" gap="1" label="Replicator App builder">
   <column min-width="280" background="surface" label="App Library">
-    <column padding="24" gap="22">
-      <row gap="10" cross="center">
-        <image image="{brandImageId}" width="42" height="42" label="Replicator logo" />
+    <column padding="24" gap="28">
+      <row gap="12" cross="center">
+        <image image="{brandImageId}" width="44" height="44" label="Replicator logo" />
         <text size="heading"><span weight="bold">Replicator</span></text>
       </row>
 
@@ -13,20 +13,25 @@
     </column>
 
     <scroll grow="1" label="Your Apps">
-      <list virtualized padding="12" gap="8">
+      <list virtualized padding="12" gap="7">
         <for each="libraryItems" key="utilityId" as="utility">
-          <list-item selected="{utility.utilityId == selectedUtilityId}" on-press="select_library:{utility.slot}" label="{utility.displayName}">{utility.displayName} - {utility.state}
+          <list-item selected="{utility.utilityId == selectedUtilityId}" on-press="select_library:{utility.slot}" label="{utility.displayName}">{utility.displayName} · {utility.state}
             <context-menu><menu-item on-press="select_library:{utility.slot}">Open</menu-item></context-menu>
           </list-item>
         </for>
         <else>
-          <panel padding="16" background="background" radius="md" label="No Apps yet"><column gap="6"><text><span weight="bold">No Apps yet</span></text><text size="sm" foreground="text_muted" wrap="true">Describe one in the Build Request below.</text></column></panel>
+          <panel padding="16" background="background" radius="lg" label="No Apps yet">
+            <column gap="6">
+              <text><span weight="bold">No Apps yet</span></text>
+              <text size="sm" foreground="text_muted" wrap="true">Describe one in the Build Request to start your library.</text>
+            </column>
+          </panel>
         </else>
       </list>
     </scroll>
 
     <column padding="20" gap="8">
-      <panel padding="12" background="background" radius="md" label="Owner">
+      <panel padding="12" background="background" radius="lg" label="Owner">
         <row gap="10" cross="center">
           <badge variant="primary">S</badge>
           <column grow="1" gap="2">
@@ -38,12 +43,12 @@
     </column>
   </column>
 
-  <column min-width="600" label="Selected App workspace">
-    <row height="150" padding="28" gap="18" cross="center" background="surface" label="App Header">
-      <panel width="72" height="72" padding="20" background="background" radius="lg">
+  <column min-width="600" background="background" label="Selected App workspace">
+    <row height="132" padding="24" gap="16" cross="center" background="surface" label="App Header">
+      <panel width="68" height="68" padding="18" background="background" radius="lg">
         <text size="heading" foreground="accent"><span weight="bold">{selectedInitial}</span></text>
       </panel>
-      <column grow="1" gap="7">
+      <column grow="1" gap="6">
         <row gap="10" cross="center">
           <text size="heading"><span weight="bold">{selectedName}</span></text>
           <badge variant="secondary">{selectedStatus}</badge>
@@ -56,94 +61,102 @@
       <else>
         <button variant="primary" icon="play" disabled="true" label="No Ready Artifact to launch">Launch</button>
       </else>
-      <button variant="ghost" icon="menu" label="More actions">More</button>
+      <button size="icon" variant="ghost" icon="menu" label="More actions">More</button>
     </row>
 
     <separator />
 
     <scroll grow="1" label="Owner Timeline">
-      <column padding="32" gap="14">
+      <column padding="28" gap="18">
         <row gap="10" cross="center">
-          <text size="heading" grow="1"><span weight="bold">Owner Timeline</span></text>
-          <if test="{globalBusy}">
-            <badge variant="secondary">One request active</badge>
-          </if>
+          <column grow="1" gap="3">
+            <text size="heading"><span weight="bold">Owner Timeline</span></text>
+            <text size="sm" foreground="text_muted">Requests, decisions, verification, and outcomes</text>
+          </column>
+          <if test="{globalBusy}"><badge variant="secondary">One request active</badge></if>
         </row>
 
-        <for each="timelineItems" key="entryId" as="entry">
-          <if test="{entry.kind == 'Build Request'}">
-            <panel padding="16" background="surface" radius="lg" label="Request from You">
-              <column gap="7">
-                <row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">{entry.kind}</text></row>
-                <text wrap="true">{entry.text}</text>
-                <text size="sm" foreground="text_muted">{entry.createdAt}</text>
-              </column>
-            </panel>
-          </if>
-          <if test="{entry.kind == 'Revision Request'}">
-            <panel padding="16" background="surface" radius="lg" label="Request from You">
-              <column gap="7">
-                <row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">{entry.kind}</text></row>
-                <text wrap="true">{entry.text}</text>
-                <text size="sm" foreground="text_muted">{entry.createdAt}</text>
-              </column>
-            </panel>
-          </if>
-          <if test="{entry.kind == 'Accepted Plan'}">
-            <panel padding="16" background="surface" radius="lg" label="Accepted plan">
-              <column gap="8">
-                <row gap="8"><badge variant="secondary">Plan</badge><text><span weight="bold">Accepted plan</span></text></row>
-                <text wrap="true">{entry.text}</text>
-                <text size="sm" foreground="text_muted">App Format: bounded Native</text>
-              </column>
-            </panel>
-          </if>
-          <if test="{entry.kind == 'Verification Evidence'}">
-            <panel padding="16" background="surface" radius="lg" label="Verification Evidence">
-              <column gap="8">
-                <row gap="8"><badge variant="primary">Evidence</badge><text><span weight="bold">Verification Evidence</span></text></row>
-                <text wrap="true">{entry.text}</text>
-                <text size="sm" foreground="text_muted">Bound to the verified source digest.</text>
-              </column>
-            </panel>
-          </if>
-          <if test="{entry.kind == 'Ready'}">
-            <panel padding="16" background="surface" radius="lg" label="Ready outcome">
-              <row gap="10" cross="center"><badge variant="primary">Ready</badge><text grow="1">{entry.text}</text><button size="sm" variant="secondary" icon="play" on-press="launch" label="Launch selected App">Launch</button></row>
-            </panel>
-          </if>
-          <if test="{entry.kind == 'Clarification'}">
-            <timeline gap="4"><timeline-item title="{entry.kind}" description="{entry.text}" meta="{entry.createdAt}" /></timeline>
-          </if>
-        </for>
-          <if test="{hasClarification}"><panel padding="16" background="surface" radius="lg" label="Clarification required"><column gap="9"><row gap="8"><badge variant="secondary">Needs input</badge><text><span weight="bold">Clarification required</span></text></row><if test="{hasClarificationQuestion0}"><column gap="4"><text wrap="true">{clarificationQuestion0}</text><if test="{clarificationFirstIsChoice}"><radio-group gap="4" label="First clarification options"><radio checked="{clarificationOptionASelected}" on-toggle="choose_clarification_a" label="{clarificationOptionA}" /><radio checked="{clarificationOptionBSelected}" on-toggle="choose_clarification_b" label="{clarificationOptionB}" /></radio-group></if><else><textarea height="48" text="{clarificationAnswer0}" on-input="clarification_answer_0" label="Answer to first clarification" placeholder="Enter a short answer" /></else></column></if><if test="{hasClarificationQuestion1}"><column gap="4"><text wrap="true">{clarificationQuestion1}</text><textarea height="48" text="{clarificationAnswer1}" on-input="clarification_answer_1" label="Answer to second clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion2}"><column gap="4"><text wrap="true">{clarificationQuestion2}</text><textarea height="48" text="{clarificationAnswer2}" on-input="clarification_answer_2" label="Answer to third clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion3}"><column gap="4"><text wrap="true">{clarificationQuestion3}</text><textarea height="48" text="{clarificationAnswer3}" on-input="clarification_answer_3" label="Answer to fourth clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion4}"><column gap="4"><text wrap="true">{clarificationQuestion4}</text><textarea height="48" text="{clarificationAnswer4}" on-input="clarification_answer_4" label="Answer to fifth clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion5}"><column gap="4"><text wrap="true">{clarificationQuestion5}</text><textarea height="48" text="{clarificationAnswer5}" on-input="clarification_answer_5" label="Answer to sixth clarification" placeholder="Enter a short answer" /></column></if><row gap="8"><button size="sm" variant="primary" disabled="{clarificationIncomplete}" on-press="continue_clarification">Continue</button><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></row></column></panel></if>
+        <timeline gap="10" label="App history">
+          <for each="timelineItems" key="entryId" as="entry">
+            <if test="{entry.kind == 'Build Request'}">
+              <timeline-item key="{entry.entryId}" indicator="You" variant="primary" title="Build Request" description="{entry.text}" meta="{entry.createdAt}" />
+            </if>
+            <if test="{entry.kind == 'Revision Request'}">
+              <timeline-item key="{entry.entryId}" indicator="You" variant="primary" title="Revision Request" description="{entry.text}" meta="{entry.createdAt}" />
+            </if>
+            <if test="{entry.kind == 'Accepted Plan'}">
+              <timeline-item key="{entry.entryId}" indicator="Plan" variant="secondary" title="Plan accepted" description="{entry.text}" meta="Bounded Native App" />
+            </if>
+            <if test="{entry.kind == 'Verification Evidence'}">
+              <timeline-item key="{entry.entryId}" indicator="OK" variant="primary" title="Verification passed" description="{entry.text}" meta="Bound to the verified source digest" />
+            </if>
+            <if test="{entry.kind == 'Ready'}">
+              <timeline-item key="{entry.entryId}" indicator="OK" variant="primary" title="Ready to launch" description="{entry.text}" meta="{entry.createdAt}" />
+            </if>
+            <if test="{entry.kind == 'Clarification'}">
+              <timeline-item key="{entry.entryId}" indicator="?" variant="secondary" title="Clarification" description="{entry.text}" meta="{entry.createdAt}" />
+            </if>
+          </for>
+        </timeline>
 
-          <if test="{globalBusy}"><panel padding="16" background="surface" radius="lg" label="Request Attempt progress"><column gap="9"><stepper active="{round(stageIndex)}" label="Request stages"><step>Plan</step><step>Build</step><step>Verify</step><step>Prepare</step></stepper><progress value="{stageProgress}" label="Request progress" /><row gap="8" cross="center"><spinner /><badge variant="secondary">{selectedStatus}</badge><text><span weight="bold">Creating your App</span></text></row><if test="{hasStageResult}"><text wrap="true">{stageResult}</text></if><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></column></panel></if>
+        <if test="{hasClarification}">
+          <panel padding="18" background="surface" radius="lg" label="Clarification required">
+            <column gap="12">
+              <row gap="8" cross="center"><badge variant="secondary">Needs input</badge><text><span weight="bold">A few quick choices</span></text></row>
+              <if test="{hasClarificationQuestion0}"><column gap="6"><text wrap="true">{clarificationQuestion0}</text><if test="{clarificationFirstIsChoice}"><radio-group gap="6" label="First clarification options"><radio checked="{clarificationOptionASelected}" on-toggle="choose_clarification_a" label="{clarificationOptionA}" /><radio checked="{clarificationOptionBSelected}" on-toggle="choose_clarification_b" label="{clarificationOptionB}" /></radio-group></if><else><textarea height="52" text="{clarificationAnswer0}" on-input="clarification_answer_0" label="Answer to first clarification" placeholder="Enter a short answer" /></else></column></if>
+              <if test="{hasClarificationQuestion1}"><column gap="6"><text wrap="true">{clarificationQuestion1}</text><textarea height="52" text="{clarificationAnswer1}" on-input="clarification_answer_1" label="Answer to second clarification" placeholder="Enter a short answer" /></column></if>
+              <if test="{hasClarificationQuestion2}"><column gap="6"><text wrap="true">{clarificationQuestion2}</text><textarea height="52" text="{clarificationAnswer2}" on-input="clarification_answer_2" label="Answer to third clarification" placeholder="Enter a short answer" /></column></if>
+              <if test="{hasClarificationQuestion3}"><column gap="6"><text wrap="true">{clarificationQuestion3}</text><textarea height="52" text="{clarificationAnswer3}" on-input="clarification_answer_3" label="Answer to fourth clarification" placeholder="Enter a short answer" /></column></if>
+              <if test="{hasClarificationQuestion4}"><column gap="6"><text wrap="true">{clarificationQuestion4}</text><textarea height="52" text="{clarificationAnswer4}" on-input="clarification_answer_4" label="Answer to fifth clarification" placeholder="Enter a short answer" /></column></if>
+              <if test="{hasClarificationQuestion5}"><column gap="6"><text wrap="true">{clarificationQuestion5}</text><textarea height="52" text="{clarificationAnswer5}" on-input="clarification_answer_5" label="Answer to sixth clarification" placeholder="Enter a short answer" /></column></if>
+              <row gap="8"><button size="sm" variant="primary" disabled="{clarificationIncomplete}" on-press="continue_clarification">Continue</button><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></row>
+            </column>
+          </panel>
+        </if>
 
-          <if test="{hasOwnerError}"><alert text="Request stopped" variant="destructive"><column padding="16" gap="9"><text wrap="true">{ownerError}</text><if test="{canLaunch}"><text size="sm" foreground="text_muted">Your previous Ready Artifact remains launchable.</text></if><button size="sm" variant="secondary" disabled="{retryDisabled}" on-press="retry_attempt">Retry</button></column></alert></if>
+        <if test="{globalBusy}">
+          <panel padding="18" background="surface" radius="lg" label="Request Attempt progress">
+            <column gap="12">
+              <row gap="8" cross="center"><spinner /><text grow="1"><span weight="bold">Creating your App</span></text><badge variant="secondary">{selectedStatus}</badge></row>
+              <stepper active="{round(stageIndex)}" label="Request stages"><step>Plan</step><step>Build</step><step>Verify</step><step>Prepare</step></stepper>
+              <progress value="{stageProgress}" label="Request progress" />
+              <if test="{hasStageResult}"><text wrap="true" foreground="text_muted">{stageResult}</text></if>
+              <row><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></row>
+            </column>
+          </panel>
+        </if>
+
+        <if test="{canLaunch}">
+          <panel padding="16" background="surface" radius="lg" label="Ready outcome">
+            <row gap="10" cross="center"><badge variant="primary">Ready</badge><column grow="1" gap="3"><text><span weight="bold">Your App is ready</span></text><text size="sm" foreground="text_muted">Verified, packaged, and available to revise.</text></column><button size="sm" variant="primary" icon="play" on-press="launch" label="Launch selected App">Launch</button></row>
+          </panel>
+        </if>
+
+        <if test="{hasOwnerError}">
+          <alert text="Request stopped" variant="destructive"><column padding="16" gap="10"><text wrap="true">{ownerError}</text><if test="{canLaunch}"><text size="sm" foreground="text_muted">Your previous Ready Artifact remains launchable.</text></if><row><button size="sm" variant="secondary" disabled="{retryDisabled}" on-press="retry_attempt">Retry</button></row></column></alert>
+        </if>
       </column>
     </scroll>
 
-    <column height="220" padding="16" gap="9" background="surface" label="Request composer">
+    <separator />
+
+    <column height="184" padding="14" gap="8" background="surface" label="Request composer">
       <row gap="8" cross="center">
         <text grow="1"><span weight="bold">{requestTitle}</span></text>
-        <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="attach_reference" label="Attach Reference Image">Reference Image</button>
+        <text size="sm" foreground="text_muted">Primary + Enter to send</text>
       </row>
-      <row gap="8" cross="center">
-        <if test="{firstReferenceAttached}">
-          <row gap="4" cross="center">
-            <badge variant="secondary">Reference Image attached</badge>
-            <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="remove_first_reference" label="Remove attached Reference Image">Remove</button>
-          </row>
-        </if>
-        <if test="{secondReferenceAttached}">
-          <row gap="4" cross="center">
-            <badge variant="secondary">Second Reference Image attached</badge>
-            <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="remove_second_reference" label="Remove second Reference Image">Remove</button>
-          </row>
-        </if>
-      </row>
-      <input-group height="96" label="Request composer"><textarea text="{revisionText}" placeholder="{composerPlaceholder}" disabled="{requestControlsDisabled}" on-input="revision_edit" on-submit="send_revision" label="Request" /><input-group-actions gap="8"><button variant="primary" icon="send" disabled="{requestControlsDisabled}" on-press="send_revision" label="Submit Request">Submit</button></input-group-actions></input-group>
+      <if test="{firstReferenceAttached}">
+        <row gap="6" cross="center"><badge variant="secondary">Reference Image attached</badge><button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="remove_first_reference" label="Remove attached Reference Images">Remove</button></row>
+      </if>
+      <input-group height="104" label="Request composer">
+        <textarea text="{revisionText}" placeholder="{composerPlaceholder}" disabled="{requestControlsDisabled}" on-input="revision_edit" on-submit="send_revision" label="Request" />
+        <input-group-actions gap="8">
+          <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="attach_reference" label="Attach Reference Image">Reference Image</button>
+          <spacer grow="1" />
+          <if test="{globalBusy}"><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel</button></if>
+          <else><button size="sm" variant="primary" icon="send" disabled="{requestControlsDisabled}" on-press="send_revision" label="Submit Request">Submit</button></else>
+        </input-group-actions>
+      </input-group>
     </column>
   </column>
 </split>
