@@ -13,6 +13,7 @@ export type UtilityState = "planning" | "awaiting_clarification" | "building" | 
 export type RequestKind = "build" | "revision";
 
 export interface LibraryItem {
+  readonly slot: number;
   readonly utilityId: Uint8Array;
   readonly displayName: Uint8Array;
   readonly format: Uint8Array;
@@ -129,7 +130,7 @@ export const viewUnbound = [
   "clarificationAnswers", "pickerSelections", "recipeSelected", "renamerSelected", "tallySelected", "planningState", "awaitingClarificationState", "buildingState", "verifyingState",
   "preparingState", "failedState", "interruptedState", "clarificationIncomplete", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url",
   "choose_text", "worker_line", "worker_exit", "worker_error", "launch_exit", "launch_error", "node_path", "worker_path", "data_root", "reference_json", "registry_loaded",
-  "registry_error", "command_written", "command_write_error", "select_library", "picker_path", "picker_line", "picker_exit", "picker_error", "quit_app",
+  "registry_error", "command_written", "command_write_error", "picker_path", "picker_line", "picker_exit", "picker_error", "quit_app",
 ] as const;
 
 export const envMsgs = [
@@ -154,7 +155,7 @@ export function initialModel(): Model {
     revisionDraft: emptyDraft(),
     submittedRevision: new Uint8Array(0),
     revisionSubmitted: false,
-    firstReferenceAttached: true,
+    firstReferenceAttached: false,
     secondReferenceAttached: false,
     storageChosen: false,
     importChosen: false,
@@ -211,24 +212,25 @@ export function tallySelected(model: Model): boolean {
 }
 
 export function selectedInitial(model: Model): Uint8Array {
-  if (model.selectedUtility === 1) return asciiBytes("F");
-  if (model.selectedUtility === 2) return asciiBytes("R");
-  if (model.selectedUtility === 3) return asciiBytes("F");
-  return asciiBytes("T");
+  const item = selectedLibraryItem(model);
+  if (item === null || item.displayName.length === 0) return asciiBytes("+");
+  return item.displayName.slice(0, 1);
 }
 
 export function selectedName(model: Model): Uint8Array {
-  if (model.selectedUtility === 1) return asciiBytes("Focus Sprint");
-  if (model.selectedUtility === 2) return asciiBytes("Recipe Clipper");
-  if (model.selectedUtility === 3) return asciiBytes("File Renamer");
-  return asciiBytes("Menu Bar Tally");
+  const item = selectedLibraryItem(model);
+  return item === null ? asciiBytes("New Utility") : item.displayName;
 }
 
 export function selectedDescription(model: Model): Uint8Array {
-  if (model.selectedUtility === 1) return asciiBytes("Stay focused. Get more done.");
-  if (model.selectedUtility === 2) return asciiBytes("Save recipes in one place.");
-  if (model.selectedUtility === 3) return asciiBytes("Batch rename files quickly.");
-  return asciiBytes("Track counts from anywhere.");
+  return selectedLibraryItem(model) === null
+    ? asciiBytes("Describe what you want Replicator to build.")
+    : asciiBytes("Bounded Native Utility");
+}
+
+function selectedLibraryItem(model: Model): LibraryItem | null {
+  for (const item of model.libraryItems) if (bytesEqual(item.utilityId, model.selectedUtilityId)) return item;
+  return null;
 }
 
 export function selectedStatus(model: Model): Uint8Array {
@@ -253,6 +255,7 @@ export function requestControlsDisabled(model: Model): boolean {
 export function composerPlaceholder(model: Model): Uint8Array {
   if (model.globalBusy) return asciiBytes("Another request is active. You can browse and launch Ready Utilities.");
   if (model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0) return asciiBytes("The bundled worker is unavailable in this launch.");
+  if (selectedLibraryItem(model) === null) return asciiBytes("Describe the Utility you want to build...");
   return asciiBytes("Describe a change to this Utility...");
 }
 
@@ -489,8 +492,9 @@ function consumeWorkerEvent(model: Model, line: Uint8Array): Model {
     return { ...model, globalBusy: false, utilityState: "awaiting_clarification", clarificationBatchId: extractString(line, asciiBytes("\"batchId\":\"")), clarificationQuestionId: ids[0], clarificationQuestion: questions[0], clarificationQuestionIds: ids, clarificationQuestions: questions, clarificationAnswers: [emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft()] };
   }
   if (bytesEqual(type, asciiBytes("library_item"))) {
-    if (model.libraryItems.length >= 50) return model;
-    const item: LibraryItem = { utilityId: extractString(line, asciiBytes("\"utilityId\":\"")), displayName: extractString(line, asciiBytes("\"displayName\":\"")), format: extractString(line, asciiBytes("\"format\":\"")), state: extractString(line, asciiBytes("\"state\":\"")), updatedAt: extractString(line, asciiBytes("\"updatedAt\":\"")), artifactPath: extractString(line, asciiBytes("\"artifactPath\":\"")), sourceDigest: extractString(line, asciiBytes("\"sourceDigest\":\"")), binaryDigest: extractString(line, asciiBytes("\"binaryDigest\":\"")) };
+    const slot = model.libraryItems.length;
+    if (slot < 0 || slot >= 50) return model;
+    const item: LibraryItem = { slot: Math.trunc(slot), utilityId: extractString(line, asciiBytes("\"utilityId\":\"")), displayName: extractString(line, asciiBytes("\"displayName\":\"")), format: extractString(line, asciiBytes("\"format\":\"")), state: extractString(line, asciiBytes("\"state\":\"")), updatedAt: extractString(line, asciiBytes("\"updatedAt\":\"")), artifactPath: extractString(line, asciiBytes("\"artifactPath\":\"")), sourceDigest: extractString(line, asciiBytes("\"sourceDigest\":\"")), binaryDigest: extractString(line, asciiBytes("\"binaryDigest\":\"")) };
     return { ...model, libraryItems: [...model.libraryItems, item] };
   }
   if (bytesEqual(type, asciiBytes("timeline_item"))) {

@@ -29,6 +29,7 @@ let native = resources.appendingPathComponent("toolchains/native-cli/bin/native.
 let templateRoot = resources.appendingPathComponent("templates", isDirectory: true)
 let nativeHome = dataRoot.appendingPathComponent("native-sdk", isDirectory: true)
 let nativeLogs = dataRoot.appendingPathComponent("native-logs", isDirectory: true)
+let commands = dataRoot.appendingPathComponent("commands", isDirectory: true)
 
 for required in [builder, picker, node] where !fileManager.isExecutableFile(atPath: required.path) {
     fail("a packaged executable is unavailable")
@@ -39,6 +40,7 @@ for required in [worker, native] where !fileManager.fileExists(atPath: required.
 do {
     try fileManager.createDirectory(at: nativeHome, withIntermediateDirectories: true)
     try fileManager.createDirectory(at: nativeLogs, withIntermediateDirectories: true)
+    try fileManager.createDirectory(at: commands, withIntermediateDirectories: true)
 } catch {
     fail("could not prepare Native SDK storage")
 }
