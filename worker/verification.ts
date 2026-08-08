@@ -501,7 +501,9 @@ export class BoundedNativeAdapter {
       await optionalAssetsDigest(assets) !== candidate.assetsDigest
     ) {
       await this.invalidateLaterEvidence();
-      throw new AdapterFailure("source", "source or candidate changed after verification");
+      const failure = new AdapterFailure("source", "source or candidate changed after verification");
+      this.lastSourceFailure = failure;
+      throw failure;
     }
     try {
       const formatMarkerDigest = await assertUtilityFormatMarker(this.utilityRoot, "native-bounded");

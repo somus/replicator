@@ -115,6 +115,9 @@ export type AgenticImplementationOptions = {
   currentDigest: () => Promise<string>;
   validate: () => Promise<string>;
   verify: () => Promise<string>;
+  repairScope: (error: unknown) => "source" | "scenario" | "host";
+  reopenSourceRepair: (error: unknown) => Promise<void>;
+  finalize: () => Promise<string>;
   onStage: (stage: "validation" | "verification", ok: boolean, summary: string) => void;
 };
 
@@ -267,9 +270,18 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             return { content: [{ type: "text", text: `Behavior verification passed for source ${verifiedDigest}.\n${summary}` }] };
           } catch (error) {
             const summary = error instanceof Error ? error.message : "Behavior verification failed";
-            sourceEditingOpen = true;
+            const repairScope = options.repairScope(error);
+            if (repairScope === "source") {
+              await options.reopenSourceRepair(error);
+              sourceEditingOpen = true;
+            }
             options.onStage("verification", false, summary);
-            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source. Make a focused source edit, then validate and verify again.` }] };
+            const instruction = repairScope === "source"
+              ? "Make one focused source edit, then validate and verify again."
+              : repairScope === "host"
+                ? "Retry the host operation once without editing source."
+                : "Correct the Behavior Scenario input without editing source.";
+            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=${repairScope}. ${instruction}` }] };
           }
         },
       ),
@@ -283,10 +295,19 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             if (!validatedDigest || !verifiedDigest || digest !== validatedDigest || digest !== verifiedDigest) {
               throw new Error("current source has not passed validation and behavior verification for one unchanged digest");
             }
+            const summary = await options.finalize();
             finalDigest = digest;
-            return { content: [{ type: "text", text: `Finalized source ${digest}. Return the requested structured summary without another tool call.` }] };
+            return { content: [{ type: "text", text: `Finalized source ${digest}. ${summary} Return the requested structured summary without another tool call.` }] };
           } catch (error) {
-            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Finalization rejected" }] };
+            const summary = error instanceof Error ? error.message : "Finalization rejected";
+            const repairScope = options.repairScope(error);
+            if (repairScope === "source") {
+              await options.reopenSourceRepair(error);
+              sourceEditingOpen = true;
+              validatedDigest = undefined;
+              verifiedDigest = undefined;
+            }
+            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=${repairScope}` }] };
           }
         },
       ),

@@ -1,6 +1,6 @@
 import { createInterface } from "node:readline";
-import { randomUUID } from "node:crypto";
-import { cp, lstat, mkdir, readFile, rm } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { cp, lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   createAgenticImplementation,
@@ -23,18 +23,20 @@ import {
   type WorkerEvent,
 } from "./protocol.js";
 import { RegistryStore, type UtilityRecord } from "./registry.js";
-import { assertProjectPolicy, scaffoldUtility, sourceDigest } from "./targets.js";
-import { BoundedNativeAdapter } from "./verification.js";
+import { assertProjectPolicy, sourceDigest } from "./targets.js";
+import {
+  AdapterFailure,
+  BoundedNativeAdapter,
+  type FinalizationOutcome,
+  type VerificationOutcome,
+} from "./verification.js";
 
 const ACTIVE_DEADLINE_MS = 360_000;
 const FINALIZATION_RESERVE_MS = 80_000;
 
 const configuredDataRoot = process.env.REPLICATOR_DATA_ROOT;
-const configuredNativeExecutable = process.env.REPLICATOR_NATIVE_PATH;
 if (!configuredDataRoot) throw new Error("REPLICATOR_DATA_ROOT is required");
-if (!configuredNativeExecutable) throw new Error("REPLICATOR_NATIVE_PATH is required");
 const dataRoot: string = configuredDataRoot;
-const nativeExecutable: string = configuredNativeExecutable;
 const registry = new RegistryStore(dataRoot);
 await registry.initialize();
 
@@ -382,7 +384,13 @@ async function ensureUtility(command: StartAttemptCommand, attemptId: string): P
   return utility;
 }
 
-async function prepareSource(command: StartAttemptCommand, attemptId: string, utility: UtilityRecord): Promise<void> {
+async function prepareSource(
+  command: StartAttemptCommand,
+  attemptId: string,
+  utility: UtilityRecord,
+  adapter: BoundedNativeAdapter,
+  signal: AbortSignal,
+): Promise<void> {
   const root = path.join(dataRoot, utility.folder);
   const source = path.join(root, "source");
   await mkdir(root, { recursive: true });
@@ -392,7 +400,7 @@ async function prepareSource(command: StartAttemptCommand, attemptId: string, ut
       await assertProjectPolicy(source, "native-bounded");
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      await scaffoldUtility(source, "native-bounded");
+      await adapter.scaffold(signal);
     }
   } else {
     const currentDigest = await sourceDigest(source, "native-bounded");
@@ -587,26 +595,46 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       if (!utility) throw new Error("Request Attempt is unavailable for resume");
     } else {
       utility = await ensureUtility(attempt.command, attempt.id);
-      await prepareSource(attempt.command, attempt.id, utility);
     }
-    emit({ type: "state_changed", attemptId: attempt.id, state: "planning" });
-
     const sourceRoot = path.join(dataRoot, utility.folder, "source");
     const utilityRoot = path.join(dataRoot, utility.folder);
     const evidenceRoot = path.join(utilityRoot, "evidence", attempt.id);
     const releaseRoot = path.join(utilityRoot, "artifacts", attempt.id);
+    const resourcesRoot = process.env.REPLICATOR_RESOURCES_ROOT;
+    const nativeCliPath = process.env.REPLICATOR_NATIVE_PATH
+      ?? (resourcesRoot ? path.join(resourcesRoot, "toolchains", "native-cli", "bin", "native.js") : undefined);
+    const nativeZigPath = process.env.NATIVE_SDK_ZIG
+      ?? (resourcesRoot ? path.join(resourcesRoot, "toolchains", "zig", "zig") : undefined);
+    if (!nativeCliPath || !nativeZigPath) throw new Error("bundled Native CLI and Zig paths are required");
+    const adapter = new BoundedNativeAdapter({
+      nodeExecutable: process.execPath,
+      nativeCliPath,
+      nativeZigPath,
+      nativeSdkHome: process.env.NATIVE_SDK_HOME ?? path.join(dataRoot, "native-sdk"),
+      utilityRoot,
+      projectRoot: sourceRoot,
+      evidenceRoot,
+      releaseRoot,
+    });
+    if (!resumeExisting) {
+      await prepareSource(attempt.command, attempt.id, utility, adapter, attempt.abortController.signal);
+    }
+    emit({ type: "state_changed", attemptId: attempt.id, state: "planning" });
+
     const sessionConfigDir = path.join(utilityRoot, "agent-session");
     await mkdir(sessionConfigDir, { recursive: true, mode: 0o700 });
     const references = agentReferences(attempt.command);
     const { plan, sessionId } = await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir);
     await persistPlan(utility.id, attempt.id, plan);
     await setState(utility.id, attempt.id, "building");
-    let candidateVerificationNumber = 0;
-    const candidateAdapter = (candidateEvidenceRoot = path.join(utilityRoot, "evidence", `${attempt.id}-agent`)) => new BoundedNativeAdapter({
-      nativeExecutable,
-      projectRoot: sourceRoot,
-      evidenceRoot: candidateEvidenceRoot,
-      releaseRoot: path.join(utilityRoot, "artifacts", `${attempt.id}-agent`),
+    let verification: VerificationOutcome | undefined;
+    let finalization: FinalizationOutcome | undefined;
+    const finalizationNonce = randomUUID();
+    await registry.update((current) => {
+      const stored = current.utilities.find((candidate) => candidate.id === utility!.id);
+      if (!stored?.activeAttempt || stored.activeAttempt.id !== attempt.id) throw new Error("Request Attempt is no longer active");
+      stored.activeAttempt.finalizationNonce = finalizationNonce;
+      stored.updatedAt = nowIso();
     });
     const editableFiles = ["app.zon", "src/app.native", "src/core.ts"] as const;
     const readEditable = async (file: string): Promise<string> => {
@@ -623,18 +651,45 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         const matches = contents.split(oldText).length - 1;
         if (matches === 0 || (!replaceAll && matches !== 1)) throw new Error("edit oldText must match exactly once unless replaceAll is true");
         const next = replaceAll ? contents.replaceAll(oldText, newText) : contents.replace(oldText, newText);
-        await candidateAdapter().writeSource(file, next);
+        await adapter.writeSource(file, next);
       },
       currentDigest: () => sourceDigest(sourceRoot, "native-bounded"),
       validate: async () => {
-        const outcomes = await candidateAdapter().validate(attempt.abortController.signal);
+        const outcomes = await adapter.validate(attempt.abortController.signal);
         return outcomes.map((outcome) => `${outcome.summary} (${outcome.durationMs} ms)`).join("\n");
       },
       verify: async () => {
-        candidateVerificationNumber += 1;
-        const candidateEvidence = path.join(utilityRoot, "evidence", `${attempt.id}-agent-${candidateVerificationNumber}`);
-        const outcome = await candidateAdapter(candidateEvidence).verify(plan.behaviorContract, attempt.abortController.signal);
-        return `${outcome.scenarioResults.length} accepted Behavior Scenarios passed with ${outcome.screenshots.length} screenshots`;
+        await setState(utility!.id, attempt.id, "verifying");
+        verification = await adapter.verify(plan.behaviorContract, attempt.abortController.signal);
+        return `${verification.scenarioResults.length} accepted Behavior Scenarios passed with ${verification.screenshots.length} screenshots`;
+      },
+      repairScope: (error) => error instanceof AdapterFailure ? error.repairScope : "host",
+      reopenSourceRepair: async (error) => {
+        if (!(error instanceof AdapterFailure)) throw new Error("only an adapter source failure can reopen editing");
+        await adapter.reopenSourceRepair(error);
+      },
+      finalize: async () => {
+        await setState(utility!.id, attempt.id, "preparing");
+        finalization = await adapter.finalize(
+          plan.behaviorContract.scenarios.map((scenario) => scenario.id),
+          attempt.abortController.signal,
+        );
+        emit({
+          type: "stage_result",
+          attemptId: attempt.id,
+          stage: "packaging",
+          ok: true,
+          summary: "Verified standalone Utility package created without rebuilding",
+        });
+        emit({
+          type: "stage_result",
+          attemptId: attempt.id,
+          stage: "launch",
+          ok: true,
+          summary: "Standalone Utility launched successfully",
+          durationMs: finalization.launchDurationMs,
+        });
+        return "The host packaged and launched the exact verified binary.";
       },
       onStage: (stage, ok, summary) => emit({
         type: "stage_result",
@@ -703,49 +758,36 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       throw new Error("Agent implementation ended without finalizing the current source digest");
     }
 
-    const adapter = new BoundedNativeAdapter({ nativeExecutable, projectRoot: sourceRoot, evidenceRoot, releaseRoot });
-    const validationOutcomes = await withDeadline(attempt, FINALIZATION_RESERVE_MS, () => adapter.validate(attempt.abortController.signal));
-    for (const outcome of validationOutcomes) emit({
-      type: "stage_result",
+    if (!verification || !finalization) throw new Error("finalize_app did not return complete verification and package evidence");
+    const persistedAttempt = (await registry.read()).utilities.find((candidate) => candidate.id === utility!.id)?.activeAttempt;
+    if (persistedAttempt?.id !== attempt.id || persistedAttempt.finalizationNonce !== finalizationNonce) {
+      throw new Error("finalization nonce is stale or unavailable");
+    }
+    if (
+      finalization.attestationInputs.sourceDigest !== agentFinalizedDigest ||
+      finalization.attestationInputs.verifiedBinaryDigest !== verification.candidate.binaryDigest ||
+      finalization.attestationInputs.verifiedAssetsDigest !== verification.candidate.assetsDigest ||
+      finalization.attestationInputs.packagedBinaryDigest !== finalization.artifact.binaryDigest
+    ) throw new Error("finalization attestation inputs do not match verified evidence");
+    const attestation = {
+      version: 1,
+      nonce: finalizationNonce,
       attemptId: attempt.id,
-      stage: "validation",
-      ok: outcome.ok,
-      summary: `Final host check: ${outcome.summary}`,
-      durationMs: outcome.durationMs,
-    });
-    await setState(utility.id, attempt.id, "verifying");
-    const verification = await withDeadline(attempt, 0, () => adapter.verify(plan.behaviorContract, attempt.abortController.signal));
-    emit({
-      type: "stage_result",
-      attemptId: attempt.id,
-      stage: "verification",
-      ok: true,
-      summary: `${verification.scenarioResults.length} Behavior Scenarios passed for the verified source digest`,
-    });
-    await setState(utility.id, attempt.id, "preparing");
-    const release = await withDeadline(attempt, 0, () => adapter.buildReleaseAndLaunch(verification.sourceDigest, attempt.abortController.signal));
-    const artifactPath = path.relative(dataRoot, path.join(releaseRoot, release.artifact.path));
+      acceptedAt: nowIso(),
+      artifact: finalization.artifact,
+      inputs: finalization.attestationInputs,
+    };
+    const attestationBytes = `${JSON.stringify(attestation, null, 2)}\n`;
+    const attestationDigest = createHash("sha256").update(attestationBytes).digest("hex");
+    const attestationFile = path.join(evidenceRoot, "accepted-finalization-attestation.json");
+    await writeFile(attestationFile, attestationBytes, { encoding: "utf8", mode: 0o600 });
+    const artifactPath = path.relative(dataRoot, path.join(releaseRoot, finalization.artifact.path));
     const screenshots = verification.screenshots.map((screenshot) => path.relative(dataRoot, path.join(evidenceRoot, screenshot)));
     const scenarioResults = verification.scenarioResults.map((result) => ({
       ...result,
       screenshots: result.screenshots.map((screenshot) => path.relative(dataRoot, path.join(evidenceRoot, screenshot))),
     }));
-    const artifact = { ...release.artifact, path: artifactPath };
-    emit({
-      type: "stage_result",
-      attemptId: attempt.id,
-      stage: "packaging",
-      ok: true,
-      summary: "ReleaseFast standalone Utility package created",
-    });
-    emit({
-      type: "stage_result",
-      attemptId: attempt.id,
-      stage: "launch",
-      ok: true,
-      summary: "Standalone Utility launched successfully",
-      durationMs: release.launchDurationMs,
-    });
+    const artifact = { ...finalization.artifact, path: artifactPath };
     await registry.update((current) => {
       const stored = current.utilities.find((candidate) => candidate.id === utility!.id);
       if (!stored || stored.activeAttempt?.id !== attempt.id) throw new Error("Request Attempt is no longer active");
@@ -753,6 +795,8 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       stored.readyArtifact = {
         ...artifact,
         evidencePath: path.relative(dataRoot, evidenceRoot),
+        attestationPath: path.relative(dataRoot, attestationFile),
+        attestationDigest,
         screenshots,
         scenarioResults,
         createdAt: nowIso(),

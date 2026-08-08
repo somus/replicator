@@ -53,6 +53,8 @@ export type OwnerFacingError = { code: string; message: string; occurredAt: stri
 
 export type ReadyArtifactRecord = ReadyArtifactMetadata & {
   evidencePath: string;
+  attestationPath: string;
+  attestationDigest: string;
   screenshots: string[];
   scenarioResults: ScenarioResult[];
   createdAt: string;
@@ -100,6 +102,7 @@ function validateRegistry(value: unknown): Registry {
     if (utility.readyArtifact) {
       assertRelativePath(utility.readyArtifact.path, `utilities.${utility.id}.readyArtifact.path`);
       assertRelativePath(utility.readyArtifact.evidencePath, `utilities.${utility.id}.readyArtifact.evidencePath`);
+      assertRelativePath(utility.readyArtifact.attestationPath, `utilities.${utility.id}.readyArtifact.attestationPath`);
       for (const screenshot of utility.readyArtifact.screenshots) assertRelativePath(screenshot, `utilities.${utility.id}.readyArtifact.screenshots`);
     }
     for (const reference of utility.references) assertRelativePath(reference.path, `utilities.${utility.id}.references.path`);
