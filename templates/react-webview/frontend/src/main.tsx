@@ -1,12 +1,17 @@
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 function App() {
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState("Ready");
+
   return (
     <main>
       <h1>Generated App</h1>
-      <button type="button">Ready</button>
+      <label htmlFor="name">Name</label>
+      <input id="name" value={name} onChange={(event) => setName(event.target.value)} />
+      <button type="button" onClick={() => setStatus("Clicked")}>{status}</button>
     </main>
   );
 }

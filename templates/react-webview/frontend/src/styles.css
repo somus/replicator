@@ -11,3 +11,10 @@ body {
 main {
   padding: 2rem;
 }
+
+label,
+input,
+button {
+  display: block;
+  margin-top: 1rem;
+}

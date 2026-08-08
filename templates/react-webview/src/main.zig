@@ -4,22 +4,27 @@ const native_sdk = @import("native_sdk");
 
 pub const panic = std.debug.FullPanic(native_sdk.debug.capturePanic);
 
-const allowed_origins = [_][]const u8{
+const max_handler_result_bytes = 12 * 1024;
+
+const navigation_origins = [_][]const u8{
     "zero://app",
     "zero://inline",
     "http://127.0.0.1:5173",
 };
 
+const webview_bridge_origins = [_][]const u8{"zero://app"};
+const automation_bridge_origins = [_][]const u8{"zero://inline"};
+
 const bridge_policies = [_]native_sdk.BridgeCommandPolicy{
-    .{ .name = "replicator.scenario", .origins = &allowed_origins },
-    .{ .name = "replicator.submitResult", .origins = &allowed_origins },
-    .{ .name = "replicator.result", .origins = &allowed_origins },
+    .{ .name = "replicator.scenario", .origins = &webview_bridge_origins },
+    .{ .name = "replicator.submitResult", .origins = &webview_bridge_origins },
+    .{ .name = "replicator.result", .origins = &automation_bridge_origins },
 };
 
 const App = struct {
     env_map: *std.process.Environ.Map,
     handlers: [3]native_sdk.BridgeHandler = undefined,
-    result: [64 * 1024]u8 = undefined,
+    result: [max_handler_result_bytes]u8 = undefined,
     result_len: usize = 0,
 
     fn app(self: *@This()) native_sdk.App {
@@ -55,7 +60,9 @@ const App = struct {
         _ = invocation;
         _ = output;
         const self: *@This() = @ptrCast(@alignCast(context));
-        return self.env_map.get("REPLICATOR_SCENARIO_JSON") orelse "null";
+        const value = self.env_map.get("REPLICATOR_SCENARIO_JSON") orelse "null";
+        if (value.len > max_handler_result_bytes) return error.ScenarioTooLarge;
+        return value;
     }
 
     fn submitResult(context: *anyopaque, invocation: native_sdk.bridge.Invocation, output: []u8) anyerror![]const u8 {
@@ -83,7 +90,7 @@ pub fn main(init: std.process.Init) !void {
         .bundle_id = "dev.replicator.generated-app",
         .bridge = app.bridge(),
         .security = .{
-            .navigation = .{ .allowed_origins = &allowed_origins },
+            .navigation = .{ .allowed_origins = &navigation_origins },
         },
     }, init);
 }
