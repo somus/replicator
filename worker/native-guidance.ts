@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
+import type { NativeGuidanceSelection, UtilityFormat } from "./protocol.js";
 
 export type GuidanceCorpus = "native-doc" | "native-skill";
 export type GuidanceSelection = {
@@ -67,6 +68,8 @@ async function loadEntries(indexPath: string, field: "pages" | "skills"): Promis
 }
 
 export class NativeGuidance {
+  private readonly reads: Array<GuidanceSelection & { bytes: number }> = [];
+
   private constructor(
     private readonly roots: Record<GuidanceCorpus, string>,
     private readonly entries: Record<GuidanceCorpus, Entry[]>,
@@ -92,6 +95,53 @@ export class NativeGuidance {
     }));
   }
 
+  compactCatalog(): string {
+    return JSON.stringify({
+      skills: this.compactList("native-skill"),
+      official: this.compactList("native-doc"),
+    });
+  }
+
+  compactList(corpus: GuidanceCorpus): Array<{ id: string; digest: string; sections: string[] }> {
+    return this.entries[corpus].map((entry) => ({ id: entry.id, digest: entry.sha256, sections: entry.headings.map((heading) => heading.id) }));
+  }
+
+  readTelemetry(): ReadonlyArray<GuidanceSelection & { bytes: number }> {
+    return this.reads.map((entry) => ({ ...entry }));
+  }
+
+  assertSelections(selections: readonly NativeGuidanceSelection[], format: UtilityFormat): void {
+    if (format !== "native-bounded") throw new Error("only bounded Native guidance is available in H3");
+    let skillSections = 0;
+    let officialPages = 0;
+    const selectedSkills = new Set<string>();
+    let selectedComponent = false;
+    for (const selection of selections) {
+      const corpus: GuidanceCorpus = selection.corpus === "skill" ? "native-skill" : "native-doc";
+      const entry = this.entries[corpus].find((candidate) => candidate.id === selection.id);
+      if (!entry || entry.sha256 !== selection.digest) throw new Error(`unknown or stale Native guidance: ${selection.id}`);
+      if (new Set(selection.sectionIds).size !== selection.sectionIds.length) throw new Error(`duplicate Native guidance section: ${selection.id}`);
+      for (const sectionId of selection.sectionIds) {
+        if (!entry.headings.some((heading) => heading.id === sectionId)) throw new Error(`unknown Native guidance section: ${selection.id}#${sectionId}`);
+      }
+      if (selection.corpus === "skill") {
+        if (selection.id === "zig") throw new Error("bounded Utility coding cannot select the protected Zig skill");
+        selectedSkills.add(selection.id);
+        skillSections += selection.sectionIds.length;
+      } else {
+        officialPages += 1;
+        if (selection.component) {
+          if (!selection.id.startsWith("docs/components/")) throw new Error("component metadata requires its exact official component page");
+          if (!selection.component.element) throw new Error("component guidance requires an element name");
+          selectedComponent = true;
+        }
+      }
+    }
+    if (skillSections > 8 || officialPages > 16) throw new Error("Native guidance selection exceeds its plan cap");
+    if (!selectedSkills.has("native-ui") || !selectedSkills.has("ts-core")) throw new Error("bounded Native plans require native-ui and ts-core guidance");
+    if (!selectedComponent) throw new Error("bounded Native plans require exact official component guidance");
+  }
+
   async read(selection: GuidanceSelection, cursor = 0): Promise<{ text: string; nextCursor?: number }> {
     const entry = this.entries[selection.corpus].find((candidate) => candidate.id === selection.id);
     if (!entry || entry.sha256 !== selection.digest) throw new Error("Native guidance selection is unknown or stale");
@@ -105,14 +155,15 @@ export class NativeGuidance {
     const section = data.subarray(heading.startByte, heading.endByte);
     if (!Number.isInteger(cursor) || cursor < 0 || cursor >= section.byteLength) throw new Error("Native guidance cursor is invalid");
     const end = Math.min(section.byteLength, cursor + 12 * 1024);
+    this.reads.push({ ...selection, bytes: end - cursor });
     return { text: section.subarray(cursor, end).toString("utf8"), ...(end < section.byteLength ? { nextCursor: end } : {}) };
   }
 
-  async search(query: string): Promise<SearchHit[]> {
+  async search(query: string, onlyCorpus?: GuidanceCorpus): Promise<SearchHit[]> {
     const needle = query.trim().toLowerCase();
     if (needle.length < 2 || needle.length > 120) throw new Error("Native guidance search query is invalid");
     const hits: SearchHit[] = [];
-    for (const corpus of ["native-skill", "native-doc"] as const) {
+    for (const corpus of (onlyCorpus ? [onlyCorpus] : ["native-skill", "native-doc"] as const)) {
       for (const entry of this.entries[corpus]) {
         const filePath = path.join(this.roots[corpus], entry.path);
         const data = await readFile(filePath);

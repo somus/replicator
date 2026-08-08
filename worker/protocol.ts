@@ -50,8 +50,17 @@ export type AnswerClarificationCommand = {
 };
 
 export type CancelAttemptCommand = { type: "cancel_attempt"; attemptId: string };
+export type LoadRegistryCommand = {
+  type: "load_registry";
+  selectedUtilityId?: string;
+  libraryLimit: number;
+  timelineLimit: number;
+  libraryCursor?: number;
+  timelineCursor?: number;
+};
 
 export type HostCommand =
+  | LoadRegistryCommand
   | StartAttemptCommand
   | AnswerClarificationCommand
   | CancelAttemptCommand;
@@ -81,21 +90,32 @@ export type BehaviorScenario = {
 
 export type BehaviorContract = { scenarios: BehaviorScenario[] };
 
+export type NativeGuidanceSelection =
+  | {
+      corpus: "skill";
+      id: "native-ui" | "ts-core" | "automation" | "core" | "zig";
+      sectionIds: string[];
+      digest: string;
+      purpose: string;
+    }
+  | {
+      corpus: "official";
+      id: `docs/${string}.md`;
+      sectionIds: string[];
+      digest: string;
+      purpose: string;
+      component?: { element: string; bindings: string[]; events: string[] };
+    };
+
 export type AcceptedPlan = {
   summary: string;
   format: UtilityFormat;
   behaviorContract: BehaviorContract;
-  formatReason?: string;
-  primaryWorkflow?: string;
-  requirements?: Array<{ sourceQuote: string; acceptance: string }>;
-  decisions?: string[];
-  guidanceSelection?: Array<{
-    corpus: "native-skill" | "native-doc";
-    id: string;
-    sectionId: string;
-    digest: string;
-    purpose: string;
-  }>;
+  formatReason: string;
+  primaryWorkflow: string;
+  requirements: Array<{ sourceQuote: string; acceptance: string }>;
+  decisions: string[];
+  nativeGuidance: NativeGuidanceSelection[];
 };
 
 export type ScenarioResult = {
@@ -107,6 +127,19 @@ export type ScenarioResult = {
 };
 
 export type WorkerEvent =
+  | {
+      type: "library_item";
+      utilityId: string;
+      displayName: string;
+      format: UtilityFormat;
+      state: UtilityState;
+      updatedAt: string;
+      artifactPath?: string;
+      sourceDigest?: string;
+      binaryDigest?: string;
+    }
+  | { type: "timeline_item"; utilityId: string; entryId: string; kind: string; createdAt: string; text: string }
+  | { type: "registry_loaded"; selectedUtilityId: string; nextLibraryCursor?: number; nextTimelineCursor?: number }
   | { type: "session_initialized"; utilityId: string; sessionId: string }
   | { type: "state_changed"; attemptId: string; state: UtilityState }
   | {
@@ -200,6 +233,27 @@ export function decodeHostCommand(line: string): HostCommand {
   const value: unknown = JSON.parse(line);
   if (!isRecord(value)) throw new Error("command must be an object");
   const type = requireString(value.type, "type", 64);
+
+  if (type === "load_registry") {
+    rejectUnknownFields(value, ["type", "selectedUtilityId", "libraryLimit", "timelineLimit", "libraryCursor", "timelineCursor"]);
+    const boundedPage = (input: unknown, field: string, maximum: number): number => {
+      if (typeof input !== "number" || !Number.isInteger(input) || input < 1 || input > maximum) throw new Error(`${field} is invalid`);
+      return input;
+    };
+    const cursor = (input: unknown, field: string): number | undefined => {
+      if (input === undefined) return undefined;
+      if (typeof input !== "number" || !Number.isInteger(input) || input < 0 || input > 100_000) throw new Error(`${field} is invalid`);
+      return input;
+    };
+    return {
+      type,
+      ...(value.selectedUtilityId === undefined ? {} : { selectedUtilityId: requireIdentifier(value.selectedUtilityId, "selectedUtilityId") }),
+      libraryLimit: boundedPage(value.libraryLimit, "libraryLimit", 100),
+      timelineLimit: boundedPage(value.timelineLimit, "timelineLimit", 100),
+      ...(cursor(value.libraryCursor, "libraryCursor") === undefined ? {} : { libraryCursor: cursor(value.libraryCursor, "libraryCursor")! }),
+      ...(cursor(value.timelineCursor, "timelineCursor") === undefined ? {} : { timelineCursor: cursor(value.timelineCursor, "timelineCursor")! }),
+    };
+  }
 
   if (type === "cancel_attempt") {
     rejectUnknownFields(value, ["type", "attemptId"]);

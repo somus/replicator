@@ -4,6 +4,7 @@ import { cp, lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   createAgenticImplementation,
+  createCodingGuidance,
   createPlanningGuidance,
   createReferenceReader,
   routeModel,
@@ -11,6 +12,7 @@ import {
   systemInstruction,
   type AgentReference,
 } from "./agent.js";
+import { NativeGuidance } from "./native-guidance.js";
 import {
   decodeHostCommand,
   encodeWorkerEvent,
@@ -19,6 +21,8 @@ import {
   type BehaviorContract,
   type BehaviorScenario,
   type ClarificationQuestion,
+  type LoadRegistryCommand,
+  type NativeGuidanceSelection,
   type StartAttemptCommand,
   type WorkerEvent,
 } from "./protocol.js";
@@ -100,7 +104,9 @@ let active: ActiveAttempt | undefined;
 let shutdownRequested = false;
 
 function emit(event: WorkerEvent): void {
-  process.stdout.write(`${encodeWorkerEvent(event)}\n`);
+  const line = encodeWorkerEvent(event);
+  if (Buffer.byteLength(line) >= 3 * 1024) throw new Error(`worker event exceeds 3 KiB: ${event.type}`);
+  process.stdout.write(`${line}\n`);
 }
 
 function redactError(error: unknown): string {
@@ -194,6 +200,47 @@ const planningOutputSchema: Record<string, unknown> = {
     },
     summary: { type: "string" },
     format: { const: "native-bounded" },
+    formatReason: { type: "string" },
+    primaryWorkflow: { type: "string" },
+    requirements: {
+      type: "array",
+      minItems: 1,
+      maxItems: 16,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["sourceQuote", "acceptance"],
+        properties: { sourceQuote: { type: "string" }, acceptance: { type: "string" } },
+      },
+    },
+    decisions: { type: "array", maxItems: 16, items: { type: "string" } },
+    nativeGuidance: {
+      type: "array",
+      minItems: 1,
+      maxItems: 24,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["corpus", "id", "sectionIds", "digest", "purpose"],
+        properties: {
+          corpus: { enum: ["skill", "official"] },
+          id: { type: "string" },
+          sectionIds: { type: "array", minItems: 1, maxItems: 16, items: { type: "string" } },
+          digest: { type: "string" },
+          purpose: { type: "string" },
+          component: {
+            type: "object",
+            additionalProperties: false,
+            required: ["element", "bindings", "events"],
+            properties: {
+              element: { type: "string" },
+              bindings: { type: "array", maxItems: 16, items: { type: "string" } },
+              events: { type: "array", maxItems: 16, items: { type: "string" } },
+            },
+          },
+        },
+      },
+    },
     scenarios: {
       type: "array",
       minItems: 1,
@@ -227,6 +274,10 @@ const planningOutputSchema: Record<string, unknown> = {
       },
     },
   },
+  allOf: [{
+    if: { properties: { outcome: { const: "plan" } } },
+    then: { required: ["summary", "format", "formatReason", "primaryWorkflow", "requirements", "decisions", "nativeGuidance", "scenarios"] },
+  }],
 };
 
 function record(value: unknown): Record<string, unknown> {
@@ -305,6 +356,56 @@ function validateBehaviorContract(value: unknown, kind: "build" | "revision"): B
   return { scenarios };
 }
 
+function validateNativeGuidance(value: unknown): NativeGuidanceSelection[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 24) throw new Error("Accepted plan requires bounded Native guidance");
+  let skillSections = 0;
+  let officialPages = 0;
+  const selections: NativeGuidanceSelection[] = [];
+  const seen = new Set<string>();
+  for (const raw of value) {
+    const item = record(raw);
+    if (!Array.isArray(item.sectionIds) || item.sectionIds.length === 0 || item.sectionIds.length > 16) throw new Error("Native guidance requires bounded section IDs");
+    const sectionIds = item.sectionIds.map((section) => text(section, "guidance section"));
+    const common = {
+      sectionIds,
+      digest: text(item.digest, "guidance digest"),
+      purpose: text(item.purpose, "guidance purpose"),
+    };
+    if (!/^[a-f0-9]{64}$/.test(common.digest)) throw new Error("Native guidance digest is invalid");
+    if (item.corpus === "skill") {
+      const id = text(item.id, "skill ID");
+      if (!["native-ui", "ts-core", "automation", "core", "zig"].includes(id)) throw new Error("Native skill ID is invalid");
+      skillSections += sectionIds.length;
+      selections.push({ corpus: "skill", id: id as Extract<NativeGuidanceSelection, { corpus: "skill" }>["id"], ...common });
+    } else {
+      if (item.corpus !== "official") throw new Error("Native guidance corpus is invalid");
+      const id = text(item.id, "official page ID");
+      if (!/^docs\/[A-Za-z0-9_./-]+\.md$/.test(id) || id.includes("..")) throw new Error("Official Native page ID is invalid");
+      officialPages += 1;
+      let component: Extract<NativeGuidanceSelection, { corpus: "official" }>["component"];
+      if (item.component !== undefined) {
+        const rawComponent = record(item.component);
+        const strings = (input: unknown, label: string): string[] => {
+          if (!Array.isArray(input) || input.length > 16) throw new Error(`${label} is invalid`);
+          return input.map((entry) => text(entry, label));
+        };
+        component = {
+          element: text(rawComponent.element, "component element"),
+          bindings: strings(rawComponent.bindings, "component binding"),
+          events: strings(rawComponent.events, "component event"),
+        };
+      }
+      selections.push({ corpus: "official", id: id as `docs/${string}.md`, ...common, ...(component ? { component } : {}) });
+    }
+    const selection = selections.at(-1)!;
+    const key = `${selection.corpus}:${selection.id}`;
+    if (seen.has(key)) throw new Error("Native guidance selection contains a duplicate ID");
+    seen.add(key);
+  }
+  if (skillSections > 8 || officialPages > 16) throw new Error("Native guidance selection exceeds the accepted-plan cap");
+  return selections;
+}
+
 function validatePlanningResult(value: unknown, kind: "build" | "revision"): PlanningResult {
   const result = record(value);
   if (result.outcome === "clarification") return { outcome: "clarification", questions: validateQuestions(result.questions) };
@@ -314,6 +415,20 @@ function validatePlanningResult(value: unknown, kind: "build" | "revision"): Pla
     plan: {
       summary: text(result.summary, "plan summary"),
       format: "native-bounded",
+      formatReason: text(result.formatReason, "format reason"),
+      primaryWorkflow: text(result.primaryWorkflow, "primary workflow"),
+      requirements: (() => {
+        if (!Array.isArray(result.requirements) || result.requirements.length === 0 || result.requirements.length > 16) throw new Error("Plan requirements are invalid");
+        return result.requirements.map((raw) => {
+          const requirement = record(raw);
+          return { sourceQuote: text(requirement.sourceQuote, "requirement source"), acceptance: text(requirement.acceptance, "requirement acceptance") };
+        });
+      })(),
+      decisions: (() => {
+        if (!Array.isArray(result.decisions) || result.decisions.length > 16) throw new Error("Plan decisions are invalid");
+        return result.decisions.map((decision) => text(decision, "plan decision"));
+      })(),
+      nativeGuidance: validateNativeGuidance(result.nativeGuidance),
       behaviorContract: validateBehaviorContract(result.scenarios, kind),
     },
   };
@@ -472,14 +587,15 @@ function agentReferences(command: StartAttemptCommand): AgentReference[] {
   }));
 }
 
-function planningPrompt(command: StartAttemptCommand, previousContract: BehaviorContract | undefined, answers?: Record<string, string>): string {
+function planningPrompt(command: StartAttemptCommand, previousContract: BehaviorContract | undefined, guidanceCatalog: string, answers?: Record<string, string>): string {
   return [
     `Request kind: ${command.kind}.`,
     `Owner request: ${command.requestText}`,
     `Reference Image IDs: ${command.references.map((reference) => reference.id).join(", ") || "none"}. Inspect every supplied image.`,
     previousContract ? `Existing Behavior Contract to preserve where applicable: ${JSON.stringify(previousContract)}` : "",
     answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
-    "Return one material Clarification batch only when ambiguity would change the result. Otherwise return one native-bounded plan and one to three executable scenarios.",
+    `Packaged Native guidance catalog: ${guidanceCatalog}`,
+    "Return one material Clarification batch only when ambiguity would change the result. Otherwise return one complete native-bounded plan with requirements, decisions, the smallest exact nativeGuidance selection, and one to three executable scenarios.",
     "Use only launch, click, input, wait, assert_text, assert_visible, and screenshot. Each wait is at most 5000 ms. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
   ].filter(Boolean).join("\n");
 }
@@ -489,6 +605,7 @@ async function acceptPlan(
   utility: UtilityRecord,
   sourceRoot: string,
   sessionConfigDir: string,
+  guidance: NativeGuidance,
 ): Promise<{ plan: AcceptedPlan; sessionId: string }> {
   let sessionId = utility.session.activeId || undefined;
   const lastAnsweredClarification = [...utility.timeline].reverse().find((entry) => entry.kind === "clarification" && entry.content.answers);
@@ -501,7 +618,7 @@ async function acceptPlan(
     const turn = await withDeadline(attempt, FINALIZATION_RESERVE_MS, () => runStructuredAgentTurn({
       cwd: sourceRoot,
       sessionConfigDir,
-      prompt: planningPrompt(attempt.command, utility.behaviorContract, answers),
+      prompt: planningPrompt(attempt.command, utility.behaviorContract, guidance.compactCatalog(), answers),
       ...(sessionId ? { resumeSessionId: sessionId } : {}),
       abortController: attempt.abortController,
       outputSchema: planningOutputSchema,
@@ -510,10 +627,15 @@ async function acceptPlan(
       effort: route.effort,
       systemInstruction: instruction.text,
       mcpServers: {
-        guidance: createPlanningGuidance(),
+        guidance: createPlanningGuidance(guidance),
         ...(references.length > 0 ? { references: createReferenceReader(references) } : {}),
       },
       allowedTools: [
+        "mcp__guidance__list_native_guides",
+        "mcp__guidance__search_native_guides",
+        "mcp__guidance__read_native_guide",
+        "mcp__guidance__list_native_docs",
+        "mcp__guidance__search_native_docs",
         "mcp__guidance__read_native_doc",
         ...(references.length > 0 ? ["mcp__references__read_reference_image"] : []),
       ],
@@ -533,7 +655,10 @@ async function acceptPlan(
       },
     }));
     sessionId = turn.sessionId;
-    if (turn.output.outcome === "plan") return { plan: turn.output.plan, sessionId };
+    if (turn.output.outcome === "plan") {
+      guidance.assertSelections(turn.output.plan.nativeGuidance, turn.output.plan.format);
+      return { plan: turn.output.plan, sessionId };
+    }
     batchNumber += 1;
     answers = await waitForClarification(attempt, utility, turn.output.questions, batchNumber);
     await saveClarification(utility.id, `batch_${batchNumber}`, answers);
@@ -601,6 +726,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     const evidenceRoot = path.join(utilityRoot, "evidence", attempt.id);
     const releaseRoot = path.join(utilityRoot, "artifacts", attempt.id);
     const resourcesRoot = process.env.REPLICATOR_RESOURCES_ROOT;
+    if (!resourcesRoot) throw new Error("packaged resources root is required");
     const nativeCliPath = process.env.REPLICATOR_NATIVE_PATH
       ?? (resourcesRoot ? path.join(resourcesRoot, "toolchains", "native-cli", "bin", "native.js") : undefined);
     const nativeZigPath = process.env.NATIVE_SDK_ZIG
@@ -624,7 +750,8 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     const sessionConfigDir = path.join(utilityRoot, "agent-session");
     await mkdir(sessionConfigDir, { recursive: true, mode: 0o700 });
     const references = agentReferences(attempt.command);
-    const { plan, sessionId } = await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir);
+    const guidance = await NativeGuidance.load(resourcesRoot);
+    const { plan, sessionId } = await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir, guidance);
     await persistPlan(utility.id, attempt.id, plan);
     await setState(utility.id, attempt.id, "building");
     let verification: VerificationOutcome | undefined;
@@ -670,6 +797,12 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       },
       finalize: async () => {
         await setState(utility!.id, attempt.id, "preparing");
+        await mkdir(evidenceRoot, { recursive: true, mode: 0o700 });
+        await writeFile(
+          path.join(evidenceRoot, "native-guidance.json"),
+          `${JSON.stringify({ selections: plan.nativeGuidance, reads: guidance.readTelemetry() }, null, 2)}\n`,
+          { encoding: "utf8", mode: 0o600 },
+        );
         finalization = await adapter.finalize(
           plan.behaviorContract.scenarios.map((scenario) => scenario.id),
           attempt.abortController.signal,
@@ -706,6 +839,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       `Owner request: ${attempt.command.requestText}`,
       `Accepted plan and immutable Behavior Contract: ${JSON.stringify(plan)}`,
       "Keep app.zon name generated-app. Do not use dependencies, scripts, nested modules, or unrequested features.",
+      "Read every approved official component section through the guidance tools before editing the component it governs. No unapproved guidance is available during coding.",
       "Inspect source with list_app_files and read_app, then use edit_app for exact replacements. Call validate_app and repair its exact diagnostics in this same turn. Then call verify_behavior for the immutable host contract; if behavior fails, make a focused repair, validate again, and retry. Call finalize_app exactly once as your final tool action, then return the structured summary. Do not claim completion without finalization.",
     ].join("\n");
     await withDeadline(
@@ -724,16 +858,18 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         systemInstruction: instruction.text,
         mcpServers: {
           replicator: implementation.server,
+          guidance: createCodingGuidance(guidance, plan.nativeGuidance),
           ...(references.length > 0 ? { references: createReferenceReader(references) } : {}),
         },
         allowedTools: [
           "mcp__replicator__list_app_files",
           "mcp__replicator__read_app",
           "mcp__replicator__edit_app",
-          "mcp__replicator__read_sdk_doc",
           "mcp__replicator__validate_app",
           "mcp__replicator__verify_behavior",
           "mcp__replicator__finalize_app",
+          "mcp__guidance__read_native_guide",
+          "mcp__guidance__read_native_doc",
           ...(references.length > 0 ? ["mcp__references__read_reference_image"] : []),
         ],
         maxTurns: 40,
@@ -759,6 +895,11 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     }
 
     if (!verification || !finalization) throw new Error("finalize_app did not return complete verification and package evidence");
+    await writeFile(
+      path.join(evidenceRoot, "agent-tools.json"),
+      `${JSON.stringify({ tools: implementation.toolTelemetry() }, null, 2)}\n`,
+      { encoding: "utf8", mode: 0o600 },
+    );
     const persistedAttempt = (await registry.read()).utilities.find((candidate) => candidate.id === utility!.id)?.activeAttempt;
     if (persistedAttempt?.id !== attempt.id || persistedAttempt.finalizationNonce !== finalizationNonce) {
       throw new Error("finalization nonce is stale or unavailable");
@@ -866,6 +1007,52 @@ async function cancelAttempt(attemptId: string): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 3_000));
 }
 
+async function loadRegistry(command: LoadRegistryCommand): Promise<void> {
+  const current = await registry.read();
+  const utilities = [...current.utilities]
+    .filter((utility) => !utility.deletedAt)
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+  const libraryCursor = command.libraryCursor ?? 0;
+  const libraryPage = utilities.slice(libraryCursor, libraryCursor + command.libraryLimit);
+  for (const utility of libraryPage) {
+    emit({
+      type: "library_item",
+      utilityId: utility.id,
+      displayName: utility.displayName.slice(0, 200),
+      format: utility.format,
+      state: utility.state,
+      updatedAt: utility.updatedAt,
+      ...(utility.readyArtifact ? {
+        artifactPath: utility.readyArtifact.path,
+        sourceDigest: utility.readyArtifact.sourceDigest,
+        binaryDigest: utility.readyArtifact.binaryDigest,
+      } : {}),
+    });
+  }
+  const selected = utilities.find((utility) => utility.id === command.selectedUtilityId) ?? utilities[0];
+  const timeline = selected ? [...selected.timeline].sort((left, right) => right.createdAt.localeCompare(left.createdAt)) : [];
+  const timelineCursor = command.timelineCursor ?? 0;
+  const timelinePage = timeline.slice(timelineCursor, timelineCursor + command.timelineLimit);
+  for (const entry of timelinePage) {
+    const text = entry.content.text
+      ?? (entry.content.answers ? `Clarification answered: ${Object.keys(entry.content.answers).length} response(s)` : "Clarification requested");
+    emit({
+      type: "timeline_item",
+      utilityId: selected!.id,
+      entryId: entry.id,
+      kind: entry.kind,
+      createdAt: entry.createdAt,
+      text: text.slice(0, 1_000),
+    });
+  }
+  emit({
+    type: "registry_loaded",
+    selectedUtilityId: selected?.id ?? "",
+    ...(libraryCursor + libraryPage.length < utilities.length ? { nextLibraryCursor: libraryCursor + libraryPage.length } : {}),
+    ...(timelineCursor + timelinePage.length < timeline.length ? { nextTimelineCursor: timelineCursor + timelinePage.length } : {}),
+  });
+}
+
 function handleTerminationSignal(): void {
   if (shutdownRequested) return;
   shutdownRequested = true;
@@ -884,6 +1071,10 @@ process.on("SIGINT", handleTerminationSignal);
 
 async function dispatchCommand(line: string, waitForAttempt: boolean): Promise<void> {
   const command = decodeHostCommand(line);
+  if (command.type === "load_registry") {
+    await loadRegistry(command);
+    return;
+  }
   if (command.type === "start_attempt") {
     if (active) throw new Error("a Request Attempt is already active");
     const attempt: ActiveAttempt = {
