@@ -1078,11 +1078,24 @@ async function answerClarification(command: AnswerClarificationCommand): Promise
 }
 
 async function cancelAttempt(attemptId: string): Promise<void> {
-  if (!active || active.id !== attemptId) throw new Error("Request Attempt is not active");
-  active.cancelRequested = true;
-  active.abortController.abort();
-  active.clarification?.reject(new Error("Request Attempt cancelled"));
-  await new Promise((resolve) => setTimeout(resolve, 3_000));
+  if (active?.id === attemptId) {
+    active.cancelRequested = true;
+    active.abortController.abort();
+    active.clarification?.reject(new Error("Request Attempt cancelled"));
+    await new Promise((resolve) => setTimeout(resolve, 3_000));
+    return;
+  }
+  const persisted = (await registry.read()).utilities.find((utility) => utility.activeAttempt?.id === attemptId);
+  if (!persisted?.activeAttempt?.command) throw new Error("Request Attempt is not active");
+  const interrupted: ActiveAttempt = {
+    id: attemptId,
+    command: persisted.activeAttempt.command,
+    abortController: new AbortController(),
+    activeStartedAt: Date.now(),
+    activeElapsedMs: persisted.activeAttempt.activeElapsedMs,
+    cancelRequested: true,
+  };
+  await finishFailure(interrupted, persisted, new Error("Request Attempt cancelled"));
 }
 
 async function loadRegistry(command: LoadRegistryCommand): Promise<void> {
