@@ -881,6 +881,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     const { plan, sessionId } = reusablePlan
       ?? await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir, guidance);
     await persistPlan(utility.id, attempt.id, plan);
+    const codingGuidanceReadStart = guidance.readTelemetry().length;
     await setState(utility.id, attempt.id, "building");
     let verification: VerificationOutcome | undefined;
     let finalization: FinalizationOutcome | undefined;
@@ -914,6 +915,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         return outcomes.map((outcome) => `${outcome.summary} (${outcome.durationMs} ms)`).join("\n");
       },
       verify: async () => {
+        guidance.assertSelectionsRead(plan.nativeGuidance, codingGuidanceReadStart);
         await setState(utility!.id, attempt.id, "verifying");
         verification = await adapter.verify(plan.behaviorContract, attempt.abortController.signal);
         const summary = `${verification.scenarioResults.length} accepted Behavior Scenarios passed with ${verification.screenshots.length} screenshots`;
@@ -930,7 +932,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         await mkdir(evidenceRoot, { recursive: true, mode: 0o700 });
         await writeFile(
           path.join(evidenceRoot, "native-guidance.json"),
-          `${JSON.stringify({ selections: plan.nativeGuidance, reads: guidance.readTelemetry() }, null, 2)}\n`,
+          `${JSON.stringify({ selections: plan.nativeGuidance, reads: guidance.readTelemetry().slice(codingGuidanceReadStart) }, null, 2)}\n`,
           { encoding: "utf8", mode: 0o600 },
         );
         finalization = await adapter.finalize(
@@ -1045,6 +1047,16 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     if (persistedAttempt?.id !== attempt.id || persistedAttempt.finalizationNonce !== finalizationNonce) {
       throw new Error("finalization nonce is stale or unavailable");
     }
+    const persistedUtility = (await registry.read()).utilities.find((candidate) => candidate.id === utility!.id);
+    const queries = persistedUtility?.queryHistory?.filter((entry) => entry.requestId === attempt.command.requestId) ?? [];
+    if (!queries.some((entry) => entry.query.phase === "planning") || !queries.some((entry) => entry.query.phase === "build")) {
+      throw new Error("accepted attempt is missing planning or build query evidence");
+    }
+    await writeFile(
+      path.join(evidenceRoot, "agent-session.json"),
+      `${JSON.stringify({ sessionId: persistedUtility!.session.activeId, requestId: attempt.command.requestId, queries }, null, 2)}\n`,
+      { encoding: "utf8", mode: 0o600 },
+    );
     if (
       finalization.attestationInputs.sourceDigest !== agentFinalizedDigest ||
       finalization.attestationInputs.verifiedBinaryDigest !== verification.candidate.binaryDigest ||

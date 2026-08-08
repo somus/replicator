@@ -110,6 +110,20 @@ export class NativeGuidance {
     return this.reads.map((entry) => ({ ...entry }));
   }
 
+  assertSelectionsRead(selections: readonly NativeGuidanceSelection[], fromIndex: number): void {
+    if (!Number.isInteger(fromIndex) || fromIndex < 0 || fromIndex > this.reads.length) throw new Error("Native guidance read boundary is invalid");
+    const reads = this.reads.slice(fromIndex);
+    const missing: string[] = [];
+    for (const selection of selections) {
+      const corpus: GuidanceCorpus = selection.corpus === "skill" ? "native-skill" : "native-doc";
+      for (const sectionId of selection.sectionIds) {
+        const read = reads.some((entry) => entry.corpus === corpus && entry.id === selection.id && entry.sectionId === sectionId && entry.digest === selection.digest && entry.bytes > 0);
+        if (!read) missing.push(`${selection.id}#${sectionId}`);
+      }
+    }
+    if (missing.length > 0) throw new Error(`Read every approved Native guidance section before behavior verification. Missing: ${missing.join(", ")}`);
+  }
+
   assertSelections(selections: readonly NativeGuidanceSelection[], format: UtilityFormat): void {
     if (format !== "native-bounded") throw new Error("only bounded Native guidance is available in H3");
     let skillSections = 0;

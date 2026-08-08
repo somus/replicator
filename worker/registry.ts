@@ -73,6 +73,11 @@ export type UtilityRecord = {
   behaviorContract?: BehaviorContract;
   readyArtifact?: ReadyArtifactRecord;
   activeAttempt?: ActiveAttemptRecord;
+  queryHistory?: Array<{
+    attemptId: string;
+    requestId: string;
+    query: NonNullable<ActiveAttemptRecord["queries"]>[number];
+  }>;
   lastError?: OwnerFacingError;
   createdAt: string;
   updatedAt: string;
@@ -186,6 +191,8 @@ export class RegistryStore {
       if (!utility?.activeAttempt || utility.activeAttempt.id !== attemptId) throw new Error("Request Attempt is no longer active");
       utility.activeAttempt.queries ??= [];
       utility.activeAttempt.queries.push(query);
+      utility.queryHistory ??= [];
+      utility.queryHistory.push({ attemptId, requestId: utility.activeAttempt.requestId, query });
       utility.updatedAt = new Date().toISOString();
     });
   }
