@@ -462,7 +462,7 @@ Build Request:
 
 Revision Request:
 
-> Add a configurable daily goal, defaulting to four focus sprints, with a clear circular progress indicator and a subtle celebration when the goal is reached. Preserve every timer preset, control, and completed-sprint behavior.
+> Add a configurable daily goal, defaulting to four focus sprints, with a clear progress bar and a subtle celebration when the goal is reached. Preserve every timer preset, control, and completed-sprint behavior.
 
 ### Multi-module Native: CSV Inspector
 
