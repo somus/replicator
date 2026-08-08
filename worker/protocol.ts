@@ -36,6 +36,7 @@ export type StartAttemptCommand = {
   kind: RequestKind;
   requestText: string;
   references: ReferenceImageMetadata[];
+  referencePaths?: string[];
   currentSourceDigest?: string;
   readyArtifact?: ReadyArtifactMetadata;
   modelOverride?: ModelOverride;
@@ -279,11 +280,14 @@ export function decodeHostCommand(line: string): HostCommand {
   if (type !== "start_attempt") throw new Error(`unknown command type: ${type}`);
   rejectUnknownFields(value, [
     "type", "utilityId", "requestId", "kind", "requestText", "references",
-    "currentSourceDigest", "readyArtifact", "modelOverride", "effortOverride",
+    "referencePaths", "currentSourceDigest", "readyArtifact", "modelOverride", "effortOverride",
   ]);
   if (value.kind !== "build" && value.kind !== "revision") throw new Error("kind must be build or revision");
   if (!Array.isArray(value.references) || value.references.length > 4) {
     throw new Error("references must be an array of at most four images");
+  }
+  if (value.referencePaths !== undefined && (!Array.isArray(value.referencePaths) || value.referencePaths.length > 4 || value.referencePaths.some((entry) => typeof entry !== "string" || !entry.startsWith("/") || entry.length > 1_024 || /[\r\n\0]/.test(entry)))) {
+    throw new Error("referencePaths must contain at most four bounded absolute paths");
   }
 
   const command: StartAttemptCommand = {
@@ -293,6 +297,7 @@ export function decodeHostCommand(line: string): HostCommand {
     kind: value.kind,
     requestText: requireString(value.requestText, "requestText", 20_000),
     references: value.references.map(decodeReference),
+    ...(value.referencePaths === undefined ? {} : { referencePaths: value.referencePaths as string[] }),
   };
   if (value.currentSourceDigest !== undefined) command.currentSourceDigest = requireString(value.currentSourceDigest, "currentSourceDigest", 128);
   if (value.readyArtifact !== undefined) command.readyArtifact = decodeReadyArtifact(value.readyArtifact);

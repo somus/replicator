@@ -1,6 +1,7 @@
 import { createInterface } from "node:readline";
 import { createHash, randomUUID } from "node:crypto";
-import { cp, lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { chmod, copyFile, cp, lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   createAgenticImplementation,
@@ -129,6 +130,83 @@ function logError(error: unknown): void {
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+function imageMetadata(data: Buffer): { mediaType: "image/png" | "image/jpeg" | "image/webp"; extension: string; width: number; height: number } {
+  if (data.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) && data.length >= 24) {
+    return { mediaType: "image/png", extension: "png", width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
+  }
+  if (data[0] === 0xff && data[1] === 0xd8) {
+    let at = 2;
+    while (at + 9 < data.length) {
+      if (data[at] !== 0xff) { at += 1; continue; }
+      const marker = data[at + 1]!;
+      if (marker === 0xd9 || marker === 0xda) break;
+      const length = data.readUInt16BE(at + 2);
+      if (length < 2 || at + 2 + length > data.length) break;
+      if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
+        return { mediaType: "image/jpeg", extension: "jpg", height: data.readUInt16BE(at + 5), width: data.readUInt16BE(at + 7) };
+      }
+      at += 2 + length;
+    }
+  }
+  if (data.subarray(0, 4).toString("ascii") === "RIFF" && data.subarray(8, 12).toString("ascii") === "WEBP") {
+    const chunk = data.subarray(12, 16).toString("ascii");
+    if (chunk === "VP8X" && data.length >= 30) {
+      return { mediaType: "image/webp", extension: "webp", width: 1 + data.readUIntLE(24, 3), height: 1 + data.readUIntLE(27, 3) };
+    }
+    if (chunk === "VP8L" && data.length >= 25 && data[20] === 0x2f) {
+      return { mediaType: "image/webp", extension: "webp", width: 1 + data[21]! + ((data[22]! & 0x3f) << 8), height: 1 + ((data[22]! & 0xc0) >> 6) + (data[23]! << 2) + ((data[24]! & 0x0f) << 10) };
+    }
+    if (chunk === "VP8 " && data.length >= 30 && data[23] === 0x9d && data[24] === 0x01 && data[25] === 0x2a) {
+      return { mediaType: "image/webp", extension: "webp", width: data.readUInt16LE(26) & 0x3fff, height: data.readUInt16LE(28) & 0x3fff };
+    }
+  }
+  throw new Error("Reference Image must be a valid PNG, JPEG, or WebP file");
+}
+
+async function runSips(source: string, destination: string): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn("/usr/bin/sips", ["--resampleHeightWidthMax", "2000", source, "--out", destination], { stdio: ["ignore", "ignore", "pipe"] });
+    let errorText = "";
+    child.stderr.on("data", (chunk: Buffer) => { errorText = `${errorText}${chunk.toString("utf8")}`.slice(0, 2_000); });
+    child.once("error", reject);
+    child.once("close", (code) => code === 0 ? resolve() : reject(new Error(`Reference Image normalization failed: ${errorText}`)));
+  });
+}
+
+async function normalizeStartReferences(command: StartAttemptCommand): Promise<StartAttemptCommand> {
+  const selectedPaths = command.referencePaths ?? [];
+  if (command.references.length + selectedPaths.length > 4) throw new Error("a Request Attempt accepts at most four Reference Images");
+  if (selectedPaths.length === 0) return command;
+  const references = [...command.references];
+  const destinationRoot = path.join(dataRoot, "utilities", command.utilityId, "references");
+  await mkdir(destinationRoot, { recursive: true, mode: 0o700 });
+  for (const selectedPath of selectedPaths) {
+    const entry = await lstat(selectedPath);
+    if (!entry.isFile() || entry.isSymbolicLink() || entry.size < 12 || entry.size > 5 * 1024 * 1024) throw new Error("Reference Image is not a bounded regular file");
+    const source = await readFile(selectedPath);
+    const metadata = imageMetadata(source);
+    if (metadata.width < 1 || metadata.height < 1) throw new Error("Reference Image dimensions are invalid");
+    const id = `reference_${randomUUID()}`;
+    const destination = path.join(destinationRoot, `${id}.${metadata.extension}`);
+    if (Math.max(metadata.width, metadata.height) > 2_000) await runSips(selectedPath, destination);
+    else await copyFile(selectedPath, destination);
+    await chmod(destination, 0o600);
+    const normalized = await readFile(destination);
+    const normalizedMetadata = imageMetadata(normalized);
+    if (normalized.length > 5 * 1024 * 1024 || Math.max(normalizedMetadata.width, normalizedMetadata.height) > 2_000) throw new Error("Reference Image normalization exceeded its bounds");
+    references.push({
+      id,
+      path: path.relative(dataRoot, destination),
+      mediaType: normalizedMetadata.mediaType,
+      byteLength: normalized.length,
+      width: normalizedMetadata.width,
+      height: normalizedMetadata.height,
+    });
+  }
+  const { referencePaths: _discarded, ...persistable } = command;
+  return { ...persistable, references };
 }
 
 function activeElapsed(attempt: ActiveAttempt): number {
@@ -1077,9 +1155,11 @@ async function dispatchCommand(line: string, waitForAttempt: boolean): Promise<v
   }
   if (command.type === "start_attempt") {
     if (active) throw new Error("a Request Attempt is already active");
+    if ((await registry.read()).utilities.some((utility) => utility.activeAttempt)) throw new Error("a Request Attempt is already active");
+    const preparedCommand = await normalizeStartReferences(command);
     const attempt: ActiveAttempt = {
       id: randomUUID(),
-      command,
+      command: preparedCommand,
       abortController: new AbortController(),
       activeStartedAt: Date.now(),
       activeElapsedMs: 0,
