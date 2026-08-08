@@ -13,6 +13,13 @@
     </column>
 
     <scroll grow="1" label="Your Utilities">
+      <list virtualized padding="12" gap="8">
+        <for each="libraryItems" key="utilityId" as="utility">
+          <list-item selected="{utility.utilityId == selectedUtilityId}" on-press="select_focus" label="{utility.displayName}">{utility.displayName} - {utility.state}
+            <context-menu><menu-item on-press="select_focus">Open</menu-item></context-menu>
+          </list-item>
+        </for>
+      </list>
       <column padding="12" gap="8">
         <if test="{focusSelected}">
           <button variant="secondary" on-press="select_focus" label="Focus Sprint Utility">Focus Sprint - {selectedStatus}</button>
@@ -75,6 +82,11 @@
         </row>
 
         <if test="{focusSelected}">
+          <timeline gap="4">
+            <for each="timelineItems" key="entryId" as="entry">
+              <timeline-item title="{entry.kind}" description="{entry.text}" meta="{entry.createdAt}" />
+            </for>
+          </timeline>
           <if test="{hasPlan}"><panel padding="16" background="surface" radius="lg" label="Accepted plan"><column gap="8"><row gap="8"><badge variant="secondary">Plan</badge><text><span weight="bold">Accepted plan</span></text></row><text wrap="true">{acceptedPlan}</text><text size="sm" foreground="text_muted">Utility Format: bounded Native</text></column></panel></if>
 
           <if test="{hasEvidence}"><panel padding="16" background="surface" radius="lg" label="Verification Evidence"><column gap="8"><row gap="8"><badge variant="primary">Evidence</badge><text><span weight="bold">Verification Evidence</span></text></row><text wrap="true">{verificationEvidence}</text><text size="sm" foreground="text_muted">Bound to the verified source digest.</text></column></panel></if>
@@ -91,7 +103,7 @@
             </panel>
           </if>
 
-          <if test="{hasClarification}"><panel padding="16" background="surface" radius="lg" label="Clarification required"><column gap="9"><row gap="8"><badge variant="secondary">Needs input</badge><text><span weight="bold">Clarification required</span></text></row><text wrap="true">{clarificationQuestion}</text><text size="sm" wrap="true" foreground="text_muted">This attempt is paused safely. Cancel and include the missing detail in a new request.</text><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></column></panel></if>
+          <if test="{hasClarification}"><panel padding="16" background="surface" radius="lg" label="Clarification required"><column gap="9"><row gap="8"><badge variant="secondary">Needs input</badge><text><span weight="bold">Clarification required</span></text></row><if test="{hasClarificationQuestion0}"><column gap="4"><text wrap="true">{clarificationQuestion0}</text><textarea height="48" text="{clarificationAnswer0}" on-input="clarification_answer_0" label="Answer to first clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion1}"><column gap="4"><text wrap="true">{clarificationQuestion1}</text><textarea height="48" text="{clarificationAnswer1}" on-input="clarification_answer_1" label="Answer to second clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion2}"><column gap="4"><text wrap="true">{clarificationQuestion2}</text><textarea height="48" text="{clarificationAnswer2}" on-input="clarification_answer_2" label="Answer to third clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion3}"><column gap="4"><text wrap="true">{clarificationQuestion3}</text><textarea height="48" text="{clarificationAnswer3}" on-input="clarification_answer_3" label="Answer to fourth clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion4}"><column gap="4"><text wrap="true">{clarificationQuestion4}</text><textarea height="48" text="{clarificationAnswer4}" on-input="clarification_answer_4" label="Answer to fifth clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion5}"><column gap="4"><text wrap="true">{clarificationQuestion5}</text><textarea height="48" text="{clarificationAnswer5}" on-input="clarification_answer_5" label="Answer to sixth clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><row gap="8"><button size="sm" variant="primary" disabled="{clarificationIncomplete}" on-press="continue_clarification">Continue</button><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></row></column></panel></if>
 
           <if test="{globalBusy}"><panel padding="16" background="surface" radius="lg" label="Request Attempt progress"><column gap="9"><row gap="8"><badge variant="secondary">{selectedStatus}</badge><text><span weight="bold">Creating your Utility</span></text></row><if test="{hasStageResult}"><text wrap="true">{stageResult}</text></if><text size="sm" foreground="text_muted">Planning, building, verification, and preparation run in one Request Attempt.</text><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></column></panel></if>
 

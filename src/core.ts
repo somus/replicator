@@ -12,6 +12,25 @@ export interface Draft {
 export type UtilityState = "planning" | "awaiting_clarification" | "building" | "verifying" | "preparing" | "ready" | "failed" | "interrupted";
 export type RequestKind = "build" | "revision";
 
+export interface LibraryItem {
+  readonly utilityId: Uint8Array;
+  readonly displayName: Uint8Array;
+  readonly format: Uint8Array;
+  readonly state: Uint8Array;
+  readonly updatedAt: Uint8Array;
+  readonly artifactPath: Uint8Array;
+  readonly sourceDigest: Uint8Array;
+  readonly binaryDigest: Uint8Array;
+}
+
+export interface TimelineItem {
+  readonly utilityId: Uint8Array;
+  readonly entryId: Uint8Array;
+  readonly kind: Uint8Array;
+  readonly createdAt: Uint8Array;
+  readonly text: Uint8Array;
+}
+
 export interface Model {
   readonly brandImageId: number;
   readonly selectedUtility: number;
@@ -43,6 +62,17 @@ export interface Model {
   readonly pendingWorkerInvocation: boolean;
   readonly clarificationBatchId: Uint8Array;
   readonly clarificationQuestionId: Uint8Array;
+  readonly clarificationQuestionIds: readonly Uint8Array[];
+  readonly clarificationQuestions: readonly Uint8Array[];
+  readonly clarificationAnswers: readonly Draft[];
+  readonly libraryItems: readonly LibraryItem[];
+  readonly timelineItems: readonly TimelineItem[];
+  readonly selectedUtilityId: Uint8Array;
+  readonly nextLibraryCursor: Uint8Array;
+  readonly nextTimelineCursor: Uint8Array;
+  readonly pickerPath: Uint8Array;
+  readonly pickerSelection: Uint8Array;
+  readonly pickerActive: boolean;
   readonly submittedKind: RequestKind;
 }
 
@@ -78,6 +108,17 @@ export type Msg =
   | { readonly kind: "registry_error"; readonly bytes: Uint8Array }
   | { readonly kind: "command_written" }
   | { readonly kind: "command_write_error"; readonly bytes: Uint8Array }
+  | { readonly kind: "select_library"; readonly slot: number }
+  | { readonly kind: "clarification_answer_0"; readonly edit: TextInputEvent }
+  | { readonly kind: "clarification_answer_1"; readonly edit: TextInputEvent }
+  | { readonly kind: "clarification_answer_2"; readonly edit: TextInputEvent }
+  | { readonly kind: "clarification_answer_3"; readonly edit: TextInputEvent }
+  | { readonly kind: "clarification_answer_4"; readonly edit: TextInputEvent }
+  | { readonly kind: "clarification_answer_5"; readonly edit: TextInputEvent }
+  | { readonly kind: "picker_path"; readonly bytes: Uint8Array }
+  | { readonly kind: "picker_line"; readonly bytes: Uint8Array }
+  | { readonly kind: "picker_exit"; readonly code: number }
+  | { readonly kind: "picker_error"; readonly bytes: Uint8Array }
   | { readonly kind: "quit_app" };
 
 export const envMsgs = [
@@ -85,6 +126,7 @@ export const envMsgs = [
   { env: "REPLICATOR_WORKER_PATH", msg: "worker_path" },
   { env: "REPLICATOR_DATA_ROOT", msg: "data_root" },
   { env: "REPLICATOR_REFERENCE_JSON", msg: "reference_json" },
+  { env: "REPLICATOR_PICKER_PATH", msg: "picker_path" },
 ] as const;
 
 export function commandMsg(name: string): Msg | null {
@@ -127,6 +169,17 @@ export function initialModel(): Model {
     pendingWorkerInvocation: false,
     clarificationBatchId: new Uint8Array(0),
     clarificationQuestionId: new Uint8Array(0),
+    clarificationQuestionIds: [new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0)],
+    clarificationQuestions: [new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0)],
+    clarificationAnswers: [emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft()],
+    libraryItems: [],
+    timelineItems: [],
+    selectedUtilityId: asciiBytes("focus-sprint"),
+    nextLibraryCursor: new Uint8Array(0),
+    nextTimelineCursor: new Uint8Array(0),
+    pickerPath: new Uint8Array(0),
+    pickerSelection: new Uint8Array(0),
+    pickerActive: false,
     submittedKind: "build",
   };
 }
@@ -208,7 +261,8 @@ export function hasClarification(model: Model): boolean { return model.clarifica
 export function retryDisabled(model: Model): boolean { return model.globalBusy || (!failedState(model) && !interruptedState(model)); }
 
 export function clarificationIncomplete(model: Model): boolean {
-  return !model.storageChosen || !model.importChosen;
+  for (let index = 0; index < 6; index += 1) if (model.clarificationQuestionIds[index].length > 0 && trimBytes(model.clarificationAnswers[index].bytes).length === 0) return true;
+  return false;
 }
 
 export function revisionText(model: Model): Uint8Array {
@@ -256,14 +310,54 @@ function answerClarificationCommand(model: Model): Uint8Array {
   const prefix = asciiBytes("{\"type\":\"answer_clarification\",\"attemptId\":");
   const batch = asciiBytes(",\"batchId\":");
   const answers = asciiBytes(",\"answers\":{");
-  const answer = asciiBytes(":\"Use local app storage\"}}\n");
   const attemptId = quoteJson(model.attemptId);
   const batchId = quoteJson(model.clarificationBatchId);
-  const questionId = quoteJson(model.clarificationQuestionId);
-  const out = new Uint8Array(prefix.length + attemptId.length + batch.length + batchId.length + answers.length + questionId.length + answer.length);
-  let at = 0; out.set(prefix, at); at += prefix.length; out.set(attemptId, at); at += attemptId.length; out.set(batch, at); at += batch.length; out.set(batchId, at); at += batchId.length; out.set(answers, at); at += answers.length; out.set(questionId, at); at += questionId.length; out.set(answer, at);
+  let size = prefix.length + attemptId.length + batch.length + batchId.length + answers.length + 3;
+  for (let index = 0; index < 6; index += 1) if (model.clarificationQuestionIds[index].length > 0) size += quoteJson(model.clarificationQuestionIds[index]).length + quoteJson(model.clarificationAnswers[index].bytes).length + 2;
+  const out = new Uint8Array(size); let at = 0; let count = 0;
+  out.set(prefix, at); at += prefix.length; out.set(attemptId, at); at += attemptId.length; out.set(batch, at); at += batch.length; out.set(batchId, at); at += batchId.length; out.set(answers, at); at += answers.length;
+  for (let index = 0; index < 6; index += 1) {
+    if (model.clarificationQuestionIds[index].length === 0) continue;
+    if (count > 0) { out[at] = 44; at += 1; }
+    const id = quoteJson(model.clarificationQuestionIds[index]); const answer = quoteJson(model.clarificationAnswers[index].bytes);
+    out.set(id, at); at += id.length; out[at] = 58; at += 1; out.set(answer, at); at += answer.length; count += 1;
+  }
+  out[at] = 125; at += 1; out[at] = 125; at += 1; out[at] = 10;
   return out;
 }
+
+function extractNthString(line: Uint8Array, key: Uint8Array, occurrence: number): Uint8Array {
+  let start = 0;
+  for (let index = 0; index <= occurrence; index += 1) {
+    const relative = findBytes(line.slice(start), key); if (relative < 0) return new Uint8Array(0); start += relative + key.length;
+  }
+  const out = new Uint8Array(line.length - start); let at = start; let count = 0; let escaped = false;
+  while (at < line.length) { const byte = line[at]; at += 1; if (escaped) { out[count] = byte; count += 1; escaped = false; } else if (byte === 92) escaped = true; else if (byte === 34) break; else { out[count] = byte; count += 1; } }
+  return out.slice(0, count);
+}
+
+function replaceAnswer(model: Model, index: number, edit: TextInputEvent): Model {
+  const next = model.clarificationAnswers.slice(); next[index] = editDraft(next[index], edit); return { ...model, clarificationAnswers: next };
+}
+
+export function clarificationAnswer0(model: Model): Uint8Array { return model.clarificationAnswers[0].bytes; }
+export function clarificationAnswer1(model: Model): Uint8Array { return model.clarificationAnswers[1].bytes; }
+export function clarificationAnswer2(model: Model): Uint8Array { return model.clarificationAnswers[2].bytes; }
+export function clarificationAnswer3(model: Model): Uint8Array { return model.clarificationAnswers[3].bytes; }
+export function clarificationAnswer4(model: Model): Uint8Array { return model.clarificationAnswers[4].bytes; }
+export function clarificationAnswer5(model: Model): Uint8Array { return model.clarificationAnswers[5].bytes; }
+export function clarificationQuestion0(model: Model): Uint8Array { return model.clarificationQuestions[0]; }
+export function clarificationQuestion1(model: Model): Uint8Array { return model.clarificationQuestions[1]; }
+export function clarificationQuestion2(model: Model): Uint8Array { return model.clarificationQuestions[2]; }
+export function clarificationQuestion3(model: Model): Uint8Array { return model.clarificationQuestions[3]; }
+export function clarificationQuestion4(model: Model): Uint8Array { return model.clarificationQuestions[4]; }
+export function clarificationQuestion5(model: Model): Uint8Array { return model.clarificationQuestions[5]; }
+export function hasClarificationQuestion0(model: Model): boolean { return model.clarificationQuestionIds[0].length > 0; }
+export function hasClarificationQuestion1(model: Model): boolean { return model.clarificationQuestionIds[1].length > 0; }
+export function hasClarificationQuestion2(model: Model): boolean { return model.clarificationQuestionIds[2].length > 0; }
+export function hasClarificationQuestion3(model: Model): boolean { return model.clarificationQuestionIds[3].length > 0; }
+export function hasClarificationQuestion4(model: Model): boolean { return model.clarificationQuestionIds[4].length > 0; }
+export function hasClarificationQuestion5(model: Model): boolean { return model.clarificationQuestionIds[5].length > 0; }
 
 function quoteJson(value: Uint8Array): Uint8Array {
   let extra = 2;
@@ -281,8 +375,10 @@ function quoteJson(value: Uint8Array): Uint8Array {
 function startAttempt(model: Model, request: Uint8Array): Uint8Array {
   const revision = model.readyArtifactPath.length > 0;
   const prefix = revision
-    ? asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":\"focus-sprint\",\"requestId\":\"revision-1\",\"kind\":\"revision\",\"requestText\":")
-    : asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":\"focus-sprint\",\"requestId\":\"build-1\",\"kind\":\"build\",\"requestText\":");
+    ? asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":")
+    : asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":");
+  const utilityId = quoteJson(model.selectedUtilityId);
+  const requestId = revision ? asciiBytes(",\"requestId\":\"revision-1\",\"kind\":\"revision\",\"requestText\":") : asciiBytes(",\"requestId\":\"build-1\",\"kind\":\"build\",\"requestText\":");
   const middle = asciiBytes(",\"references\":"); const references = model.referenceJson.length > 0 ? model.referenceJson : asciiBytes("[]");
   const suffix = revision
     ? asciiBytes(",\"currentSourceDigest\":")
@@ -295,8 +391,10 @@ function startAttempt(model: Model, request: Uint8Array): Uint8Array {
   const binaryDigest = revision ? quoteJson(model.binaryDigest) : new Uint8Array(0);
   const ending = revision ? asciiBytes("}}\n") : new Uint8Array(0);
   const quoted = quoteJson(request);
-  const out = new Uint8Array(prefix.length + quoted.length + middle.length + references.length + suffix.length + sourceDigest.length + artifactPrefix.length + artifactPath.length + artifactSource.length + sourceDigest.length + artifactBinary.length + binaryDigest.length + ending.length); let at = 0;
+  const out = new Uint8Array(prefix.length + utilityId.length + requestId.length + quoted.length + middle.length + references.length + suffix.length + sourceDigest.length + artifactPrefix.length + artifactPath.length + artifactSource.length + sourceDigest.length + artifactBinary.length + binaryDigest.length + ending.length); let at = 0;
   out.set(prefix, at); at += prefix.length;
+  out.set(utilityId, at); at += utilityId.length;
+  out.set(requestId, at); at += requestId.length;
   out.set(quoted, at); at += quoted.length;
   out.set(middle, at); at += middle.length;
   out.set(references, at); at += references.length;
@@ -370,14 +468,22 @@ function stateFromEvent(line: Uint8Array, previous: UtilityState): UtilityState 
 function consumeWorkerEvent(model: Model, line: Uint8Array): Model {
   const type = extractString(line, asciiBytes("\"type\":\""));
   if (bytesEqual(type, asciiBytes("state_changed"))) return { ...model, utilityState: stateFromEvent(line, model.utilityState), attemptId: extractString(line, asciiBytes("\"attemptId\":\"")) };
-  if (bytesEqual(type, asciiBytes("clarification_required"))) return {
-    ...model,
-    globalBusy: false,
-    utilityState: "awaiting_clarification",
-    clarificationBatchId: extractString(line, asciiBytes("\"batchId\":\"")),
-    clarificationQuestionId: extractString(line, asciiBytes("\"questions\":[{\"id\":\"")),
-    clarificationQuestion: extractString(line, asciiBytes("\"question\":\"")),
-  };
+  if (bytesEqual(type, asciiBytes("clarification_required"))) {
+    const ids: Uint8Array[] = []; const questions: Uint8Array[] = [];
+    for (let index = 0; index < 6; index += 1) { ids[index] = extractNthString(line, asciiBytes("\"id\":\""), index); questions[index] = extractNthString(line, asciiBytes("\"question\":\""), index); }
+    return { ...model, globalBusy: false, utilityState: "awaiting_clarification", clarificationBatchId: extractString(line, asciiBytes("\"batchId\":\"")), clarificationQuestionId: ids[0], clarificationQuestion: questions[0], clarificationQuestionIds: ids, clarificationQuestions: questions, clarificationAnswers: [emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft()] };
+  }
+  if (bytesEqual(type, asciiBytes("library_item"))) {
+    if (model.libraryItems.length >= 50) return model;
+    const item: LibraryItem = { utilityId: extractString(line, asciiBytes("\"utilityId\":\"")), displayName: extractString(line, asciiBytes("\"displayName\":\"")), format: extractString(line, asciiBytes("\"format\":\"")), state: extractString(line, asciiBytes("\"state\":\"")), updatedAt: extractString(line, asciiBytes("\"updatedAt\":\"")), artifactPath: extractString(line, asciiBytes("\"artifactPath\":\"")), sourceDigest: extractString(line, asciiBytes("\"sourceDigest\":\"")), binaryDigest: extractString(line, asciiBytes("\"binaryDigest\":\"")) };
+    return { ...model, libraryItems: [...model.libraryItems, item] };
+  }
+  if (bytesEqual(type, asciiBytes("timeline_item"))) {
+    if (model.timelineItems.length >= 50) return model;
+    const item: TimelineItem = { utilityId: extractString(line, asciiBytes("\"utilityId\":\"")), entryId: extractString(line, asciiBytes("\"entryId\":\"")), kind: extractString(line, asciiBytes("\"kind\":\"")), createdAt: extractString(line, asciiBytes("\"createdAt\":\"")), text: extractString(line, asciiBytes("\"text\":\"")) };
+    return { ...model, timelineItems: [...model.timelineItems, item] };
+  }
+  if (bytesEqual(type, asciiBytes("registry_loaded"))) return { ...model, selectedUtilityId: extractString(line, asciiBytes("\"selectedUtilityId\":\"")), nextLibraryCursor: extractString(line, asciiBytes("\"nextLibraryCursor\":\"")), nextTimelineCursor: extractString(line, asciiBytes("\"nextTimelineCursor\":\"")) };
   if (bytesEqual(type, asciiBytes("plan_accepted"))) return { ...model, utilityState: "building", acceptedPlan: extractString(line, asciiBytes("\"summary\":\"")) };
   if (bytesEqual(type, asciiBytes("stage_result"))) {
     const summary = extractString(line, asciiBytes("\"summary\":\""));
@@ -401,6 +507,11 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, selectedUtility: 3, globalBusy: !model.attemptInterrupted }, Cmd.none];
     case "select_tally":
       return [{ ...model, selectedUtility: 4 }, Cmd.none];
+    case "select_library": {
+      const item = model.libraryItems[msg.slot];
+      if (!item) return [model, Cmd.none];
+      return [{ ...model, selectedUtilityId: item.utilityId, readyArtifactPath: item.artifactPath, sourceDigest: item.sourceDigest, binaryDigest: item.binaryDigest, utilityState: bytesEqual(item.state, asciiBytes("ready")) ? "ready" : model.utilityState }, Cmd.none];
+    }
     case "revision_edit":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
       return [{ ...model, revisionDraft: editDraft(model.revisionDraft, msg.edit) }, Cmd.none];
@@ -408,11 +519,11 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       if (requestControlsDisabled(model) || trimBytes(model.revisionDraft.bytes).length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0 || (model.readyArtifactPath.length > 0 && (model.sourceDigest.length === 0 || model.binaryDigest.length === 0))) return [model, Cmd.none];
       return [{ ...model, globalBusy: true, utilityState: "planning", revisionSubmitted: true, submittedKind: model.readyArtifactPath.length > 0 ? "revision" : "build", submittedRevision: trimBytes(model.revisionDraft.bytes), revisionDraft: emptyDraft(), attemptInterrupted: false, ownerError: new Uint8Array(0), clarificationQuestion: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, trimBytes(model.revisionDraft.bytes)), stageResult: asciiBytes("Starting the Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, trimBytes(model.revisionDraft.bytes)), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "attach_reference":
-      if (requestControlsDisabled(model)) return [model, Cmd.none];
-      return [{ ...model, secondReferenceAttached: true }, Cmd.none];
+      if (requestControlsDisabled(model) || model.pickerPath.length === 0) return [model, Cmd.none];
+      return [{ ...model, pickerActive: true }, Cmd.spawn([model.pickerPath], { key: "reference-picker", line: "picker_line", exit: "picker_exit", err: "picker_error" })];
     case "remove_first_reference":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
-      return [{ ...model, firstReferenceAttached: false }, Cmd.none];
+      return [{ ...model, firstReferenceAttached: false, pickerSelection: new Uint8Array(0) }, Cmd.none];
     case "remove_second_reference":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
       return [{ ...model, secondReferenceAttached: false }, Cmd.none];
@@ -425,7 +536,18 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "continue_clarification":
       if (clarificationIncomplete(model) || model.attemptId.length === 0 || model.clarificationBatchId.length === 0 || model.clarificationQuestionId.length === 0) return [model, Cmd.none];
       return [{ ...model, globalBusy: true, pendingWorkerInvocation: true, pendingWorkerCommand: answerClarificationCommand(model), stageResult: asciiBytes("Resuming this Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), answerClarificationCommand(model), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
+    case "clarification_answer_0": return [replaceAnswer(model, 0, msg.edit), Cmd.none];
+    case "clarification_answer_1": return [replaceAnswer(model, 1, msg.edit), Cmd.none];
+    case "clarification_answer_2": return [replaceAnswer(model, 2, msg.edit), Cmd.none];
+    case "clarification_answer_3": return [replaceAnswer(model, 3, msg.edit), Cmd.none];
+    case "clarification_answer_4": return [replaceAnswer(model, 4, msg.edit), Cmd.none];
+    case "clarification_answer_5": return [replaceAnswer(model, 5, msg.edit), Cmd.none];
     case "cancel_attempt":
+      if (model.pickerActive) return [{ ...model, pickerActive: false }, Cmd.cancel("reference-picker")];
+      if (model.utilityState === "awaiting_clarification" && model.attemptId.length > 0) {
+        const command = new Uint8Array(asciiBytes("{\"type\":\"cancel_attempt\",\"attemptId\":").length + quoteJson(model.attemptId).length + 2); const prefix = asciiBytes("{\"type\":\"cancel_attempt\",\"attemptId\":"); command.set(prefix); command.set(quoteJson(model.attemptId), prefix.length); command[command.length - 2] = 125; command[command.length - 1] = 10;
+        return [{ ...model, globalBusy: true, pendingWorkerInvocation: true, pendingWorkerCommand: command, stageResult: asciiBytes("Cancelling this Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), command, { key: "worker-command", ok: "command_written", err: "command_write_error" })];
+      }
       if (!model.globalBusy) return [model, Cmd.none];
       return [{ ...model, stageResult: asciiBytes("Cancelling this Request Attempt...") }, Cmd.cancel("request-worker")];
     case "retry_attempt":
@@ -443,6 +565,14 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "quit_app": return [model, Cmd.quitApp()];
     case "worker_line":
       return [consumeWorkerEvent(model, msg.bytes), Cmd.none];
+    case "picker_line":
+      if (bytesEqual(extractString(msg.bytes, asciiBytes("\"type\":\"")), asciiBytes("selected"))) return [{ ...model, firstReferenceAttached: true, pickerSelection: extractString(msg.bytes, asciiBytes("\"path\":\"")) }, Cmd.none];
+      if (bytesEqual(extractString(msg.bytes, asciiBytes("\"type\":\"")), asciiBytes("error"))) return [{ ...model, ownerError: extractString(msg.bytes, asciiBytes("\"reason\":\"")) }, Cmd.none];
+      return [model, Cmd.none];
+    case "picker_exit": return [{ ...model, pickerActive: false }, Cmd.none];
+    case "picker_error":
+      if (bytesEqual(msg.bytes, asciiBytes("cancelled"))) return [model, Cmd.none];
+      return [{ ...model, pickerActive: false, ownerError: asciiBytes("Reference Image selection could not continue.") }, Cmd.none];
     case "worker_exit":
       if (!model.globalBusy) return [model, Cmd.none];
       return [{ ...model, globalBusy: false, utilityState: "failed", ownerError: asciiBytes("The worker ended before the Utility became ready.") }, Cmd.none];
@@ -462,6 +592,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       if (model.nodePath.length === 0 || model.workerPath.length === 0) return [{ ...model, dataRoot: msg.bytes }, Cmd.none];
       return [{ ...model, dataRoot: msg.bytes, pendingWorkerInvocation: true, pendingWorkerCommand: loadRegistryCommand() }, Cmd.writeFile(joinPath(msg.bytes, commandFileRelative), loadRegistryCommand(), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "reference_json": return [{ ...model, referenceJson: msg.bytes, firstReferenceAttached: msg.bytes.length > 0 }, Cmd.none];
+    case "picker_path": return [{ ...model, pickerPath: msg.bytes }, Cmd.none];
     case "registry_loaded": return [consumeRegistry(model, msg.bytes), Cmd.none];
     case "registry_error": return [model, Cmd.none];
     case "command_written":
