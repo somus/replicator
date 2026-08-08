@@ -111,6 +111,41 @@ function requireString(value: unknown, field: string): string {
   return value;
 }
 
+function requireNumber(value: unknown, field: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error(`${field} must be a non-negative number`);
+  }
+  return value;
+}
+
+function decodeReference(value: unknown, index: number): ReferenceImageMetadata {
+  if (!isRecord(value)) throw new Error(`references.${index} must be an object`);
+  if (
+    value.mediaType !== "image/png" &&
+    value.mediaType !== "image/jpeg" &&
+    value.mediaType !== "image/webp"
+  ) {
+    throw new Error(`references.${index}.mediaType is unsupported`);
+  }
+  return {
+    id: requireString(value.id, `references.${index}.id`),
+    path: requireString(value.path, `references.${index}.path`),
+    mediaType: value.mediaType,
+    byteLength: requireNumber(value.byteLength, `references.${index}.byteLength`),
+    width: requireNumber(value.width, `references.${index}.width`),
+    height: requireNumber(value.height, `references.${index}.height`),
+  };
+}
+
+function decodeReadyArtifact(value: unknown): ReadyArtifactMetadata {
+  if (!isRecord(value)) throw new Error("readyArtifact must be an object");
+  return {
+    path: requireString(value.path, "readyArtifact.path"),
+    sourceDigest: requireString(value.sourceDigest, "readyArtifact.sourceDigest"),
+    binaryDigest: requireString(value.binaryDigest, "readyArtifact.binaryDigest"),
+  };
+}
+
 export function decodeHostCommand(line: string): HostCommand {
   const value: unknown = JSON.parse(line);
   if (!isRecord(value)) throw new Error("command must be an object");
@@ -149,7 +184,7 @@ export function decodeHostCommand(line: string): HostCommand {
     requestId: requireString(value.requestId, "requestId"),
     kind: value.kind,
     requestText: requireString(value.requestText, "requestText"),
-    references: value.references as ReferenceImageMetadata[],
+    references: value.references.map(decodeReference),
   };
   if (value.currentSourceDigest !== undefined) {
     command.currentSourceDigest = requireString(
@@ -158,8 +193,7 @@ export function decodeHostCommand(line: string): HostCommand {
     );
   }
   if (value.readyArtifact !== undefined) {
-    if (!isRecord(value.readyArtifact)) throw new Error("readyArtifact must be an object");
-    command.readyArtifact = value.readyArtifact as ReadyArtifactMetadata;
+    command.readyArtifact = decodeReadyArtifact(value.readyArtifact);
   }
   return command;
 }

@@ -24,8 +24,12 @@ function emit(event: WorkerEvent): void {
 }
 
 function logError(error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`${message.replaceAll(process.env.HOME ?? "", "<home>")}\n`);
+  let message = error instanceof Error ? error.message : String(error);
+  for (const sensitivePath of [process.env.HOME, dataRoot]) {
+    if (sensitivePath) message = message.replaceAll(sensitivePath, "<redacted-path>");
+  }
+  message = message.replace(/sk-ant-[A-Za-z0-9_-]+/g, "<redacted-credential>");
+  process.stderr.write(`${message}\n`);
 }
 
 async function startAttempt(command: StartAttemptCommand): Promise<void> {
