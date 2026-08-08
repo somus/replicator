@@ -167,9 +167,7 @@ export async function sourceFiles(
 
   if (format !== "react-webview") {
     for (const file of await sourceFilesIn(projectRoot, "src")) {
-      if (file === "src/app.native" || /^src\/[A-Za-z][A-Za-z0-9_-]*\.ts$/.test(file)) {
-        files.add(file);
-      }
+      files.add(file);
     }
   } else {
     for (const file of [
@@ -230,6 +228,15 @@ export async function assertProjectPolicy(
   }
 
   if (format === "native-multimodule") {
+    const unexpected = files.filter(
+      (file) =>
+        file !== "app.zon" &&
+        file !== "src/app.native" &&
+        !/^src\/[A-Za-z][A-Za-z0-9_-]*\.ts$/.test(file),
+    );
+    if (unexpected.length > 0) {
+      throw new Error(`multi-module Native contains unauthorized source: ${unexpected[0]}`);
+    }
     const modules = files.filter((file) => file.endsWith(".ts"));
     if (modules.length > 8) {
       throw new Error("multi-module Native permits core.ts plus seven top-level modules");
