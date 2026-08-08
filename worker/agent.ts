@@ -253,6 +253,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
         async () => {
           const started = performance.now();
           try {
+            if (finalDigest) throw new Error("source is finalized");
             const text = (await options.listSourceFiles()).join("\n");
             await recordTool("list_app_files", "source", started, "accepted");
             return { content: [{ type: "text", text }] };
@@ -269,6 +270,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
         async ({ file }) => {
           const started = performance.now();
           try {
+            if (finalDigest) throw new Error("source is finalized");
             const text = await options.readSource(file);
             await recordTool("read_app", "source", started, "accepted");
             return { content: [{ type: "text", text }] };
@@ -325,7 +327,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             sourceEditingOpen = true;
             options.onStage("validation", false, summary);
             await recordTool("validate_app", "validation", started, "failed", "source", true);
-            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source. Make a focused source edit, then call validate_app again.` }] };
+            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source\n${SOURCE_REPAIR_ADDENDUM_V1}\nThen call validate_app again.` }] };
           }
         },
       ),
@@ -357,7 +359,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
             options.onStage("verification", false, summary);
             await recordTool("verify_behavior", "verification", started, "failed", repairScope, true);
             const instruction = repairScope === "source"
-              ? "Make one focused source edit, then validate and verify again."
+              ? `${SOURCE_REPAIR_ADDENDUM_V1} Then validate and verify again.`
               : repairScope === "host"
                 ? "Retry the host operation once without editing source."
                 : "Correct the Behavior Scenario input without editing source.";
@@ -390,7 +392,8 @@ export function createAgenticImplementation(options: AgenticImplementationOption
               verifiedDigest = undefined;
             }
             await recordTool("finalize_app", "finalization", started, "failed", repairScope, true);
-            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=${repairScope}` }] };
+            const repairInstruction = repairScope === "source" ? `\n${SOURCE_REPAIR_ADDENDUM_V1}` : "";
+            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=${repairScope}${repairInstruction}` }] };
           }
         },
       ),

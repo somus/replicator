@@ -962,6 +962,11 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         },
       }),
     );
+    const acceptedTools = implementation.toolTelemetry();
+    const finalTool = acceptedTools.at(-1);
+    if (!finalTool || finalTool.tool !== "finalize_app" || finalTool.outcome !== "accepted") {
+      throw new Error("finalize_app was not the final accepted implementation tool");
+    }
     const agentFinalizedDigest = implementation.finalizedDigest();
     if (!agentFinalizedDigest || agentFinalizedDigest !== await sourceDigest(sourceRoot, "native-bounded")) {
       throw new Error("Agent implementation ended without finalizing the current source digest");
