@@ -14,7 +14,51 @@ let fileManager = FileManager.default
 let resources = bundleResources
 let dataRoot = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     .appendingPathComponent("Replicator", isDirectory: true)
+
+func seedPreparedDemoIfNeeded() throws {
+    let registry = dataRoot.appendingPathComponent("registry.json")
+    guard !fileManager.fileExists(atPath: registry.path) else { return }
+
+    let preparedResources = resources.appendingPathComponent("prepared-demo", isDirectory: true)
+    let preparedData = preparedResources.appendingPathComponent("data", isDirectory: true)
+    let preparedArtifact = preparedResources.appendingPathComponent("Focus Sprint.app", isDirectory: true)
+    guard fileManager.fileExists(atPath: preparedData.appendingPathComponent("registry.json").path),
+          fileManager.fileExists(atPath: preparedArtifact.path) else {
+        throw LauncherError.failed("Prepared Demo resources are unavailable")
+    }
+
+    let parent = dataRoot.deletingLastPathComponent()
+    try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
+    if fileManager.fileExists(atPath: dataRoot.path) {
+        guard try fileManager.contentsOfDirectory(atPath: dataRoot.path).isEmpty else { return }
+    }
+
+    let staging = parent.appendingPathComponent(".replicator-prepared-\(UUID().uuidString)", isDirectory: true)
+    do {
+        try fileManager.copyItem(at: preparedData, to: staging)
+        let artifactDestination = staging
+            .appendingPathComponent("utilities/focus-sprint/artifacts/d55e6460-01b9-40d3-82ea-efbf3ea8717d", isDirectory: true)
+            .appendingPathComponent("Generated App.app", isDirectory: true)
+        try fileManager.createDirectory(at: artifactDestination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try fileManager.copyItem(at: preparedArtifact, to: artifactDestination)
+
+        if fileManager.fileExists(atPath: dataRoot.path) {
+            guard !fileManager.fileExists(atPath: registry.path),
+                  try fileManager.contentsOfDirectory(atPath: dataRoot.path).isEmpty else {
+                try? fileManager.removeItem(at: staging)
+                return
+            }
+            try fileManager.removeItem(at: dataRoot)
+        }
+        try fileManager.moveItem(at: staging, to: dataRoot)
+    } catch {
+        try? fileManager.removeItem(at: staging)
+        throw error
+    }
+}
+
 do {
+    try seedPreparedDemoIfNeeded()
     try fileManager.createDirectory(at: dataRoot, withIntermediateDirectories: true)
     try fileManager.changeCurrentDirectoryPath(dataRoot.path).orThrow("could not enter Application Support")
 } catch {

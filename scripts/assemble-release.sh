@@ -109,12 +109,34 @@ captured_skills_digest=$("$bundled_node" -p "JSON.parse(require('fs').readFileSy
 }
 
 mkdir -p "$package_assets/bin" "$package_assets/worker" "$package_assets/templates" \
-  "$package_assets/native-skills" "$package_assets/prepared-demo"
+  "$package_assets/native-skills" "$package_assets/prepared-demo/data"
 ditto "$worker_input" "$package_assets/worker"
 ditto "$repo_root/templates/native-bounded" "$package_assets/templates/native-bounded"
 ditto "$repo_root/resources/native-docs" "$package_assets/native-docs"
 ditto "$skills_capture" "$package_assets/native-skills/0.8.1"
-ditto "$prepared_demo" "$package_assets/prepared-demo/Focus Sprint.app"
+ditto "$prepared_demo" "$package_assets/prepared-demo/data"
+prepared_registry="$package_assets/prepared-demo/data/registry.json"
+prepared_artifact_rel=$(
+  "$bundled_node" -e '
+    const fs = require("fs");
+    const registry = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    if (registry.version !== 1 || registry.utilities.length !== 1) process.exit(1);
+    const utility = registry.utilities[0];
+    if (utility.id !== "focus-sprint" || utility.state !== "ready" || !utility.readyArtifact) process.exit(1);
+    process.stdout.write(utility.readyArtifact.path);
+  ' "$prepared_registry"
+)
+[ "$prepared_artifact_rel" = "utilities/focus-sprint/artifacts/d55e6460-01b9-40d3-82ea-efbf3ea8717d/Generated App.app" ] || {
+  echo "Prepared Demo registry does not select the exact verified revised artifact" >&2
+  exit 1
+}
+prepared_artifact="$package_assets/prepared-demo/data/$prepared_artifact_rel"
+[ -d "$prepared_artifact" ] || {
+  echo "Prepared Demo exact verified revised artifact is missing" >&2
+  exit 1
+}
+mv "$prepared_artifact" "$package_assets/prepared-demo/Focus Sprint.app"
+rmdir "$(dirname "$prepared_artifact")"
 cp "$repo_root/packaging/runtime-versions.json" "$package_assets/runtime-versions.json"
 
 if [ -n "$runtime_modules" ]; then
