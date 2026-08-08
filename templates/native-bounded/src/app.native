@@ -1,5 +1,5 @@
-<column gap="12" padding="16">
-  <text>Generated App</text>
-  <text grow="1">{message}</text>
-  <button variant="primary" on-press="activate">Activate</button>
+<column gap="16" padding="20">
+  <text>New Utility</text>
+  <text grow="1">Describe and build this Utility in Replicator.</text>
+  <status-bar>Ready for a bounded Native implementation</status-bar>
 </column>

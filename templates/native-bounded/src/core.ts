@@ -1,18 +1,19 @@
 import { Cmd } from "@native-sdk/core";
 
 export interface Model {
-  readonly message: "Ready" | "Activated";
+  readonly ready: boolean;
 }
 
-export type Msg = { readonly kind: "activate" };
+export type Msg =
+  | { readonly kind: "noop" }
+  | { readonly kind: "noop_again" };
+
+export const viewUnbound = ["noop", "noop_again"] as const;
 
 export function initialModel(): Model {
-  return { message: "Ready" };
+  return { ready: true };
 }
 
-export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
-  switch (msg.kind) {
-    case "activate":
-      return [{ ...model, message: "Activated" }, Cmd.none];
-  }
+export function update(model: Model, _message: Msg): Model | [Model, Cmd<Msg>] {
+  return model;
 }

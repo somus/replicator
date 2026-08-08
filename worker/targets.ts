@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import {
+  constants,
   copyFile,
   lstat,
   mkdir,
+  open,
   readFile,
   readdir,
   realpath,
@@ -22,9 +24,14 @@ const protectedWebViewFiles = new Set([
   "frontend/src/replicator-harness.ts",
 ]);
 
-export const defaultTemplateRoot = path.resolve(
+const configuredTemplateRoot = process.env.REPLICATOR_TEMPLATE_ROOT;
+if (configuredTemplateRoot && !path.isAbsolute(configuredTemplateRoot)) {
+  throw new Error("REPLICATOR_TEMPLATE_ROOT must be an absolute path");
+}
+
+export const defaultTemplateRoot = configuredTemplateRoot ?? path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../templates",
+  "../../templates",
 );
 
 export function normalizeProjectPath(candidate: string): string | null {
@@ -126,6 +133,33 @@ export async function resolveEditableProjectPath(
   return { file, absolutePath };
 }
 
+export async function writeEditableProjectFile(
+  projectRoot: string,
+  format: UtilityFormat,
+  candidate: string,
+  contents: string,
+): Promise<string> {
+  if (Buffer.byteLength(contents) > 512 * 1024) {
+    throw new Error("source file exceeds the 512 KiB bounded edit limit");
+  }
+  const { file, absolutePath } = await resolveEditableProjectPath(
+    projectRoot,
+    format,
+    candidate,
+  );
+  const handle = await open(
+    absolutePath,
+    constants.O_WRONLY | constants.O_TRUNC | constants.O_NOFOLLOW,
+  );
+  try {
+    await handle.writeFile(contents, "utf8");
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  return file;
+}
+
 async function sourceFilesIn(
   projectRoot: string,
   relativeDirectory: string,
@@ -216,6 +250,11 @@ export async function assertProjectPolicy(
   }
 
   if (format === "native-bounded") {
+    for (const required of ["src/app.native", "src/core.ts"]) {
+      if (!files.includes(required)) {
+        throw new Error(`bounded Native is missing required source: ${required}`);
+      }
+    }
     const unexpected = files.filter(
       (file) =>
         file !== "app.zon" &&
