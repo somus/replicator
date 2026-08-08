@@ -122,6 +122,16 @@ export type Msg =
   | { readonly kind: "picker_error"; readonly bytes: Uint8Array }
   | { readonly kind: "quit_app" };
 
+export const viewUnbound = [
+  "selectedUtility", "storageChosen", "importChosen", "attemptInterrupted", "launched", "utilityState", "attemptId", "readyArtifactPath", "sourceDigest", "binaryDigest",
+  "clarificationQuestion", "nodePath", "workerPath", "dataRoot", "referenceJson", "pendingWorkerCommand", "pendingWorkerInvocation", "clarificationBatchId", "clarificationQuestionId",
+  "nextLibraryCursor", "nextTimelineCursor", "pickerPath", "pickerSelection", "pickerActive", "submittedKind", "revisionDraft", "clarificationQuestionIds", "clarificationQuestions",
+  "clarificationAnswers", "pickerSelections", "recipeSelected", "renamerSelected", "tallySelected", "planningState", "awaitingClarificationState", "buildingState", "verifyingState",
+  "preparingState", "failedState", "interruptedState", "clarificationIncomplete", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url",
+  "choose_text", "worker_line", "worker_exit", "worker_error", "launch_exit", "launch_error", "node_path", "worker_path", "data_root", "reference_json", "registry_loaded",
+  "registry_error", "command_written", "command_write_error", "select_library", "picker_path", "picker_line", "picker_exit", "picker_error", "quit_app",
+] as const;
+
 export const envMsgs = [
   { env: "REPLICATOR_NODE_PATH", msg: "node_path" },
   { env: "REPLICATOR_WORKER_PATH", msg: "worker_path" },
@@ -135,8 +145,6 @@ export function commandMsg(name: string): Msg | null {
   if (name === "app.quit") return { kind: "quit_app" };
   return null;
 }
-
-export const viewUnbound = ["selectedUtility", "storageChosen", "importChosen", "attemptInterrupted", "launched", "utilityState", "attemptId", "readyArtifactPath", "sourceDigest", "binaryDigest", "nodePath", "workerPath", "dataRoot", "referenceJson", "submittedKind", "pendingWorkerCommand", "pendingWorkerInvocation", "clarificationBatchId", "clarificationQuestionId", "recipeSelected", "renamerSelected", "tallySelected", "planningState", "awaitingClarificationState", "buildingState", "verifyingState", "preparingState", "failedState", "interruptedState", "clarificationIncomplete", "revisionDraft", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url", "choose_text", "worker_line", "worker_exit", "worker_error", "launch_exit", "launch_error", "node_path", "worker_path", "data_root", "reference_json", "registry_loaded", "registry_error", "command_written", "command_write_error", "quit_app"] as const;
 
 export function initialModel(): Model {
   return {
