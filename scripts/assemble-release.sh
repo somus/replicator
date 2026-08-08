@@ -175,6 +175,7 @@ builder_binary="$repo_root/zig-out/bin/replicator"
   exit 1
 }
 cp "$builder_binary" "$package_assets/bin/ReplicatorBuilder"
+xcrun strip -S "$package_assets/bin/ReplicatorBuilder"
 
 # Native 0.8.1's asset indexer intentionally caps one asset at 16 MiB,
 # while the pinned Node, Agent SDK, and Zig executables are larger. Let

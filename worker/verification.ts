@@ -24,6 +24,7 @@ import {
   assertProjectPolicy,
   assertUtilityFormatMarker,
   createUtilityFormatMarker,
+  defaultTemplateRoot,
   scaffoldUtility,
   sourceDigest,
   writeEditableProjectFile,
@@ -361,9 +362,6 @@ export class UtilityAdapter {
       return;
     }
     const temporary = path.join(this.utilityRoot, "generated-app");
-    if (temporary === this.projectRoot) {
-      throw new AdapterFailure("host", "projectRoot must differ from the native init staging path");
-    }
     try {
       if ((await readdir(this.projectRoot)).length > 0) {
         throw new AdapterFailure("host", "Utility source destination must be empty");
@@ -387,6 +385,9 @@ export class UtilityAdapter {
         30_000,
       );
       await rename(temporary, this.projectRoot);
+      for (const file of ["app.zon", "src/app.native", "src/core.ts"]) {
+        await copyFile(path.join(defaultTemplateRoot, "native-bounded", file), path.join(this.projectRoot, file));
+      }
       await createUtilityFormatMarker(this.utilityRoot, this.format);
       await assertProjectPolicy(this.projectRoot, this.format);
     } catch (error) {
@@ -442,6 +443,11 @@ export class UtilityAdapter {
       } else {
         await preflightSource(this.projectRoot);
       }
+      if (this.format !== "react-webview") {
+        await rm(path.join(this.projectRoot, "zig-out", "model-contract.zon"), { force: true });
+      }
+      const check = await this.runNative(["check", "--strict"], signal, 30_000);
+      stages.push({ stage: "native_check", summary: "Native strict check passed", durationMs: check.durationMs, ok: true });
       const coreDigest = this.format === "react-webview" ? undefined : await sha256File(path.join(this.projectRoot, "src", "core.ts"));
       const modelContractRefreshed = coreDigest !== undefined && coreDigest !== this.modelContractCoreDigest;
       if (modelContractRefreshed && coreDigest) {
@@ -449,8 +455,6 @@ export class UtilityAdapter {
         stages.push({ stage: "native_test", summary: "Native model contract refreshed", durationMs: test.durationMs, ok: true });
         this.modelContractCoreDigest = coreDigest;
       }
-      const check = await this.runNative(["check", "--strict"], signal, 30_000);
-      stages.push({ stage: "native_check", summary: "Native strict check passed", durationMs: check.durationMs, ok: true });
       this.validatedDigest = await sourceDigest(this.projectRoot, this.format);
       return Object.assign(stages, { sourceDigest: this.validatedDigest, modelContractRefreshed });
     } catch (error) {

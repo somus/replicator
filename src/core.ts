@@ -621,7 +621,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, globalBusy: true, utilityState: "planning", stageIndex: 0, stageProgress: 0.25, attemptInterrupted: false, ownerError: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, model.submittedRevision) }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, model.submittedRevision), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "launch":
       if (!canLaunch(model)) return [model, Cmd.none];
-      return [{ ...model, launched: true }, Cmd.spawn([asciiBytes("/usr/bin/open"), joinPath(model.dataRoot, model.readyArtifactPath)], { key: "launch-artifact", exit: "launch_exit", err: "launch_error" })];
+      return [{ ...model, launched: true }, Cmd.spawn([asciiBytes("/usr/bin/open"), asciiBytes("-n"), asciiBytes("-W"), joinPath(model.dataRoot, model.readyArtifactPath)], { key: "launch-artifact", exit: "launch_exit", err: "launch_error" })];
     case "new_utility": {
       if (model.globalBusy) return [model, Cmd.none];
       const fresh = initialModel();

@@ -1,5 +1,28 @@
-<column gap="16" padding="20">
-  <text>New Utility</text>
-  <text grow="1">Describe and build this Utility in Replicator.</text>
-  <status-bar>Ready for a bounded Native implementation</status-bar>
+<column gap="16" padding="24" main="center" cross="center" grow="1">
+  <text size="heading">Focus Sprint</text>
+  <progress label="sprint-progress" value="{progressFraction}" width="280" />
+  <row label="time-display">
+    <text size="display">{timeDisplay}</text>
+  </row>
+  <stack width="240">
+    <select label="mode-select" on-press="toggle_picker">{modeLabel}</select>
+    <if test="{pickerOpen}">
+      <dropdown-menu anchor="below" anchor-alignment="stretch" on-dismiss="close_picker">
+        <menu-item label="mode-option-focus" selected="{mode == 'focus'}" on-press="pick_focus">Focus</menu-item>
+        <menu-item label="mode-option-break" selected="{mode == 'short_break'}" on-press="pick_break">Break</menu-item>
+        <menu-item label="mode-option-demo" selected="{mode == 'demo'}" on-press="pick_demo">Demo</menu-item>
+      </dropdown-menu>
+    </if>
+  </stack>
+  <row label="mode-label">
+    <text>{modeLabel}</text>
+  </row>
+  <row gap="8">
+    <button label="start-button" variant="primary" on-press="start" disabled="{not canStart}">Start</button>
+    <button label="pause-button" variant="outline" on-press="pause" disabled="{not running}">Pause</button>
+    <button label="reset-button" variant="outline" on-press="reset">Reset</button>
+  </row>
+  <row label="completed-count">
+    <text>{completedText}</text>
+  </row>
 </column>

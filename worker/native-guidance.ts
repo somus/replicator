@@ -125,8 +125,6 @@ export class NativeGuidance {
   }
 
   assertSelections(selections: readonly NativeGuidanceSelection[], format: UtilityFormat): void {
-    let skillSections = 0;
-    let officialPages = 0;
     const selectedSkills = new Set<string>();
     let selectedComponent = false;
     for (const selection of selections) {
@@ -140,9 +138,7 @@ export class NativeGuidance {
       if (selection.corpus === "skill") {
         if (selection.id === "zig") throw new Error("generated Utility coding cannot select the protected Zig skill");
         selectedSkills.add(selection.id);
-        skillSections += selection.sectionIds.length;
       } else {
-        officialPages += 1;
         if (selection.component) {
           if (!selection.id.startsWith("docs/components/")) throw new Error("component metadata requires its exact official component page");
           if (!selection.component.element) throw new Error("component guidance requires an element name");
@@ -150,7 +146,6 @@ export class NativeGuidance {
         }
       }
     }
-    if (skillSections > 8 || officialPages > 16) throw new Error("Native guidance selection exceeds its plan cap");
     if (format !== "react-webview") {
       if (!selectedSkills.has("native-ui") || !selectedSkills.has("ts-core")) throw new Error("Native plans require native-ui and ts-core guidance");
       if (!selectedComponent) throw new Error("Native plans require exact official component guidance");

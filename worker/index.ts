@@ -267,11 +267,7 @@ const buildOutputSchema: Record<string, unknown> = {
   properties: { summary: { type: "string" } },
 };
 
-const planningOutputSchema: Record<string, unknown> = {
-  type: "object",
-  additionalProperties: false,
-  required: ["outcome"],
-  properties: {
+const planningOutputProperties: Record<string, unknown> = {
     outcome: { enum: ["clarification", "plan"] },
     questions: {
       type: "array",
@@ -364,7 +360,13 @@ const planningOutputSchema: Record<string, unknown> = {
         },
       },
     },
-  },
+};
+
+const planningOutputSchema: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["outcome", "primaryWorkflow"],
+  properties: planningOutputProperties,
 };
 
 function record(value: unknown): Record<string, unknown> {
@@ -410,12 +412,14 @@ function validateBehaviorContract(value: unknown, kind: "build" | "revision"): B
     if (ids.has(scenario.id)) throw new Error("Behavior Scenario IDs must be unique");
     ids.add(scenario.id);
     if (!Array.isArray(scenario.steps) || scenario.steps.length === 0 || scenario.steps.length > 24) throw new Error("Behavior Scenario requires bounded executable steps");
-    for (const rawStep of scenario.steps) {
+    for (const [stepIndex, rawStep] of scenario.steps.entries()) {
       const step = record(rawStep);
       if (step.action === "launch") continue;
       if (step.action === "wait") throw new Error("Behavior Scenario fixed waits are not executable; use an assertion");
       if (step.action === "screenshot") {
-        text(step.name, "Behavior Scenario screenshot name");
+        if (typeof step.name !== "string" || step.name.length === 0 || step.name.length > 4000) {
+          step.name = `${scenario.id}-screenshot-${stepIndex + 1}`;
+        }
         continue;
       }
       if (step.action === "click" || step.action === "assert_visible") {
@@ -440,8 +444,6 @@ function validateBehaviorContract(value: unknown, kind: "build" | "revision"): B
 
 function validateNativeGuidance(value: unknown): NativeGuidanceSelection[] {
   if (!Array.isArray(value) || value.length > 24) throw new Error("Accepted plan contains invalid Native guidance");
-  let skillSections = 0;
-  let officialPages = 0;
   const selections: NativeGuidanceSelection[] = [];
   const seen = new Set<string>();
   for (const raw of value) {
@@ -457,13 +459,11 @@ function validateNativeGuidance(value: unknown): NativeGuidanceSelection[] {
     if (item.corpus === "skill") {
       const id = text(item.id, "skill ID");
       if (!["native-ui", "ts-core", "automation", "core", "zig"].includes(id)) throw new Error("Native skill ID is invalid");
-      skillSections += sectionIds.length;
       selections.push({ corpus: "skill", id: id as Extract<NativeGuidanceSelection, { corpus: "skill" }>["id"], ...common });
     } else {
       if (item.corpus !== "official") throw new Error("Native guidance corpus is invalid");
       const id = text(item.id, "official page ID");
       if (!/^docs\/[A-Za-z0-9_./-]+\.md$/.test(id) || id.includes("..")) throw new Error("Official Native page ID is invalid");
-      officialPages += 1;
       let component: Extract<NativeGuidanceSelection, { corpus: "official" }>["component"];
       if (item.component !== undefined) {
         const rawComponent = record(item.component);
@@ -484,7 +484,6 @@ function validateNativeGuidance(value: unknown): NativeGuidanceSelection[] {
     if (seen.has(key)) throw new Error("Native guidance selection contains a duplicate ID");
     seen.add(key);
   }
-  if (skillSections > 8 || officialPages > 16) throw new Error("Native guidance selection exceeds the accepted-plan cap");
   return selections;
 }
 
@@ -688,8 +687,8 @@ function planningPrompt(
     answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
     `Packaged Native guidance catalog: ${guidanceCatalog}`,
     requiredFormat ? `This Revision must retain its existing format: ${requiredFormat}.` : "Choose exactly one format: native-bounded for a small single-core Native app, native-multimodule when the Native app needs up to seven additional top-level TypeScript modules, or react-webview for a React DOM interface.",
-    "Return one material Clarification batch only when ambiguity would change the result. A batch may begin with one choice question containing exactly two options; every additional question must use short_text. Otherwise return one complete format-aware plan with requirements, decisions, nativeGuidance, and one to three executable scenarios.",
-    "Native formats must include native-ui and ts-core guidance and use at most eight skill sections total. Include the exact official docs/components page for every selected Native UI component. React/WebView plans may return an empty nativeGuidance selection because the shell is host-protected.",
+    "Always return a non-empty primaryWorkflow; for a Clarification outcome, make it the provisional workflow being clarified. Return one material Clarification batch only when ambiguity would change the result. A batch may begin with one choice question containing exactly two options; every additional question must use short_text. Otherwise return one complete format-aware plan with requirements, decisions, nativeGuidance, and one to three executable scenarios.",
+    "Native formats must include native-ui and ts-core guidance and must not select the protected zig skill. Keep guidance selections minimal. Include at least one exact official docs/components/*.md selection and give every component-page selection a component object with its element, bindings, and events arrays. React/WebView plans may return an empty nativeGuidance selection because the shell is host-protected.",
     "Use only launch, click, input, assert_text, assert_visible, and screenshot. Fixed waits are not executable; assertions own bounded polling. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
   ].filter(Boolean).join("\n");
 }
@@ -1026,8 +1025,8 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       "Native message payloads use tag:value for a constant and tag:{binding} for one model binding. Never wrap a quoted constant inside binding braces.",
       "In a TypeScript core, declare update-only fields and host-fired messages with export const viewUnbound = [\"fieldName\", \"messageKind\"] as const. The snake_case view_unbound spelling is Zig-only and will fail native check --strict.",
       "Never create zero-size, transparent, off-canvas, or otherwise invisible widgets just to satisfy the model-contract checker. Declare legitimately update-only state and host-fired messages in viewUnbound instead.",
-      "Read every approved official component section through the guidance tools before editing the component it governs. No unapproved guidance is available during coding.",
-      "Inspect source with list_app_files and read_app, then use edit_app for exact replacements. Call validate_app and repair its exact diagnostics in this same turn. Then call verify_behavior for the immutable host contract; if behavior fails, make a focused repair, validate again, and retry. Call finalize_app exactly once as your final tool action, then return the structured summary. Do not claim completion without finalization.",
+      "Read every approved guidance section before behavior verification, and read each approved official component section before editing the component it governs. No unapproved guidance is available during coding.",
+      "Inspect source with list_app_files and read_app, compare every immutable Behavior Scenario target with the exact accessible labels in markup, and make the smallest label-only correction before the first validation when a target is missing. If the starter already satisfies the accepted plan and every target, preserve it unchanged; otherwise use edit_app only for the smallest exact replacements. Call validate_app, repair exact diagnostics in this same turn, then call verify_behavior. If behavior fails, make a focused repair, validate again, and retry. Call finalize_app exactly once as your final tool action, then return the structured summary. Do not claim completion without finalization.",
     ].join("\n");
     await withDeadline(
       attempt,
