@@ -1,5 +1,7 @@
 dist/
 node_modules/
+.env
+.native/
 .DS_Store
 .zig-cache/
 zig-out/

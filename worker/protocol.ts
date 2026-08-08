@@ -130,6 +130,14 @@ function requireString(value: unknown, field: string, maximum = 4096): string {
   return value;
 }
 
+function requireIdentifier(value: unknown, field: string): string {
+  const identifier = requireString(value, field, 128);
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(identifier)) {
+    throw new Error(`${field} must contain only letters, numbers, underscores, or hyphens`);
+  }
+  return identifier;
+}
+
 function requireNumber(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
     throw new Error(`${field} must be a non-negative number`);
@@ -148,7 +156,7 @@ function decodeReference(value: unknown, index: number): ReferenceImageMetadata 
   if (value.mediaType !== "image/png" && value.mediaType !== "image/jpeg" && value.mediaType !== "image/webp") {
     throw new Error(`references.${index}.mediaType is unsupported`);
   }
-  return {
+  const reference: ReferenceImageMetadata = {
     id: requireString(value.id, `references.${index}.id`, 128),
     path: requireString(value.path, `references.${index}.path`, 1024),
     mediaType: value.mediaType,
@@ -156,6 +164,11 @@ function decodeReference(value: unknown, index: number): ReferenceImageMetadata 
     width: requireNumber(value.width, `references.${index}.width`),
     height: requireNumber(value.height, `references.${index}.height`),
   };
+  if (reference.byteLength > 5 * 1024 * 1024) throw new Error(`references.${index} exceeds 5 MB`);
+  if (reference.width === 0 || reference.height === 0 || Math.max(reference.width, reference.height) > 2000) {
+    throw new Error(`references.${index} must be normalized to at most 2000 px`);
+  }
+  return reference;
 }
 
 function decodeReadyArtifact(value: unknown): ReadyArtifactMetadata {
@@ -175,7 +188,7 @@ export function decodeHostCommand(line: string): HostCommand {
 
   if (type === "cancel_attempt") {
     rejectUnknownFields(value, ["type", "attemptId"]);
-    return { type, attemptId: requireString(value.attemptId, "attemptId", 128) };
+    return { type, attemptId: requireIdentifier(value.attemptId, "attemptId") };
   }
 
   if (type === "answer_clarification") {
@@ -188,8 +201,8 @@ export function decodeHostCommand(line: string): HostCommand {
     );
     return {
       type,
-      attemptId: requireString(value.attemptId, "attemptId", 128),
-      batchId: requireString(value.batchId, "batchId", 128),
+      attemptId: requireIdentifier(value.attemptId, "attemptId"),
+      batchId: requireIdentifier(value.batchId, "batchId"),
       answers,
     };
   }
@@ -206,14 +219,20 @@ export function decodeHostCommand(line: string): HostCommand {
 
   const command: StartAttemptCommand = {
     type,
-    utilityId: requireString(value.utilityId, "utilityId", 128),
-    requestId: requireString(value.requestId, "requestId", 128),
+    utilityId: requireIdentifier(value.utilityId, "utilityId"),
+    requestId: requireIdentifier(value.requestId, "requestId"),
     kind: value.kind,
     requestText: requireString(value.requestText, "requestText", 20_000),
     references: value.references.map(decodeReference),
   };
   if (value.currentSourceDigest !== undefined) command.currentSourceDigest = requireString(value.currentSourceDigest, "currentSourceDigest", 128);
   if (value.readyArtifact !== undefined) command.readyArtifact = decodeReadyArtifact(value.readyArtifact);
+  if (command.kind === "revision" && (!command.currentSourceDigest || !command.readyArtifact)) {
+    throw new Error("Revision requires currentSourceDigest and readyArtifact");
+  }
+  if (command.kind === "build" && (command.currentSourceDigest || command.readyArtifact)) {
+    throw new Error("Build must not include existing source or Ready Artifact metadata");
+  }
   return command;
 }
 

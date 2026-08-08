@@ -153,16 +153,30 @@ assemble_release() {
   staged_resources="$staged_app/Contents/Resources"
   mkdir -p "$output_root"
   ditto "$builder_app" "$staged_app"
-  for managed_resource in toolchains worker 'Prepared Demo'; do
+  for managed_resource in toolchains worker templates reference-images 'Prepared Demo'; do
     if [ -e "$staged_resources/$managed_resource" ]; then
       find "$staged_resources/$managed_resource" -depth -delete
     fi
   done
-  mkdir -p "$staged_resources/toolchains" "$staged_resources/worker" "$staged_resources/Prepared Demo"
+  mkdir -p "$staged_resources/toolchains" "$staged_resources/worker" "$staged_resources/templates" "$staged_resources/reference-images" "$staged_resources/Prepared Demo"
   prepare_toolchains "$staged_resources/toolchains" "$staging"
   ditto "$worker_input" "$staged_resources/worker"
+  ditto "$repo_root/templates/native-bounded" "$staged_resources/templates/native-bounded"
+  cp "$repo_root/demo-prototype/focus-sprint-reference-dark.png" "$staged_resources/reference-images/focus-sprint-reference-dark.png"
   ditto "$utility_app" "$staged_resources/Prepared Demo/Focus Sprint.app"
   cp "$repo_root/packaging/runtime-versions.json" "$staged_resources/runtime-versions.json"
+
+  builder_executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$staged_app/Contents/Info.plist")
+  [ -n "$builder_executable" ] && [ "$builder_executable" != "ReplicatorBuilder" ] || {
+    echo "builder executable name is unavailable or reserved" >&2
+    exit 1
+  }
+  mv "$staged_app/Contents/MacOS/$builder_executable" "$staged_app/Contents/MacOS/ReplicatorBuilder"
+  mkdir -p "$staging/module-cache"
+  CLANG_MODULE_CACHE_PATH="$staging/module-cache" SWIFT_MODULECACHE_PATH="$staging/module-cache" \
+    xcrun swiftc -O -target arm64-apple-macos14.0 \
+      -framework AppKit "$repo_root/probe/release-launcher/main.swift" \
+      -o "$staged_app/Contents/MacOS/$builder_executable"
 
   if [ -n "$runtime_modules" ]; then
     require_directory "$runtime_modules"
@@ -181,7 +195,7 @@ assemble_release() {
   chmod +x "$staged_resources/toolchains/node/bin/node" \
     "$staged_resources/toolchains/native-cli/node_modules/@native-sdk/cli-darwin-arm64/bin/native" \
     "$staged_resources/toolchains/zig/zig"
-  sign_macho_files "$staged_resources"
+  sign_macho_files "$staged_app/Contents"
   sign_nested_apps "$staged_resources"
   codesign --force --sign - "$staged_app"
   codesign --verify --deep --strict --verbose=2 "$staged_app"

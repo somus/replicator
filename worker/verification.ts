@@ -207,6 +207,27 @@ function stopProcess(child: ChildProcess): void {
   if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
 }
 
+async function stopUtilityProcess(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  child.kill("SIGTERM");
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    let force: NodeJS.Timeout | undefined;
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      if (force) clearTimeout(force);
+      resolve();
+    };
+    child.once("close", finish);
+    force = setTimeout(() => {
+      child.kill("SIGKILL");
+      finish();
+    }, 750);
+    force.unref();
+  });
+}
+
 function utilityEnvironment(): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = {};
   for (const name of ["HOME", "LANG", "LC_ALL", "PATH", "TMPDIR"]) {
@@ -312,13 +333,13 @@ export class BoundedNativeAdapter {
       const scenarioStarted = performance.now();
       let stdout = "";
       let stderr = "";
-      await rm(path.join(this.projectRoot, ".zig-cache", "native-sdk-automation"), {
+      await rm(path.join(this.evidenceRoot, ".zig-cache", "native-sdk-automation"), {
         recursive: true,
         force: true,
       });
       let utilitySpawnError: Error | undefined;
       const child = spawn(binary, [], {
-        cwd: this.projectRoot,
+        cwd: this.evidenceRoot,
         env: utilityEnvironment(),
         stdio: ["ignore", "pipe", "pipe"],
       });
@@ -337,7 +358,7 @@ export class BoundedNativeAdapter {
         await runCommand(
           this.nativeExecutable,
           ["automate", "wait"],
-          this.projectRoot,
+          this.evidenceRoot,
           signal,
           Math.min(remainingMs(deadline), 10_000),
         );
@@ -350,7 +371,7 @@ export class BoundedNativeAdapter {
         const snapshot = await runCommand(
           this.nativeExecutable,
           ["automate", "snapshot"],
-          this.projectRoot,
+          this.evidenceRoot,
           signal,
           remainingMs(deadline),
         );
@@ -398,7 +419,7 @@ export class BoundedNativeAdapter {
         throw error;
       } finally {
         signal.removeEventListener("abort", onAbort);
-        stopProcess(child);
+        await stopUtilityProcess(child);
       }
     }
 
@@ -470,13 +491,19 @@ export class BoundedNativeAdapter {
     } else if (step.action === "assert_visible") {
       args = ["automate", "assert", "--timeout-ms", String(Math.min(5_000, remainingMs(deadline))), escapeRegex(step.target)];
     } else {
-      const linePattern = `${escapeRegex(step.target)}.*${escapeRegex(step.value)}`;
-      args = ["automate", "assert", "--timeout-ms", String(Math.min(5_000, remainingMs(deadline))), linePattern];
+      args = [
+        "automate",
+        "assert",
+        "--timeout-ms",
+        String(Math.min(5_000, remainingMs(deadline))),
+        escapeRegex(step.target),
+        escapeRegex(step.value),
+      ];
     }
     await runCommand(
       this.nativeExecutable,
       args,
-      this.projectRoot,
+      this.evidenceRoot,
       signal,
       remainingMs(deadline),
     );
@@ -492,7 +519,7 @@ export class BoundedNativeAdapter {
     const snapshot = await runCommand(
       this.nativeExecutable,
       ["automate", "snapshot"],
-      this.projectRoot,
+      this.evidenceRoot,
       signal,
       remainingMs(deadline),
     );
@@ -521,13 +548,13 @@ export class BoundedNativeAdapter {
     await runCommand(
       this.nativeExecutable,
       ["automate", "screenshot", defaultViewLabel, "1"],
-      this.projectRoot,
+      this.evidenceRoot,
       signal,
       remainingMs(deadline),
     );
     const evidenceName = `${safeName(scenario.id)}-${safeName(name)}.png`;
     await copyFile(
-      path.join(this.projectRoot, ".zig-cache", "native-sdk-automation", `screenshot-${defaultViewLabel}.png`),
+      path.join(this.evidenceRoot, ".zig-cache", "native-sdk-automation", `screenshot-${defaultViewLabel}.png`),
       path.join(this.evidenceRoot, evidenceName),
     );
     screenshots.push(evidenceName);

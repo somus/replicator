@@ -1,39 +1,303 @@
-import { query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import {
+  createSdkMcpServer,
+  query,
+  tool,
+  type McpSdkServerConfigWithInstance,
+} from "@anthropic-ai/claude-agent-sdk";
+import { z } from "zod";
 
-export type AgentSessionOptions = {
+export type AgentTurnOptions<T> = {
   cwd: string;
-  request: string;
+  prompt: string;
   resumeSessionId?: string;
   abortController: AbortController;
+  outputSchema: Record<string, unknown>;
   onInitialized: (sessionId: string) => Promise<void>;
+  validateOutput: (value: unknown) => T;
+  mcpServers?: Record<string, McpSdkServerConfigWithInstance>;
+  allowedTools?: string[];
+  maxTurns?: number;
+  model?: "sonnet";
+  effort?: "low";
+  maxBudgetUsd?: number;
+  sessionConfigDir: string;
 };
 
-export async function runAgentSession(options: AgentSessionOptions): Promise<void> {
+export type AgentTurnResult<T> = { sessionId: string; output: T };
+
+export async function runStructuredAgentTurn<T>(options: AgentTurnOptions<T>): Promise<AgentTurnResult<T>> {
+  const environment = Object.fromEntries(
+    Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+  );
   const queryOptions = {
     cwd: options.cwd,
     abortController: options.abortController,
-    maxTurns: 1,
+    maxTurns: options.maxTurns ?? 12,
+    model: options.model ?? "sonnet",
+    effort: options.effort ?? "low",
+    maxBudgetUsd: options.maxBudgetUsd ?? 5,
     persistSession: true,
     permissionMode: "dontAsk" as const,
     tools: [] as string[],
     settingSources: [] as [],
+    strictMcpConfig: true,
+    systemPrompt: "You are the Replicator bounded Native utility agent. Follow only the owner request, accepted host contract, and tools supplied in this query. You have no shell, general filesystem, Claude Code settings, memory, skills, plugins, or ambient MCP servers. Use the provided tools to clarify when necessary, accept one plan, inspect references and focused Native guidance, edit only approved files, validate, behavior-test, repair, and finalize one unchanged source digest.",
+    env: { ...environment, CLAUDE_CONFIG_DIR: options.sessionConfigDir },
+    outputFormat: { type: "json_schema" as const, schema: options.outputSchema },
+    ...(options.mcpServers ? { mcpServers: options.mcpServers } : {}),
+    ...(options.allowedTools ? { allowedTools: options.allowedTools } : {}),
     ...(options.resumeSessionId ? { resume: options.resumeSessionId } : {}),
   };
 
-  let initialized = false;
-  for await (const message of query({ prompt: options.request, options: queryOptions })) {
-    await persistInitialization(message, initialized, options.onInitialized);
-    if (message.type === "system" && message.subtype === "init") initialized = true;
+  let sessionId: string | undefined;
+  let structuredOutput: unknown;
+  let assistantError: string | undefined;
+  for await (const message of query({ prompt: options.prompt, options: queryOptions })) {
+    if (message.type === "system" && message.subtype === "init" && !sessionId) {
+      sessionId = message.session_id;
+      await options.onInitialized(sessionId);
+    }
+    if (message.type === "assistant" && message.error) assistantError = message.error;
+    if (message.type === "result") {
+      if (message.subtype !== "success" || message.is_error) {
+        if (assistantError === "authentication_failed") throw new Error("Agent SDK authentication is unavailable");
+        const details = "errors" in message && message.errors.length > 0
+          ? `: ${message.errors.join("; ")}`
+          : message.subtype === "success" && message.result ? `: ${message.result}` : "";
+        throw new Error(`Agent SDK turn failed: ${message.subtype}${details}`);
+      }
+      structuredOutput = message.structured_output;
+    }
   }
-
-  if (!initialized) throw new Error("Agent SDK ended before session initialization");
+  if (!sessionId) throw new Error("Agent SDK ended before session initialization");
+  if (structuredOutput === undefined) throw new Error("Agent SDK returned no structured output");
+  return { sessionId, output: options.validateOutput(structuredOutput) };
 }
 
-async function persistInitialization(
-  message: SDKMessage,
-  alreadyInitialized: boolean,
-  onInitialized: (sessionId: string) => Promise<void>,
-): Promise<void> {
-  if (alreadyInitialized || message.type !== "system" || message.subtype !== "init") return;
-  await onInitialized(message.session_id);
+export type AgenticImplementationOptions = {
+  acceptPlan: (input: { summary: string; scenarios: unknown[] }) => Promise<string>;
+  requestClarification: (questions: unknown[]) => Promise<Record<string, string>>;
+  writeSource: (file: string, contents: string) => Promise<void>;
+  currentDigest: () => Promise<string>;
+  validate: () => Promise<string>;
+  verify: () => Promise<string>;
+  onStage: (stage: "validation" | "verification", ok: boolean, summary: string) => void;
+};
+
+export type AgenticImplementation = {
+  server: McpSdkServerConfigWithInstance;
+  finalizedDigest: () => string | undefined;
+};
+
+const nativeDocs: Record<string, string> = {
+  "essentials": [
+    "Only app.zon, src/app.native, and src/core.ts are editable. Source is authoritative.",
+    "Use a Model for durable state, a Msg union for events, init for initial state, update for transitions, and view for markup.",
+    "Model text is Uint8Array. Derive changing display bytes with exported one-Model functions and bind the function name without parentheses.",
+    "Every dynamic markup binding uses braces. Exported functions taking exactly one Model value are markup bindings.",
+    "Use label on a wrapper when automation must assert both an accessible target and child visible text, because a text label replaces its visible automation name.",
+  ].join("\n"),
+  "state-and-timers": [
+    "Construct commands inline in update. Cmd.delay takes a key, milliseconds, and a message tag, for example Cmd.delay(1, 1000, \"tick\").",
+    "Keep numeric timer state in Model. Return a new Model and next Cmd from each update arm.",
+    "Avoid language keywords as string-union members because they become compiled enum members.",
+  ].join("\n"),
+  "markup-layout-style": [
+    "Native 0.8.1 uses main/cross alignment, foreground/background/border tokens, radius sm/md/lg, and text sizes sm/heading/display.",
+    "Buttons use on-press and variants primary/secondary/outline/ghost. Do not invent HTML attributes or components.",
+    "Supported useful elements include row, column, panel, text, button, progress, stack, spacer, and divider.",
+  ].join("\n"),
+  "validation": [
+    "Call validate_app after edits. It runs the strict Native checker and an automation-capable Debug build.",
+    "Repair the exact diagnostic, then call validate_app again. Do not make cleanup or cosmetic edits after validation passes.",
+    "Call verify_behavior only for the unchanged validated digest. If it reports a source failure, make one focused edit and validate again.",
+    "Call finalize_app exactly once after validation and behavior verification pass for the same unchanged digest.",
+  ].join("\n"),
+};
+
+export function createAgenticImplementation(options: AgenticImplementationOptions): AgenticImplementation {
+  let planAccepted = false;
+  let validatedDigest: string | undefined;
+  let verifiedDigest: string | undefined;
+  let finalDigest: string | undefined;
+  let writes = 0;
+  let verificationAttempts = 0;
+
+  const server = createSdkMcpServer({
+    name: "replicator",
+    version: "1.0.0",
+    alwaysLoad: true,
+    instructions: "Implement through the bounded edit, documentation, validation, behavior verification, and finalization tools. Keep repairing in this query until finalization passes.",
+    tools: [
+      tool(
+        "request_clarification",
+        "Pause for owner answers only when a material ambiguity prevents a safe plan. Call only before accept_plan.",
+        {
+          questions: z.array(z.object({
+            id: z.string().min(1).max(128),
+            question: z.string().min(1).max(1_000),
+            answerKind: z.enum(["choice", "short_text"]),
+            options: z.array(z.string().min(1).max(500)).min(2).max(5).optional(),
+          })).min(1).max(6),
+        },
+        async ({ questions }) => {
+          try {
+            if (planAccepted) throw new Error("the plan is already accepted");
+            const answers = await options.requestClarification(questions);
+            return { content: [{ type: "text", text: `Owner answers: ${JSON.stringify(answers)}` }] };
+          } catch (error) {
+            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Clarification failed" }] };
+          }
+        },
+      ),
+      tool(
+        "accept_plan",
+        "Submit the immutable bounded Native plan and executable Behavior Contract before editing source.",
+        {
+          summary: z.string().min(1).max(4_000),
+          scenarios: z.array(z.object({
+            id: z.string().min(1).max(128),
+            title: z.string().min(1).max(1_000),
+            purpose: z.enum(["primary", "newest_change", "preserved_behavior", "high_risk"]),
+            steps: z.array(z.union([
+              z.object({ action: z.literal("launch") }),
+              z.object({ action: z.literal("click"), target: z.string().min(1).max(200) }),
+              z.object({ action: z.literal("input"), target: z.string().min(1).max(200), value: z.string().max(2_000) }),
+              z.object({ action: z.literal("wait"), milliseconds: z.number().min(0).max(5_000) }),
+              z.object({ action: z.literal("assert_text"), target: z.string().min(1).max(200), value: z.string().min(1).max(2_000) }),
+              z.object({ action: z.literal("assert_visible"), target: z.string().min(1).max(200) }),
+              z.object({ action: z.literal("screenshot"), name: z.string().min(1).max(80) }),
+            ])).min(1).max(24),
+          })).min(1).max(3),
+        },
+        async ({ summary, scenarios }) => {
+          try {
+            if (planAccepted) throw new Error("the plan is already accepted");
+            const result = await options.acceptPlan({ summary, scenarios });
+            planAccepted = true;
+            return { content: [{ type: "text", text: result }] };
+          } catch (error) {
+            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Plan rejected" }] };
+          }
+        },
+      ),
+      tool(
+        "write_source",
+        "Replace one complete host-approved Native source file. Any edit invalidates validation and verification evidence.",
+        { file: z.string().min(1).max(128), contents: z.string().max(500_000) },
+        async ({ file, contents }) => {
+          try {
+            if (!planAccepted) throw new Error("call accept_plan before editing source");
+            if (finalDigest) throw new Error("source is finalized");
+            if (writes >= 18) throw new Error("bounded source edit limit reached");
+            await options.writeSource(file, contents);
+            writes += 1;
+            validatedDigest = undefined;
+            verifiedDigest = undefined;
+            return { content: [{ type: "text", text: `Updated ${file}; validation evidence is invalid until validate_app passes.` }] };
+          } catch (error) {
+            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Source edit rejected" }] };
+          }
+        },
+      ),
+      tool(
+        "read_sdk_doc",
+        "Read one focused host-provided Native 0.8.1 authoring page.",
+        { topic: z.enum(["essentials", "state-and-timers", "markup-layout-style", "validation"]) },
+        async ({ topic }) => ({ content: [{ type: "text", text: nativeDocs[topic]! }] }),
+      ),
+      tool(
+        "validate_app",
+        "Run the strict Native checker and automation-capable Debug build. Repair diagnostics and call again until it passes.",
+        {},
+        async () => {
+          try {
+            if (!planAccepted) throw new Error("call accept_plan before validation");
+            if (finalDigest) throw new Error("source is finalized");
+            const summary = await options.validate();
+            validatedDigest = await options.currentDigest();
+            verifiedDigest = undefined;
+            options.onStage("validation", true, summary);
+            return { content: [{ type: "text", text: `Validation passed for source ${validatedDigest}. Do not edit unless verify_behavior reports a source failure.\n${summary}` }] };
+          } catch (error) {
+            const summary = error instanceof Error ? error.message : "Validation failed";
+            options.onStage("validation", false, summary);
+            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source. Make a focused source edit, then call validate_app again.` }] };
+          }
+        },
+      ),
+      tool(
+        "verify_behavior",
+        "Run the immutable accepted Behavior Contract against the unchanged validated Debug app.",
+        {},
+        async () => {
+          try {
+            if (!planAccepted) throw new Error("call accept_plan before behavior verification");
+            if (finalDigest) throw new Error("source is finalized");
+            if (!validatedDigest || await options.currentDigest() !== validatedDigest) {
+              throw new Error("source changed or has not passed validate_app");
+            }
+            if (verificationAttempts >= 5) throw new Error("bounded behavior verification limit reached");
+            verificationAttempts += 1;
+            const summary = await options.verify();
+            verifiedDigest = await options.currentDigest();
+            options.onStage("verification", true, summary);
+            return { content: [{ type: "text", text: `Behavior verification passed for source ${verifiedDigest}.\n${summary}` }] };
+          } catch (error) {
+            const summary = error instanceof Error ? error.message : "Behavior verification failed";
+            options.onStage("verification", false, summary);
+            return { isError: true, content: [{ type: "text", text: `${summary}\nrepairScope=source. Make a focused source edit, then validate and verify again.` }] };
+          }
+        },
+      ),
+      tool(
+        "finalize_app",
+        "Finalize only after validation and behavior verification pass for the same unchanged source. This must be the final tool call.",
+        {},
+        async () => {
+          try {
+            if (!planAccepted) throw new Error("call accept_plan before finalization");
+            const digest = await options.currentDigest();
+            if (!validatedDigest || !verifiedDigest || digest !== validatedDigest || digest !== verifiedDigest) {
+              throw new Error("current source has not passed validation and behavior verification for one unchanged digest");
+            }
+            finalDigest = digest;
+            return { content: [{ type: "text", text: `Finalized source ${digest}. Return the requested structured summary without another tool call.` }] };
+          } catch (error) {
+            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Finalization rejected" }] };
+          }
+        },
+      ),
+    ],
+  });
+  return { server, finalizedDigest: () => finalDigest };
+}
+
+export type AgentReference = {
+  id: string;
+  mediaType: "image/png" | "image/jpeg" | "image/webp";
+  load: () => Promise<Buffer>;
+};
+
+export function createReferenceReader(references: AgentReference[]): McpSdkServerConfigWithInstance {
+  return createSdkMcpServer({
+    name: "references",
+    version: "1.0.0",
+    alwaysLoad: true,
+    instructions: "Use read_reference_image to inspect every supplied Reference Image before planning or editing the Utility.",
+    tools: [
+      tool(
+        "read_reference_image",
+        "Read one immutable owner-supplied Reference Image by its host-provided ID.",
+        { id: z.string().min(1).max(128) },
+        async ({ id }) => {
+          const reference = references.find((candidate) => candidate.id === id);
+          if (!reference) return { isError: true, content: [{ type: "text", text: "Unknown Reference Image ID" }] };
+          const data = await reference.load();
+          if (data.byteLength > 5 * 1024 * 1024) return { isError: true, content: [{ type: "text", text: "Reference Image exceeds the host limit" }] };
+          return { content: [{ type: "image", data: data.toString("base64"), mimeType: reference.mediaType }] };
+        },
+      ),
+    ],
+  });
 }

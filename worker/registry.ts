@@ -6,6 +6,7 @@ import type {
   ReadyArtifactMetadata,
   ReferenceImageMetadata,
   RequestKind,
+  ScenarioResult,
   UtilityFormat,
   UtilityState,
 } from "./protocol.js";
@@ -29,6 +30,13 @@ export type ActiveAttemptRecord = {
 
 export type OwnerFacingError = { code: string; message: string; occurredAt: string };
 
+export type ReadyArtifactRecord = ReadyArtifactMetadata & {
+  evidencePath: string;
+  screenshots: string[];
+  scenarioResults: ScenarioResult[];
+  createdAt: string;
+};
+
 export type UtilityRecord = {
   id: string;
   displayName: string;
@@ -40,7 +48,7 @@ export type UtilityRecord = {
   references: ReferenceImageMetadata[];
   acceptedPlan?: AcceptedPlan;
   behaviorContract?: BehaviorContract;
-  readyArtifact?: ReadyArtifactMetadata;
+  readyArtifact?: ReadyArtifactRecord;
   activeAttempt?: ActiveAttemptRecord;
   lastError?: OwnerFacingError;
   createdAt: string;
@@ -68,7 +76,11 @@ function validateRegistry(value: unknown): Registry {
     if (!utility || typeof utility !== "object" || typeof utility.id !== "string" || ids.has(utility.id)) throw new Error("registry contains an invalid or duplicate Utility");
     ids.add(utility.id);
     assertRelativePath(utility.folder, `utilities.${utility.id}.folder`);
-    if (utility.readyArtifact) assertRelativePath(utility.readyArtifact.path, `utilities.${utility.id}.readyArtifact.path`);
+    if (utility.readyArtifact) {
+      assertRelativePath(utility.readyArtifact.path, `utilities.${utility.id}.readyArtifact.path`);
+      assertRelativePath(utility.readyArtifact.evidencePath, `utilities.${utility.id}.readyArtifact.evidencePath`);
+      for (const screenshot of utility.readyArtifact.screenshots) assertRelativePath(screenshot, `utilities.${utility.id}.readyArtifact.screenshots`);
+    }
     for (const reference of utility.references) assertRelativePath(reference.path, `utilities.${utility.id}.references.path`);
     if (utility.activeAttempt) activeAttempts += 1;
   }
@@ -119,7 +131,7 @@ export class RegistryStore {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       hadPrevious = false;
     }
-    await writeFile(this.#temporaryPath, `${JSON.stringify(registry, null, 2)}\n`, { mode: 0o600 });
+    await writeFile(this.#temporaryPath, `${JSON.stringify(registry)}\n`, { mode: 0o600 });
     await rename(this.#temporaryPath, this.#registryPath);
     if (!hadPrevious) await copyFile(this.#registryPath, this.#backupPath);
   }

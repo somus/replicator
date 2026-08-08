@@ -240,13 +240,37 @@ function quoteJson(value: Uint8Array): Uint8Array {
 }
 
 function startAttempt(model: Model, request: Uint8Array): Uint8Array {
-  const prefix = model.readyArtifactPath.length > 0
+  const revision = model.readyArtifactPath.length > 0;
+  const prefix = revision
     ? asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":\"focus-sprint\",\"requestId\":\"revision-1\",\"kind\":\"revision\",\"requestText\":")
     : asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":\"focus-sprint\",\"requestId\":\"build-1\",\"kind\":\"build\",\"requestText\":");
   const middle = asciiBytes(",\"references\":"); const references = model.referenceJson.length > 0 ? model.referenceJson : asciiBytes("[]");
-  const suffix = asciiBytes("}\n"); const quoted = quoteJson(request);
-  const out = new Uint8Array(prefix.length + quoted.length + middle.length + references.length + suffix.length); let at = 0;
-  out.set(prefix, at); at += prefix.length; out.set(quoted, at); at += quoted.length; out.set(middle, at); at += middle.length; out.set(references, at); at += references.length; out.set(suffix, at); return out;
+  const suffix = revision
+    ? asciiBytes(",\"currentSourceDigest\":")
+    : asciiBytes("}\n");
+  const sourceDigest = revision ? quoteJson(model.sourceDigest) : new Uint8Array(0);
+  const artifactPrefix = revision ? asciiBytes(",\"readyArtifact\":{\"path\":") : new Uint8Array(0);
+  const artifactPath = revision ? quoteJson(model.readyArtifactPath) : new Uint8Array(0);
+  const artifactSource = revision ? asciiBytes(",\"sourceDigest\":") : new Uint8Array(0);
+  const artifactBinary = revision ? asciiBytes(",\"binaryDigest\":") : new Uint8Array(0);
+  const binaryDigest = revision ? quoteJson(model.binaryDigest) : new Uint8Array(0);
+  const ending = revision ? asciiBytes("}}\n") : new Uint8Array(0);
+  const quoted = quoteJson(request);
+  const out = new Uint8Array(prefix.length + quoted.length + middle.length + references.length + suffix.length + sourceDigest.length + artifactPrefix.length + artifactPath.length + artifactSource.length + sourceDigest.length + artifactBinary.length + binaryDigest.length + ending.length); let at = 0;
+  out.set(prefix, at); at += prefix.length;
+  out.set(quoted, at); at += quoted.length;
+  out.set(middle, at); at += middle.length;
+  out.set(references, at); at += references.length;
+  out.set(suffix, at); at += suffix.length;
+  out.set(sourceDigest, at); at += sourceDigest.length;
+  out.set(artifactPrefix, at); at += artifactPrefix.length;
+  out.set(artifactPath, at); at += artifactPath.length;
+  out.set(artifactSource, at); at += artifactSource.length;
+  out.set(sourceDigest, at); at += sourceDigest.length;
+  out.set(artifactBinary, at); at += artifactBinary.length;
+  out.set(binaryDigest, at); at += binaryDigest.length;
+  out.set(ending, at);
+  return out;
 }
 
 function consumeRegistry(model: Model, bytes: Uint8Array): Model {
@@ -335,7 +359,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       if (requestControlsDisabled(model)) return [model, Cmd.none];
       return [{ ...model, revisionDraft: editDraft(model.revisionDraft, msg.edit) }, Cmd.none];
     case "send_revision":
-      if (requestControlsDisabled(model) || trimBytes(model.revisionDraft.bytes).length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0) return [model, Cmd.none];
+      if (requestControlsDisabled(model) || trimBytes(model.revisionDraft.bytes).length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0 || (model.readyArtifactPath.length > 0 && (model.sourceDigest.length === 0 || model.binaryDigest.length === 0))) return [model, Cmd.none];
       return [{ ...model, globalBusy: true, utilityState: "planning", revisionSubmitted: true, submittedKind: model.readyArtifactPath.length > 0 ? "revision" : "build", submittedRevision: trimBytes(model.revisionDraft.bytes), revisionDraft: emptyDraft(), attemptInterrupted: false, ownerError: new Uint8Array(0), clarificationQuestion: new Uint8Array(0), stageResult: asciiBytes("Starting the Request Attempt...") }, Cmd.spawn([model.nodePath, model.workerPath], { key: "request-worker", stdin: startAttempt(model, trimBytes(model.revisionDraft.bytes)), line: "worker_line", exit: "worker_exit", err: "worker_error" })];
     case "attach_reference":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
