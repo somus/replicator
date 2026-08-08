@@ -30,7 +30,7 @@ export function routeModel(
   return { model, effort, reason: modelOverride || effortOverride ? "validated operator override" : `default for ${format}` };
 }
 
-export function systemInstruction(phase: AgentPhase, target: UtilityFormat, sourceRepair = false): { version: string; digest: string; text: string } {
+export function systemInstruction(phase: AgentPhase, target: UtilityFormat | "host-selected-plan", sourceRepair = false): { version: string; digest: string; text: string } {
   const version = phase === "planning" ? "shared-v1+planning-v1" : `shared-v1+build-v1${sourceRepair ? "+source-repair-v1" : ""}`;
   const text = [
     SHARED_SYSTEM_V1,
@@ -114,6 +114,8 @@ export type AgenticImplementationOptions = {
   listSourceFiles: () => Promise<string[]>;
   readSource: (file: string) => Promise<string>;
   editSource: (file: string, oldText: string, newText: string, replaceAll: boolean) => Promise<void>;
+  createSource?: (file: string, contents: string) => Promise<void>;
+  installDependency?: (packageName: string) => Promise<void>;
   currentDigest: () => Promise<string>;
   validate: () => Promise<string>;
   verify: () => Promise<string>;
@@ -244,11 +246,11 @@ export function createAgenticImplementation(options: AgenticImplementationOption
     name: "replicator",
     version: "1.0.0",
     alwaysLoad: true,
-    instructions: "Implement through the bounded edit, documentation, validation, behavior verification, and finalization tools. Keep repairing in this query until finalization passes.",
+    instructions: "Implement through the format-bounded source, validation, behavior verification, and finalization tools. Keep repairing in this query until finalization passes.",
     tools: [
       tool(
         "list_app_files",
-        "List every editable file allowed by the locked bounded Native format.",
+        "List every editable file allowed by the host-locked Utility format.",
         {},
         async () => {
           const started = performance.now();
@@ -265,7 +267,7 @@ export function createAgenticImplementation(options: AgenticImplementationOption
       ),
       tool(
         "read_app",
-        "Read one allowed bounded Native source file before editing it.",
+        "Read one allowed source file before editing it.",
         { file: z.string().min(1).max(128) },
         async ({ file }) => {
           const started = performance.now();
@@ -277,6 +279,48 @@ export function createAgenticImplementation(options: AgenticImplementationOption
           } catch (error) {
             await recordTool("read_app", "source", started, "failed", "host");
             return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Source read rejected" }] };
+          }
+        },
+      ),
+      tool(
+        "create_app_file",
+        "Create one additional top-level TypeScript module when the locked format allows it.",
+        { file: z.string().min(1).max(128), contents: z.string().min(1).max(120 * 1024) },
+        async ({ file, contents }) => {
+          const started = performance.now();
+          try {
+            if (!options.createSource) throw new Error("the locked format does not allow source creation");
+            if (finalDigest || !sourceEditingOpen) throw new Error("source creation is closed");
+            if (writes >= 18) throw new Error("bounded source edit limit reached");
+            await options.createSource(file, contents);
+            writes += 1;
+            validatedDigest = undefined;
+            verifiedDigest = undefined;
+            await recordTool("create_app_file", "source", started, "accepted", undefined, true);
+            return { content: [{ type: "text", text: `Created ${file}; validation evidence is invalid until validate_app passes.` }] };
+          } catch (error) {
+            await recordTool("create_app_file", "source", started, "failed", "source", true);
+            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Source creation rejected" }] };
+          }
+        },
+      ),
+      tool(
+        "install_frontend_dependency",
+        "Ask the host to add one exact frontend package and update its protected lockfile without lifecycle scripts.",
+        { packageName: z.string().regex(/^(?:@[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*|[a-z0-9][a-z0-9._-]*)(?:@[0-9]+\.[0-9]+\.[0-9]+)?$/) },
+        async ({ packageName }) => {
+          const started = performance.now();
+          try {
+            if (!options.installDependency) throw new Error("the locked format does not expose frontend dependencies");
+            if (finalDigest || !sourceEditingOpen) throw new Error("dependency changes are closed");
+            await options.installDependency(packageName);
+            validatedDigest = undefined;
+            verifiedDigest = undefined;
+            await recordTool("install_frontend_dependency", "source", started, "accepted", undefined, true);
+            return { content: [{ type: "text", text: `Installed ${packageName}; validation evidence is invalid until validate_app passes.` }] };
+          } catch (error) {
+            await recordTool("install_frontend_dependency", "source", started, "failed", "source", true);
+            return { isError: true, content: [{ type: "text", text: error instanceof Error ? error.message : "Dependency install rejected" }] };
           }
         },
       ),

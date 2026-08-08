@@ -125,7 +125,6 @@ export class NativeGuidance {
   }
 
   assertSelections(selections: readonly NativeGuidanceSelection[], format: UtilityFormat): void {
-    if (format !== "native-bounded") throw new Error("only bounded Native guidance is available in H3");
     let skillSections = 0;
     let officialPages = 0;
     const selectedSkills = new Set<string>();
@@ -139,7 +138,7 @@ export class NativeGuidance {
         if (!entry.headings.some((heading) => heading.id === sectionId)) throw new Error(`unknown Native guidance section: ${selection.id}#${sectionId}`);
       }
       if (selection.corpus === "skill") {
-        if (selection.id === "zig") throw new Error("bounded Utility coding cannot select the protected Zig skill");
+        if (selection.id === "zig") throw new Error("generated Utility coding cannot select the protected Zig skill");
         selectedSkills.add(selection.id);
         skillSections += selection.sectionIds.length;
       } else {
@@ -152,8 +151,10 @@ export class NativeGuidance {
       }
     }
     if (skillSections > 8 || officialPages > 16) throw new Error("Native guidance selection exceeds its plan cap");
-    if (!selectedSkills.has("native-ui") || !selectedSkills.has("ts-core")) throw new Error("bounded Native plans require native-ui and ts-core guidance");
-    if (!selectedComponent) throw new Error("bounded Native plans require exact official component guidance");
+    if (format !== "react-webview") {
+      if (!selectedSkills.has("native-ui") || !selectedSkills.has("ts-core")) throw new Error("Native plans require native-ui and ts-core guidance");
+      if (!selectedComponent) throw new Error("Native plans require exact official component guidance");
+    }
   }
 
   async read(selection: GuidanceSelection, cursor = 0): Promise<{ text: string; nextCursor?: number }> {

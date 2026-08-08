@@ -18,11 +18,13 @@ import type {
   BehaviorStep,
   ReadyArtifactMetadata,
   ScenarioResult,
+  UtilityFormat,
 } from "./protocol.js";
 import {
   assertProjectPolicy,
   assertUtilityFormatMarker,
   createUtilityFormatMarker,
+  scaffoldUtility,
   sourceDigest,
   writeEditableProjectFile,
 } from "./targets.js";
@@ -94,7 +96,8 @@ export type FinalizationOutcome = {
   attestationInputs: FinalizationInputs;
 };
 
-export type BoundedNativeAdapterOptions = {
+export type UtilityAdapterOptions = {
+  format?: UtilityFormat;
   nodeExecutable?: string;
   nativeCliPath?: string;
   nativeZigPath?: string;
@@ -291,7 +294,8 @@ function stopProcess(child: ChildProcess): void {
   if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
 }
 
-export class BoundedNativeAdapter {
+export class UtilityAdapter {
+  readonly format: UtilityFormat;
   readonly nodeExecutable: string;
   readonly nativeCliPath: string;
   readonly nativeZigPath: string;
@@ -312,7 +316,8 @@ export class BoundedNativeAdapter {
   private lastSourceFailure: AdapterFailure | undefined;
   private finalized = false;
 
-  constructor(options: BoundedNativeAdapterOptions) {
+  constructor(options: UtilityAdapterOptions) {
+    this.format = options.format ?? "native-bounded";
     this.nodeExecutable = path.resolve(options.nodeExecutable ?? process.execPath);
     this.nativeCliPath = path.resolve(options.nativeCliPath ?? options.nativeExecutable ?? "native");
     this.nativeZigPath = path.resolve(options.nativeZigPath ?? process.env.NATIVE_SDK_ZIG ?? "zig");
@@ -350,6 +355,11 @@ export class BoundedNativeAdapter {
   async scaffold(signal: AbortSignal): Promise<void> {
     if (this.finalized) throw new Error("adapter is finalized");
     await mkdir(this.utilityRoot, { recursive: true });
+    if (this.format !== "native-bounded") {
+      await scaffoldUtility(this.projectRoot, this.format);
+      await createUtilityFormatMarker(this.utilityRoot, this.format);
+      return;
+    }
     const temporary = path.join(this.utilityRoot, "generated-app");
     if (temporary === this.projectRoot) {
       throw new AdapterFailure("host", "projectRoot must differ from the native init staging path");
@@ -377,8 +387,8 @@ export class BoundedNativeAdapter {
         30_000,
       );
       await rename(temporary, this.projectRoot);
-      await createUtilityFormatMarker(this.utilityRoot, "native-bounded");
-      await assertProjectPolicy(this.projectRoot, "native-bounded");
+      await createUtilityFormatMarker(this.utilityRoot, this.format);
+      await assertProjectPolicy(this.projectRoot, this.format);
     } catch (error) {
       await rm(temporary, { recursive: true, force: true });
       throw error instanceof AdapterFailure
@@ -393,7 +403,7 @@ export class BoundedNativeAdapter {
       throw new Error("source edits are sealed; a source-scoped failure must reopen repair first");
     }
     await this.invalidateLaterEvidence();
-    await writeEditableProjectFile(this.projectRoot, "native-bounded", relativePath, contents);
+    await writeEditableProjectFile(this.projectRoot, this.format, relativePath, contents);
     this.validatedDigest = undefined;
     if (relativePath === "src/core.ts") this.modelContractCoreDigest = undefined;
   }
@@ -401,8 +411,8 @@ export class BoundedNativeAdapter {
   async validate(signal: AbortSignal): Promise<ValidationOutcome> {
     if (this.finalized) throw new Error("adapter is finalized");
     try {
-      await assertUtilityFormatMarker(this.utilityRoot, "native-bounded");
-      await assertProjectPolicy(this.projectRoot, "native-bounded");
+      await assertUtilityFormatMarker(this.utilityRoot, this.format);
+      await assertProjectPolicy(this.projectRoot, this.format);
       const stages: StageOutcome[] = [];
       const node = await runCommand(
         this.nodeExecutable,
@@ -426,17 +436,22 @@ export class BoundedNativeAdapter {
         durationMs: version.durationMs,
         ok: true,
       });
-      await preflightSource(this.projectRoot);
-      const coreDigest = await sha256File(path.join(this.projectRoot, "src", "core.ts"));
-      const modelContractRefreshed = coreDigest !== this.modelContractCoreDigest;
-      if (modelContractRefreshed) {
+      if (this.format === "react-webview") {
+        await runCommand("npm", ["ci", "--ignore-scripts", "--prefix", "frontend"], this.projectRoot, this.environment(), signal, 120_000);
+        await runCommand("npm", ["--prefix", "frontend", "run", "build"], this.projectRoot, this.environment(), signal, 120_000);
+      } else {
+        await preflightSource(this.projectRoot);
+      }
+      const coreDigest = this.format === "react-webview" ? undefined : await sha256File(path.join(this.projectRoot, "src", "core.ts"));
+      const modelContractRefreshed = coreDigest !== undefined && coreDigest !== this.modelContractCoreDigest;
+      if (modelContractRefreshed && coreDigest) {
         const test = await this.runNative(["test", "--yes"], signal, 120_000);
         stages.push({ stage: "native_test", summary: "Native model contract refreshed", durationMs: test.durationMs, ok: true });
         this.modelContractCoreDigest = coreDigest;
       }
       const check = await this.runNative(["check", "--strict"], signal, 30_000);
       stages.push({ stage: "native_check", summary: "Native strict check passed", durationMs: check.durationMs, ok: true });
-      this.validatedDigest = await sourceDigest(this.projectRoot, "native-bounded");
+      this.validatedDigest = await sourceDigest(this.projectRoot, this.format);
       return Object.assign(stages, { sourceDigest: this.validatedDigest, modelContractRefreshed });
     } catch (error) {
       if (error instanceof AdapterFailure || (error instanceof Error && error.name === "AbortError")) throw error;
@@ -451,11 +466,11 @@ export class BoundedNativeAdapter {
   ): Promise<ScenarioVerificationOutcome> {
     if (this.finalized) throw new Error("adapter is finalized");
     validateScenario(scenario);
-    const currentDigest = await sourceDigest(this.projectRoot, "native-bounded");
+    const currentDigest = await sourceDigest(this.projectRoot, this.format);
     if (!this.validatedDigest || currentDigest !== this.validatedDigest) {
       throw new AdapterFailure("source", "source must pass validate_app before verification");
     }
-    await assertUtilityFormatMarker(this.utilityRoot, "native-bounded");
+    await assertUtilityFormatMarker(this.utilityRoot, this.format);
     this.verificationSealed = true;
     const candidate = await this.buildOrReuseCandidate(signal);
     const started = performance.now();
@@ -519,7 +534,7 @@ export class BoundedNativeAdapter {
     if (uniqueRequired.length < 1 || uniqueRequired.some((id) => !this.scenarioResults.get(id)?.passed)) {
       throw new AdapterFailure("scenario", "every required Behavior Scenario must pass before finalization");
     }
-    const currentDigest = await sourceDigest(this.projectRoot, "native-bounded");
+    const currentDigest = await sourceDigest(this.projectRoot, this.format);
     const binary = path.join(this.projectRoot, "zig-out", "bin", "generated-app");
     const assets = path.join(this.projectRoot, "zig-out", "assets.bundle");
     if (
@@ -533,7 +548,7 @@ export class BoundedNativeAdapter {
       throw failure;
     }
     try {
-      const formatMarkerDigest = await assertUtilityFormatMarker(this.utilityRoot, "native-bounded");
+      const formatMarkerDigest = await assertUtilityFormatMarker(this.utilityRoot, this.format);
       await rm(this.releaseRoot, { recursive: true, force: true });
       await mkdir(this.releaseRoot, { recursive: true });
       const application = path.join(this.releaseRoot, "Generated App.app");

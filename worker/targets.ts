@@ -33,6 +33,17 @@ const boundedNativeProtectedFiles = [
   "tsconfig.json",
   "assets/icon.png",
 ] as const;
+const multiModuleBaseFiles = ["app.zon", "src/app.native", "src/core.ts"] as const;
+const reactWebViewEditableFiles = ["frontend/index.html"] as const;
+const reactWebViewProtectedFiles = [
+  "app.zon",
+  "build.zig",
+  "build.zig.zon",
+  "frontend/package-lock.json",
+  "frontend/package.json",
+  "frontend/vite.config.js",
+  "frontend/src/replicator-harness.ts",
+] as const;
 
 export type ProjectFilePolicy = {
   readable: readonly string[];
@@ -52,7 +63,22 @@ export function projectFilePolicy(format: UtilityFormat): ProjectFilePolicy {
       digest: [...boundedNativeEditableFiles, ...boundedNativeProtectedFiles].sort(),
     };
   }
-  return { readable: [], editable: [], creatable: [], protected: [], digest: [] };
+  if (format === "native-multimodule") {
+    return {
+      readable: multiModuleBaseFiles,
+      editable: multiModuleBaseFiles,
+      creatable: ["src/<module>.ts"],
+      protected: [],
+      digest: multiModuleBaseFiles,
+    };
+  }
+  return {
+    readable: reactWebViewEditableFiles,
+    editable: reactWebViewEditableFiles,
+    creatable: [],
+    protected: reactWebViewProtectedFiles,
+    digest: [...reactWebViewEditableFiles, ...reactWebViewProtectedFiles].sort(),
+  };
 }
 
 function markerContents(format: UtilityFormat): string {
@@ -214,6 +240,30 @@ export async function writeEditableProjectFile(
     absolutePath,
     constants.O_WRONLY | constants.O_TRUNC | constants.O_NOFOLLOW,
   );
+  try {
+    await handle.writeFile(contents, "utf8");
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+  return file;
+}
+
+export async function createEditableProjectFile(
+  projectRoot: string,
+  format: UtilityFormat,
+  candidate: string,
+  contents: string,
+): Promise<string> {
+  if (format !== "native-multimodule") throw new Error(`new source files are not allowed for ${format}`);
+  if (Buffer.byteLength(contents) > 120 * 1024) throw new Error("source file exceeds the 120 KiB creation limit");
+  const { file, absolutePath } = await resolveEditableProjectPath(projectRoot, format, candidate);
+  if (!/^src\/[A-Za-z][A-Za-z0-9_-]*\.ts$/.test(file) || file === "src/core.ts") {
+    throw new Error("multi-module Native may create only additional top-level TypeScript modules");
+  }
+  const modules = (await sourceFilesIn(projectRoot, "src")).filter((entry) => entry.endsWith(".ts"));
+  if (modules.length >= 8) throw new Error("multi-module Native permits core.ts plus seven additional modules");
+  const handle = await open(absolutePath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
   try {
     await handle.writeFile(contents, "utf8");
     await handle.sync();

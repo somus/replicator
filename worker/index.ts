@@ -25,13 +25,20 @@ import {
   type LoadRegistryCommand,
   type NativeGuidanceSelection,
   type StartAttemptCommand,
+  type UtilityFormat,
   type WorkerEvent,
 } from "./protocol.js";
 import { RegistryStore, type OwnerTimelineEntry, type UtilityRecord } from "./registry.js";
-import { assertProjectPolicy, sourceDigest } from "./targets.js";
+import {
+  assertProjectPolicy,
+  createEditableProjectFile,
+  isEditableProjectPath,
+  sourceDigest,
+  sourceFiles,
+} from "./targets.js";
 import {
   AdapterFailure,
-  BoundedNativeAdapter,
+  UtilityAdapter,
   type FinalizationOutcome,
   type VerificationOutcome,
 } from "./verification.js";
@@ -283,7 +290,7 @@ const planningOutputSchema: Record<string, unknown> = {
       },
     },
     summary: { type: "string" },
-    format: { const: "native-bounded" },
+    format: { enum: ["native-bounded", "native-multimodule", "react-webview"] },
     formatReason: { type: "string" },
     primaryWorkflow: { type: "string" },
     requirements: {
@@ -300,7 +307,7 @@ const planningOutputSchema: Record<string, unknown> = {
     decisions: { type: "array", maxItems: 16, items: { type: "string" } },
     nativeGuidance: {
       type: "array",
-      minItems: 1,
+      minItems: 0,
       maxItems: 24,
       items: {
         type: "object",
@@ -432,7 +439,7 @@ function validateBehaviorContract(value: unknown, kind: "build" | "revision"): B
 }
 
 function validateNativeGuidance(value: unknown): NativeGuidanceSelection[] {
-  if (!Array.isArray(value) || value.length === 0 || value.length > 24) throw new Error("Accepted plan requires bounded Native guidance");
+  if (!Array.isArray(value) || value.length > 24) throw new Error("Accepted plan contains invalid Native guidance");
   let skillSections = 0;
   let officialPages = 0;
   const selections: NativeGuidanceSelection[] = [];
@@ -484,12 +491,15 @@ function validateNativeGuidance(value: unknown): NativeGuidanceSelection[] {
 function validatePlanningResult(value: unknown, kind: "build" | "revision"): PlanningResult {
   const result = record(value);
   if (result.outcome === "clarification") return { outcome: "clarification", questions: validateQuestions(result.questions) };
-  if (result.outcome !== "plan" || result.format !== "native-bounded") throw new Error("Accepted Utility Format must remain bounded Native");
+  if (result.outcome !== "plan" || !["native-bounded", "native-multimodule", "react-webview"].includes(String(result.format))) {
+    throw new Error("Accepted Utility Format is invalid");
+  }
+  const format = result.format as UtilityFormat;
   return {
     outcome: "plan",
     plan: {
       summary: text(result.summary, "plan summary"),
-      format: "native-bounded",
+      format,
       formatReason: text(result.formatReason, "format reason"),
       primaryWorkflow: text(result.primaryWorkflow, "primary workflow"),
       requirements: (() => {
@@ -578,7 +588,8 @@ async function prepareSource(
   command: StartAttemptCommand,
   attemptId: string,
   utility: UtilityRecord,
-  adapter: BoundedNativeAdapter,
+  adapter: UtilityAdapter,
+  format: UtilityFormat,
   signal: AbortSignal,
 ): Promise<void> {
   const root = path.join(dataRoot, utility.folder);
@@ -587,13 +598,13 @@ async function prepareSource(
   if (command.kind === "build") {
     try {
       await lstat(source);
-      await assertProjectPolicy(source, "native-bounded");
+      await assertProjectPolicy(source, format);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       await adapter.scaffold(signal);
     }
   } else {
-    const currentDigest = await sourceDigest(source, "native-bounded");
+    const currentDigest = await sourceDigest(source, format);
     if (currentDigest !== command.currentSourceDigest || currentDigest !== utility.readyArtifact?.sourceDigest) {
       throw new Error("Revision source digest does not match the Ready Artifact");
     }
@@ -662,7 +673,13 @@ function agentReferences(command: StartAttemptCommand): AgentReference[] {
   }));
 }
 
-function planningPrompt(command: StartAttemptCommand, previousContract: BehaviorContract | undefined, guidanceCatalog: string, answers?: Record<string, string>): string {
+function planningPrompt(
+  command: StartAttemptCommand,
+  previousContract: BehaviorContract | undefined,
+  guidanceCatalog: string,
+  requiredFormat?: UtilityFormat,
+  answers?: Record<string, string>,
+): string {
   return [
     `Request kind: ${command.kind}.`,
     `Owner request: ${command.requestText}`,
@@ -670,8 +687,9 @@ function planningPrompt(command: StartAttemptCommand, previousContract: Behavior
     previousContract ? `Existing Behavior Contract to preserve where applicable: ${JSON.stringify(previousContract)}` : "",
     answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
     `Packaged Native guidance catalog: ${guidanceCatalog}`,
-    "Return one material Clarification batch only when ambiguity would change the result. A batch may begin with one choice question containing exactly two options; every additional question must use short_text. Otherwise return one complete native-bounded plan with requirements, decisions, the smallest exact nativeGuidance selection, and one to three executable scenarios.",
-    "The nativeGuidance selection must include both native-ui and ts-core and use at most eight skill sections total across both entries; count them before returning. Do not select generic native-ui elements or attributes sections when exact component pages cover them. Include the exact official docs/components page for every selected UI component, with component metadata naming its element and the exact bindings and events the plan will use.",
+    requiredFormat ? `This Revision must retain its existing format: ${requiredFormat}.` : "Choose exactly one format: native-bounded for a small single-core Native app, native-multimodule when the Native app needs up to seven additional top-level TypeScript modules, or react-webview for a React DOM interface.",
+    "Return one material Clarification batch only when ambiguity would change the result. A batch may begin with one choice question containing exactly two options; every additional question must use short_text. Otherwise return one complete format-aware plan with requirements, decisions, nativeGuidance, and one to three executable scenarios.",
+    "Native formats must include native-ui and ts-core guidance and use at most eight skill sections total. Include the exact official docs/components page for every selected Native UI component. React/WebView plans may return an empty nativeGuidance selection because the shell is host-protected.",
     "Use only launch, click, input, assert_text, assert_visible, and screenshot. Fixed waits are not executable; assertions own bounded polling. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
   ].filter(Boolean).join("\n");
 }
@@ -689,12 +707,13 @@ async function acceptPlan(
   let batchNumber = utility.activeAttempt?.clarificationBatches ?? 0;
   const references = agentReferences(attempt.command);
   const route = routeModel("planning", utility.format, attempt.command.modelOverride, attempt.command.effortOverride);
-  const instruction = systemInstruction("planning", utility.format);
+  const requiredFormat = attempt.command.kind === "revision" ? utility.format : undefined;
+  const instruction = systemInstruction("planning", requiredFormat ?? "host-selected-plan");
   for (;;) {
     const turn = await withDeadline(attempt, FINALIZATION_RESERVE_MS, () => runStructuredAgentTurn({
       cwd: sourceRoot,
       sessionConfigDir,
-      prompt: planningPrompt(attempt.command, utility.behaviorContract, guidance.compactCatalog(), answers),
+      prompt: planningPrompt(attempt.command, utility.behaviorContract, guidance.compactCatalog(), requiredFormat, answers),
       ...(sessionId ? { resumeSessionId: sessionId } : {}),
       abortController: attempt.abortController,
       outputSchema: planningOutputSchema,
@@ -733,6 +752,7 @@ async function acceptPlan(
     }));
     sessionId = turn.sessionId;
     if (turn.output.outcome === "plan") {
+      if (requiredFormat && turn.output.plan.format !== requiredFormat) throw new Error("Revision plan changed the locked Utility Format");
       guidance.assertSelections(turn.output.plan.nativeGuidance, turn.output.plan.format);
       return { plan: turn.output.plan, sessionId };
     }
@@ -856,19 +876,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     const nativeZigPath = process.env.NATIVE_SDK_ZIG
       ?? (resourcesRoot ? path.join(resourcesRoot, "toolchains", "zig", "zig") : undefined);
     if (!nativeCliPath || !nativeZigPath) throw new Error("bundled Native CLI and Zig paths are required");
-    const adapter = new BoundedNativeAdapter({
-      nodeExecutable: process.execPath,
-      nativeCliPath,
-      nativeZigPath,
-      nativeSdkHome: process.env.NATIVE_SDK_HOME ?? path.join(dataRoot, "native-sdk"),
-      utilityRoot,
-      projectRoot: sourceRoot,
-      evidenceRoot,
-      releaseRoot,
-    });
-    if (!resumeExisting) {
-      await prepareSource(attempt.command, attempt.id, utility, adapter, attempt.abortController.signal);
-    }
+    await mkdir(sourceRoot, { recursive: true, mode: 0o700 });
     emit({ type: "state_changed", attemptId: attempt.id, state: "planning" });
 
     const sessionConfigDir = path.join(utilityRoot, "agent-session");
@@ -881,6 +889,20 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     const { plan, sessionId } = reusablePlan
       ?? await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir, guidance);
     await persistPlan(utility.id, attempt.id, plan);
+    const adapter = new UtilityAdapter({
+      format: plan.format,
+      nodeExecutable: process.execPath,
+      nativeCliPath,
+      nativeZigPath,
+      nativeSdkHome: process.env.NATIVE_SDK_HOME ?? path.join(dataRoot, "native-sdk"),
+      utilityRoot,
+      projectRoot: sourceRoot,
+      evidenceRoot,
+      releaseRoot,
+    });
+    if (!resumeExisting || attempt.command.kind === "build") {
+      await prepareSource(attempt.command, attempt.id, utility, adapter, plan.format, attempt.abortController.signal);
+    }
     const codingGuidanceReadStart = guidance.readTelemetry().length;
     await setState(utility.id, attempt.id, "building");
     let verification: VerificationOutcome | undefined;
@@ -892,15 +914,18 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       stored.activeAttempt.finalizationNonce = finalizationNonce;
       stored.updatedAt = nowIso();
     });
-    const editableFiles = ["app.zon", "src/app.native", "src/core.ts"] as const;
+    const editableFiles = async (): Promise<string[]> => (await sourceFiles(sourceRoot, plan.format))
+      .filter((file) => isEditableProjectPath(plan.format, file));
     const readEditable = async (file: string): Promise<string> => {
-      if (!editableFiles.includes(file as (typeof editableFiles)[number])) throw new Error("source path is not editable for bounded Native");
+      if (!isEditableProjectPath(plan.format, file) || !(await editableFiles()).includes(file)) {
+        throw new Error(`source path is not editable for ${plan.format}`);
+      }
       const contents = await readFile(path.join(sourceRoot, file), "utf8");
       if (Buffer.byteLength(contents) > 120 * 1024) throw new Error("source file exceeds the read limit");
       return contents;
     };
     const implementation = createAgenticImplementation({
-      listSourceFiles: async () => [...editableFiles],
+      listSourceFiles: editableFiles,
       readSource: readEditable,
       editSource: async (file, oldText, newText, replaceAll) => {
         const contents = await readEditable(file);
@@ -909,7 +934,30 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         const next = replaceAll ? contents.replaceAll(oldText, newText) : contents.replace(oldText, newText);
         await adapter.writeSource(file, next);
       },
-      currentDigest: () => sourceDigest(sourceRoot, "native-bounded"),
+      ...(plan.format === "native-multimodule" ? {
+        createSource: async (file: string, contents: string) => {
+          await createEditableProjectFile(sourceRoot, plan.format, file, contents);
+        },
+      } : {}),
+      ...(plan.format === "react-webview" ? {
+        installDependency: async (packageName: string) => {
+          await new Promise<void>((resolve, reject) => {
+            const environment = Object.fromEntries(
+              Object.entries(process.env).filter(([name, value]) => value !== undefined && name !== "ANTHROPIC_API_KEY" && name !== "CLAUDE_CODE_OAUTH_TOKEN"),
+            ) as NodeJS.ProcessEnv;
+            const child = spawn("npm", ["--prefix", "frontend", "install", "--save", "--ignore-scripts", packageName], {
+              cwd: sourceRoot,
+              env: environment,
+              stdio: ["ignore", "ignore", "pipe"],
+            });
+            let errors = "";
+            child.stderr.on("data", (chunk: Buffer) => { errors = `${errors}${chunk.toString("utf8")}`.slice(-12 * 1024); });
+            child.once("error", reject);
+            child.once("close", (code) => code === 0 ? resolve() : reject(new Error(`frontend dependency install failed: ${errors}`)));
+          });
+        },
+      } : {}),
+      currentDigest: () => sourceDigest(sourceRoot, plan.format),
       validate: async () => {
         const outcomes = await adapter.validate(attempt.abortController.signal);
         return outcomes.map((outcome) => `${outcome.summary} (${outcome.durationMs} ms)`).join("\n");
@@ -967,10 +1015,12 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     const route = routeModel("build", plan.format, attempt.command.modelOverride, attempt.command.effortOverride);
     const instruction = systemInstruction("build", plan.format);
     const buildPrompt = [
-      "Implement the host-accepted bounded Native plan in this resumed Session.",
+      `Implement the host-accepted ${plan.format} plan in this resumed Session.`,
       `Owner request: ${attempt.command.requestText}`,
       `Accepted plan and immutable Behavior Contract: ${JSON.stringify(plan)}`,
-      "Keep app.zon name generated-app. Do not use dependencies, scripts, nested modules, or unrequested features.",
+      "Keep app.zon name generated-app. Respect the host-managed file and dependency boundaries and do not add unrequested features.",
+      plan.format === "native-multimodule" ? "You may create at most seven additional top-level src/*.ts modules with create_app_file; nested modules are forbidden." : "",
+      plan.format === "react-webview" ? "Edit only frontend/index.html and unprotected frontend/src files. The Zig shell, harness, manifest, build graph, package metadata, and lockfile are host-protected. Use install_frontend_dependency for any required package." : "",
       "Native 0.8.1 markup does not support HTML id or data-* attributes. Give every interactive or asserted scenario target a unique accessible label exactly matching the immutable Behavior Scenario target; labels, visible text, and Native automation replace DOM selectors.",
       "For an asserted dynamic text value, put the scenario label on a container and render the value in an unlabeled child <text>. A label on <text> replaces its visible value in Native automation snapshots.",
       "Native message payloads use tag:value for a constant and tag:{binding} for one model binding. Never wrap a quoted constant inside binding braces.",
@@ -1002,6 +1052,8 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
           "mcp__replicator__list_app_files",
           "mcp__replicator__read_app",
           "mcp__replicator__edit_app",
+          ...(plan.format === "native-multimodule" ? ["mcp__replicator__create_app_file"] : []),
+          ...(plan.format === "react-webview" ? ["mcp__replicator__install_frontend_dependency"] : []),
           "mcp__replicator__validate_app",
           "mcp__replicator__verify_behavior",
           "mcp__replicator__finalize_app",
@@ -1033,7 +1085,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       throw new Error("finalize_app was not the final accepted implementation tool");
     }
     const agentFinalizedDigest = implementation.finalizedDigest();
-    if (!agentFinalizedDigest || agentFinalizedDigest !== await sourceDigest(sourceRoot, "native-bounded")) {
+    if (!agentFinalizedDigest || agentFinalizedDigest !== await sourceDigest(sourceRoot, plan.format)) {
       throw new Error("Agent implementation ended without finalizing the current source digest");
     }
 
