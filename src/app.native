@@ -1,5 +1,5 @@
-<row background="background" label="Replicator builder">
-  <column width="372" background="surface" label="Utility Library">
+<split value="{sidebarSplit}" on-resize="sidebar_resized" gap="1" label="Replicator builder">
+  <column min-width="280" background="surface" label="Utility Library">
     <column padding="24" gap="22">
       <row gap="10" cross="center">
         <image image="{brandImageId}" width="42" height="42" label="Replicator logo" />
@@ -38,9 +38,7 @@
     </column>
   </column>
 
-  <separator />
-
-  <column grow="1" label="Selected Utility workspace">
+  <column min-width="600" label="Selected Utility workspace">
     <row height="150" padding="28" gap="18" cross="center" background="surface" label="Utility Header">
       <panel width="72" height="72" padding="20" background="background" radius="lg">
         <text size="heading" foreground="accent"><span weight="bold">{selectedInitial}</span></text>
@@ -93,15 +91,13 @@
             </panel>
           </if>
 
-          <if test="{hasClarification}"><panel padding="16" background="surface" radius="lg" label="Clarification required"><column gap="9"><row gap="8"><badge variant="secondary">Needs input</badge><text><span weight="bold">Clarification required</span></text></row><if test="{hasClarificationQuestion0}"><column gap="4"><text wrap="true">{clarificationQuestion0}</text><textarea height="48" text="{clarificationAnswer0}" on-input="clarification_answer_0" label="Answer to first clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion1}"><column gap="4"><text wrap="true">{clarificationQuestion1}</text><textarea height="48" text="{clarificationAnswer1}" on-input="clarification_answer_1" label="Answer to second clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion2}"><column gap="4"><text wrap="true">{clarificationQuestion2}</text><textarea height="48" text="{clarificationAnswer2}" on-input="clarification_answer_2" label="Answer to third clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion3}"><column gap="4"><text wrap="true">{clarificationQuestion3}</text><textarea height="48" text="{clarificationAnswer3}" on-input="clarification_answer_3" label="Answer to fourth clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion4}"><column gap="4"><text wrap="true">{clarificationQuestion4}</text><textarea height="48" text="{clarificationAnswer4}" on-input="clarification_answer_4" label="Answer to fifth clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><if test="{hasClarificationQuestion5}"><column gap="4"><text wrap="true">{clarificationQuestion5}</text><textarea height="48" text="{clarificationAnswer5}" on-input="clarification_answer_5" label="Answer to sixth clarification" placeholder="Choose an offered option or enter a short answer" /></column></if><row gap="8"><button size="sm" variant="primary" disabled="{clarificationIncomplete}" on-press="continue_clarification">Continue</button><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></row></column></panel></if>
+          <if test="{hasClarification}"><panel padding="16" background="surface" radius="lg" label="Clarification required"><column gap="9"><row gap="8"><badge variant="secondary">Needs input</badge><text><span weight="bold">Clarification required</span></text></row><if test="{hasClarificationQuestion0}"><column gap="4"><text wrap="true">{clarificationQuestion0}</text><if test="{clarificationFirstIsChoice}"><radio-group gap="4" label="First clarification options"><radio checked="{clarificationOptionASelected}" on-toggle="choose_clarification_a" label="{clarificationOptionA}" /><radio checked="{clarificationOptionBSelected}" on-toggle="choose_clarification_b" label="{clarificationOptionB}" /></radio-group></if><else><textarea height="48" text="{clarificationAnswer0}" on-input="clarification_answer_0" label="Answer to first clarification" placeholder="Enter a short answer" /></else></column></if><if test="{hasClarificationQuestion1}"><column gap="4"><text wrap="true">{clarificationQuestion1}</text><textarea height="48" text="{clarificationAnswer1}" on-input="clarification_answer_1" label="Answer to second clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion2}"><column gap="4"><text wrap="true">{clarificationQuestion2}</text><textarea height="48" text="{clarificationAnswer2}" on-input="clarification_answer_2" label="Answer to third clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion3}"><column gap="4"><text wrap="true">{clarificationQuestion3}</text><textarea height="48" text="{clarificationAnswer3}" on-input="clarification_answer_3" label="Answer to fourth clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion4}"><column gap="4"><text wrap="true">{clarificationQuestion4}</text><textarea height="48" text="{clarificationAnswer4}" on-input="clarification_answer_4" label="Answer to fifth clarification" placeholder="Enter a short answer" /></column></if><if test="{hasClarificationQuestion5}"><column gap="4"><text wrap="true">{clarificationQuestion5}</text><textarea height="48" text="{clarificationAnswer5}" on-input="clarification_answer_5" label="Answer to sixth clarification" placeholder="Enter a short answer" /></column></if><row gap="8"><button size="sm" variant="primary" disabled="{clarificationIncomplete}" on-press="continue_clarification">Continue</button><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></row></column></panel></if>
 
-          <if test="{globalBusy}"><panel padding="16" background="surface" radius="lg" label="Request Attempt progress"><column gap="9"><row gap="8"><badge variant="secondary">{selectedStatus}</badge><text><span weight="bold">Creating your Utility</span></text></row><if test="{hasStageResult}"><text wrap="true">{stageResult}</text></if><text size="sm" foreground="text_muted">Planning, building, verification, and preparation run in one Request Attempt.</text><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></column></panel></if>
+          <if test="{globalBusy}"><panel padding="16" background="surface" radius="lg" label="Request Attempt progress"><column gap="9"><stepper active="{round(stageIndex)}" label="Request stages"><step>Plan</step><step>Build</step><step>Verify</step><step>Prepare</step></stepper><progress value="{stageProgress}" label="Request progress" /><row gap="8" cross="center"><spinner /><badge variant="secondary">{selectedStatus}</badge><text><span weight="bold">Creating your Utility</span></text></row><if test="{hasStageResult}"><text wrap="true">{stageResult}</text></if><button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button></column></panel></if>
 
-          <if test="{hasOwnerError}"><panel padding="16" background="surface" radius="lg" label="Request stopped"><column gap="9"><row gap="8"><badge variant="secondary">{selectedStatus}</badge><text><span weight="bold">Request stopped</span></text></row><text wrap="true">{ownerError}</text><if test="{canLaunch}"><text size="sm" foreground="text_muted">Your previous Ready Artifact remains launchable.</text></if><button size="sm" variant="secondary" disabled="{retryDisabled}" on-press="retry_attempt">Retry</button></column></panel></if>
+          <if test="{hasOwnerError}"><alert text="Request stopped" variant="destructive"><column padding="16" gap="9"><text wrap="true">{ownerError}</text><if test="{canLaunch}"><text size="sm" foreground="text_muted">Your previous Ready Artifact remains launchable.</text></if><button size="sm" variant="secondary" disabled="{retryDisabled}" on-press="retry_attempt">Retry</button></column></alert></if>
       </column>
     </scroll>
-
-    <separator />
 
     <column height="160" padding="16" gap="9" background="surface" label="Request composer">
       <row gap="8" cross="center">
@@ -122,10 +118,7 @@
           </row>
         </if>
       </row>
-      <row gap="10" cross="center">
-        <textarea grow="1" height="54" text="{revisionText}" placeholder="{composerPlaceholder}" disabled="{requestControlsDisabled}" on-input="revision_edit" label="Request" />
-        <button variant="primary" icon="send" disabled="{requestControlsDisabled}" on-press="send_revision" label="Submit Request">Submit</button>
-      </row>
+      <input-group grow="1" height="64" label="Request composer"><textarea text="{revisionText}" placeholder="{composerPlaceholder}" disabled="{requestControlsDisabled}" on-input="revision_edit" on-submit="send_revision" label="Request" /><input-group-actions gap="8"><button variant="primary" icon="send" disabled="{requestControlsDisabled}" on-press="send_revision" label="Submit Request">Submit</button></input-group-actions></input-group>
     </column>
   </column>
-</row>
+</split>

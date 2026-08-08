@@ -278,7 +278,7 @@ const planningOutputSchema: Record<string, unknown> = {
           id: { type: "string" },
           question: { type: "string" },
           answerKind: { enum: ["choice", "short_text"] },
-          options: { type: "array", minItems: 2, maxItems: 5, items: { type: "string" } },
+          options: { type: "array", minItems: 2, maxItems: 2, items: { type: "string" } },
         },
       },
     },
@@ -377,15 +377,15 @@ function text(value: unknown, field: string): string {
 function validateQuestions(value: unknown): ClarificationQuestion[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > 6) throw new Error("Agent returned an invalid Clarification batch");
   const ids = new Set<string>();
-  return value.map((raw) => {
+  return value.map((raw, index) => {
     const question = record(raw);
     const id = text(question.id, "Clarification id");
     if (ids.has(id)) throw new Error("Clarification question IDs must be unique");
     ids.add(id);
     if (question.answerKind !== "choice" && question.answerKind !== "short_text") throw new Error("Agent returned an invalid Clarification answer kind");
     const options = question.options;
-    if (question.answerKind === "choice" && (!Array.isArray(options) || options.length < 2 || options.length > 5 || options.some((option) => typeof option !== "string"))) {
-      throw new Error("Choice Clarifications require two to five options");
+    if (question.answerKind === "choice" && (index !== 0 || !Array.isArray(options) || options.length !== 2 || options.some((option) => typeof option !== "string"))) {
+      throw new Error("A Clarification batch may begin with one choice containing exactly two options");
     }
     return {
       id,
@@ -674,7 +674,7 @@ function planningPrompt(command: StartAttemptCommand, previousContract: Behavior
     previousContract ? `Existing Behavior Contract to preserve where applicable: ${JSON.stringify(previousContract)}` : "",
     answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
     `Packaged Native guidance catalog: ${guidanceCatalog}`,
-    "Return one material Clarification batch only when ambiguity would change the result. Otherwise return one complete native-bounded plan with requirements, decisions, the smallest exact nativeGuidance selection, and one to three executable scenarios.",
+    "Return one material Clarification batch only when ambiguity would change the result. A batch may begin with one choice question containing exactly two options; every additional question must use short_text. Otherwise return one complete native-bounded plan with requirements, decisions, the smallest exact nativeGuidance selection, and one to three executable scenarios.",
     "Use only launch, click, input, assert_text, assert_visible, and screenshot. Fixed waits are not executable; assertions own bounded polling. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
   ].filter(Boolean).join("\n");
 }

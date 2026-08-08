@@ -35,6 +35,9 @@ export interface TimelineItem {
 export interface Model {
   readonly brandImageId: number;
   readonly selectedUtility: number;
+  readonly sidebarSplit: number;
+  readonly stageIndex: number;
+  readonly stageProgress: number;
   readonly globalBusy: boolean;
   readonly revisionDraft: Draft;
   readonly submittedRevision: Uint8Array;
@@ -63,6 +66,9 @@ export interface Model {
   readonly pendingWorkerInvocation: boolean;
   readonly clarificationBatchId: Uint8Array;
   readonly clarificationQuestionId: Uint8Array;
+  readonly clarificationAnswerKind: Uint8Array;
+  readonly clarificationOptionA: Uint8Array;
+  readonly clarificationOptionB: Uint8Array;
   readonly clarificationQuestionIds: readonly Uint8Array[];
   readonly clarificationQuestions: readonly Uint8Array[];
   readonly clarificationAnswers: readonly Draft[];
@@ -111,12 +117,15 @@ export type Msg =
   | { readonly kind: "command_written" }
   | { readonly kind: "command_write_error"; readonly bytes: Uint8Array }
   | { readonly kind: "select_library"; readonly slot: number }
+  | { readonly kind: "sidebar_resized"; readonly fraction: number }
   | { readonly kind: "clarification_answer_0"; readonly edit: TextInputEvent }
   | { readonly kind: "clarification_answer_1"; readonly edit: TextInputEvent }
   | { readonly kind: "clarification_answer_2"; readonly edit: TextInputEvent }
   | { readonly kind: "clarification_answer_3"; readonly edit: TextInputEvent }
   | { readonly kind: "clarification_answer_4"; readonly edit: TextInputEvent }
   | { readonly kind: "clarification_answer_5"; readonly edit: TextInputEvent }
+  | { readonly kind: "choose_clarification_a" }
+  | { readonly kind: "choose_clarification_b" }
   | { readonly kind: "picker_path"; readonly bytes: Uint8Array }
   | { readonly kind: "picker_line"; readonly bytes: Uint8Array }
   | { readonly kind: "picker_exit"; readonly code: number }
@@ -126,6 +135,7 @@ export type Msg =
 export const viewUnbound = [
   "selectedUtility", "storageChosen", "importChosen", "attemptInterrupted", "launched", "utilityState", "attemptId", "readyArtifactPath", "sourceDigest", "binaryDigest",
   "clarificationQuestion", "nodePath", "workerPath", "dataRoot", "referenceJson", "pendingWorkerCommand", "pendingWorkerInvocation", "clarificationBatchId", "clarificationQuestionId",
+  "clarificationAnswerKind",
   "nextLibraryCursor", "nextTimelineCursor", "pickerPath", "pickerSelection", "pickerActive", "submittedKind", "revisionDraft", "clarificationQuestionIds", "clarificationQuestions",
   "clarificationAnswers", "pickerSelections", "recipeSelected", "renamerSelected", "tallySelected", "planningState", "awaitingClarificationState", "buildingState", "verifyingState",
   "preparingState", "failedState", "interruptedState", "clarificationIncomplete", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url",
@@ -151,6 +161,9 @@ export function initialModel(): Model {
   return {
     brandImageId: 1,
     selectedUtility: 1,
+    sidebarSplit: 0.28,
+    stageIndex: 0,
+    stageProgress: 0.25,
     globalBusy: false,
     revisionDraft: emptyDraft(),
     submittedRevision: new Uint8Array(0),
@@ -179,6 +192,9 @@ export function initialModel(): Model {
     pendingWorkerInvocation: false,
     clarificationBatchId: new Uint8Array(0),
     clarificationQuestionId: new Uint8Array(0),
+    clarificationAnswerKind: new Uint8Array(0),
+    clarificationOptionA: new Uint8Array(0),
+    clarificationOptionB: new Uint8Array(0),
     clarificationQuestionIds: [new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0)],
     clarificationQuestions: [new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0), new Uint8Array(0)],
     clarificationAnswers: [emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft()],
@@ -271,6 +287,9 @@ export function hasStageResult(model: Model): boolean { return model.stageResult
 export function hasEvidence(model: Model): boolean { return model.verificationEvidence.length > 0; }
 export function hasOwnerError(model: Model): boolean { return model.ownerError.length > 0; }
 export function hasClarification(model: Model): boolean { return model.clarificationQuestion.length > 0; }
+export function clarificationFirstIsChoice(model: Model): boolean { return bytesEqual(model.clarificationAnswerKind, asciiBytes("choice")); }
+export function clarificationOptionASelected(model: Model): boolean { return bytesEqual(model.clarificationAnswers[0].bytes, model.clarificationOptionA); }
+export function clarificationOptionBSelected(model: Model): boolean { return bytesEqual(model.clarificationAnswers[0].bytes, model.clarificationOptionB); }
 export function retryDisabled(model: Model): boolean { return model.globalBusy || (!failedState(model) && !interruptedState(model)); }
 
 export function clarificationIncomplete(model: Model): boolean {
@@ -347,6 +366,17 @@ function extractNthString(line: Uint8Array, key: Uint8Array, occurrence: number)
   const out = new Uint8Array(line.length - start); let at = start; let count = 0; let escaped = false;
   while (at < line.length) { const byte = line[at]; at += 1; if (escaped) { out[count] = byte; count += 1; escaped = false; } else if (byte === 92) escaped = true; else if (byte === 34) break; else { out[count] = byte; count += 1; } }
   return out.slice(0, count);
+}
+
+function firstClarificationOptions(line: Uint8Array): [Uint8Array, Uint8Array] {
+  const key = asciiBytes("\"options\":[\""); const found = findBytes(line, key); if (found < 0) return [new Uint8Array(0), new Uint8Array(0)];
+  const source = line.slice(found + key.length); const first = extractString(source, asciiBytes(""));
+  const comma = findBytes(source, asciiBytes("\",\"")); if (comma < 0) return [first, new Uint8Array(0)];
+  return [first, extractString(source.slice(comma + 3), asciiBytes(""))];
+}
+
+function selectedAnswer(model: Model, answer: Uint8Array): Model {
+  const answers = model.clarificationAnswers.slice(); answers[0] = { bytes: answer, anchor: 0, focus: 0, compStart: -1, compEnd: -1 }; return { ...model, clarificationAnswers: answers };
 }
 
 function replaceAnswer(model: Model, index: number, edit: TextInputEvent): Model {
@@ -485,11 +515,16 @@ function stateFromEvent(line: Uint8Array, previous: UtilityState): UtilityState 
 
 function consumeWorkerEvent(model: Model, line: Uint8Array): Model {
   const type = extractString(line, asciiBytes("\"type\":\""));
-  if (bytesEqual(type, asciiBytes("state_changed"))) return { ...model, utilityState: stateFromEvent(line, model.utilityState), attemptId: extractString(line, asciiBytes("\"attemptId\":\"")) };
+  if (bytesEqual(type, asciiBytes("state_changed"))) {
+    const utilityState = stateFromEvent(line, model.utilityState);
+    const stageIndex = utilityState === "building" ? 1 : utilityState === "verifying" ? 2 : utilityState === "preparing" || utilityState === "ready" ? 3 : 0;
+    return { ...model, utilityState, stageIndex, stageProgress: (stageIndex + 1) / 4, attemptId: extractString(line, asciiBytes("\"attemptId\":\"")) };
+  }
   if (bytesEqual(type, asciiBytes("clarification_required"))) {
     const ids: Uint8Array[] = []; const questions: Uint8Array[] = [];
     for (let index = 0; index < 6; index += 1) { ids[index] = extractNthString(line, asciiBytes("\"id\":\""), index); questions[index] = extractNthString(line, asciiBytes("\"question\":\""), index); }
-    return { ...model, globalBusy: false, utilityState: "awaiting_clarification", clarificationBatchId: extractString(line, asciiBytes("\"batchId\":\"")), clarificationQuestionId: ids[0], clarificationQuestion: questions[0], clarificationQuestionIds: ids, clarificationQuestions: questions, clarificationAnswers: [emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft()] };
+    const options = firstClarificationOptions(line);
+    return { ...model, globalBusy: false, utilityState: "awaiting_clarification", clarificationBatchId: extractString(line, asciiBytes("\"batchId\":\"")), clarificationQuestionId: ids[0], clarificationQuestion: questions[0], clarificationAnswerKind: extractString(line, asciiBytes("\"answerKind\":\"")), clarificationOptionA: options[0], clarificationOptionB: options[1], clarificationQuestionIds: ids, clarificationQuestions: questions, clarificationAnswers: [emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft(), emptyDraft()] };
   }
   if (bytesEqual(type, asciiBytes("library_item"))) {
     const slot = model.libraryItems.length;
@@ -502,15 +537,20 @@ function consumeWorkerEvent(model: Model, line: Uint8Array): Model {
     const item: TimelineItem = { utilityId: extractString(line, asciiBytes("\"utilityId\":\"")), entryId: extractString(line, asciiBytes("\"entryId\":\"")), kind: extractString(line, asciiBytes("\"kind\":\"")), createdAt: extractString(line, asciiBytes("\"createdAt\":\"")), text: extractString(line, asciiBytes("\"text\":\"")) };
     return { ...model, timelineItems: [...model.timelineItems, item] };
   }
-  if (bytesEqual(type, asciiBytes("registry_loaded"))) return { ...model, selectedUtilityId: extractString(line, asciiBytes("\"selectedUtilityId\":\"")), nextLibraryCursor: extractString(line, asciiBytes("\"nextLibraryCursor\":\"")), nextTimelineCursor: extractString(line, asciiBytes("\"nextTimelineCursor\":\"")) };
-  if (bytesEqual(type, asciiBytes("plan_accepted"))) return { ...model, utilityState: "building", acceptedPlan: extractString(line, asciiBytes("\"summary\":\"")) };
+  if (bytesEqual(type, asciiBytes("registry_loaded"))) {
+    const selectedUtilityId = extractString(line, asciiBytes("\"selectedUtilityId\":\""));
+    let readyArtifactPath = model.readyArtifactPath; let sourceDigest = model.sourceDigest; let binaryDigest = model.binaryDigest; let utilityState: UtilityState = "planning";
+    for (const item of model.libraryItems) if (bytesEqual(item.utilityId, selectedUtilityId)) { readyArtifactPath = item.artifactPath; sourceDigest = item.sourceDigest; binaryDigest = item.binaryDigest; if (bytesEqual(item.state, asciiBytes("ready"))) utilityState = "ready"; }
+    return { ...model, selectedUtilityId, readyArtifactPath, sourceDigest, binaryDigest, utilityState, nextLibraryCursor: extractString(line, asciiBytes("\"nextLibraryCursor\":\"")), nextTimelineCursor: extractString(line, asciiBytes("\"nextTimelineCursor\":\"")) };
+  }
+  if (bytesEqual(type, asciiBytes("plan_accepted"))) return { ...model, utilityState: "building", stageIndex: 1, stageProgress: 0.5, acceptedPlan: extractString(line, asciiBytes("\"summary\":\"")) };
   if (bytesEqual(type, asciiBytes("stage_result"))) {
     const summary = extractString(line, asciiBytes("\"summary\":\""));
-    if (findBytes(line, asciiBytes("\"stage\":\"verification\"")) >= 0) return { ...model, utilityState: "verifying", verificationEvidence: summary };
-    if (findBytes(line, asciiBytes("\"stage\":\"packaging\"")) >= 0 || findBytes(line, asciiBytes("\"stage\":\"launch\"")) >= 0) return { ...model, utilityState: "preparing", stageResult: summary };
+    if (findBytes(line, asciiBytes("\"stage\":\"verification\"")) >= 0) return { ...model, utilityState: "verifying", stageIndex: 2, stageProgress: 0.75, verificationEvidence: summary };
+    if (findBytes(line, asciiBytes("\"stage\":\"packaging\"")) >= 0 || findBytes(line, asciiBytes("\"stage\":\"launch\"")) >= 0) return { ...model, utilityState: "preparing", stageIndex: 3, stageProgress: 1, stageResult: summary };
     return { ...model, stageResult: summary };
   }
-  if (bytesEqual(type, asciiBytes("artifact_ready"))) return { ...model, globalBusy: false, utilityState: "ready", readyArtifactPath: extractString(line, asciiBytes("\"path\":\"")), sourceDigest: extractString(line, asciiBytes("\"sourceDigest\":\"")), binaryDigest: extractString(line, asciiBytes("\"binaryDigest\":\"")), verificationEvidence: asciiBytes("Behavior Contract passed and evidence matches the verified source."), ownerError: new Uint8Array(0) };
+  if (bytesEqual(type, asciiBytes("artifact_ready"))) return { ...model, globalBusy: false, utilityState: "ready", stageIndex: 3, stageProgress: 1, readyArtifactPath: extractString(line, asciiBytes("\"path\":\"")), sourceDigest: extractString(line, asciiBytes("\"sourceDigest\":\"")), binaryDigest: extractString(line, asciiBytes("\"binaryDigest\":\"")), verificationEvidence: asciiBytes("Behavior Contract passed and evidence matches the verified source."), ownerError: new Uint8Array(0) };
   if (bytesEqual(type, asciiBytes("attempt_failed"))) return { ...model, globalBusy: false, utilityState: "failed", ownerError: extractString(line, asciiBytes("\"reason\":\"")) };
   if (bytesEqual(type, asciiBytes("attempt_interrupted"))) return { ...model, globalBusy: false, utilityState: "interrupted", attemptInterrupted: true, ownerError: extractString(line, asciiBytes("\"reason\":\"")) };
   return model;
@@ -526,6 +566,9 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, selectedUtility: 3, globalBusy: !model.attemptInterrupted }, Cmd.none];
     case "select_tally":
       return [{ ...model, selectedUtility: 4 }, Cmd.none];
+    case "sidebar_resized":
+      if (msg.fraction < 0 || msg.fraction > 1) return [model, Cmd.none];
+      return [{ ...model, sidebarSplit: msg.fraction }, Cmd.none];
     case "select_library": {
       const item = model.libraryItems[msg.slot];
       if (!item) return [model, Cmd.none];
@@ -536,7 +579,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, revisionDraft: editDraft(model.revisionDraft, msg.edit) }, Cmd.none];
     case "send_revision":
       if (requestControlsDisabled(model) || trimBytes(model.revisionDraft.bytes).length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0 || (model.readyArtifactPath.length > 0 && (model.sourceDigest.length === 0 || model.binaryDigest.length === 0))) return [model, Cmd.none];
-      return [{ ...model, globalBusy: true, utilityState: "planning", revisionSubmitted: true, submittedKind: model.readyArtifactPath.length > 0 ? "revision" : "build", submittedRevision: trimBytes(model.revisionDraft.bytes), revisionDraft: emptyDraft(), attemptInterrupted: false, ownerError: new Uint8Array(0), clarificationQuestion: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, trimBytes(model.revisionDraft.bytes)), stageResult: asciiBytes("Starting the Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, trimBytes(model.revisionDraft.bytes)), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
+      return [{ ...model, globalBusy: true, utilityState: "planning", stageIndex: 0, stageProgress: 0.25, revisionSubmitted: true, submittedKind: model.readyArtifactPath.length > 0 ? "revision" : "build", submittedRevision: trimBytes(model.revisionDraft.bytes), revisionDraft: emptyDraft(), attemptInterrupted: false, ownerError: new Uint8Array(0), clarificationQuestion: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, trimBytes(model.revisionDraft.bytes)), stageResult: asciiBytes("Starting the Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, trimBytes(model.revisionDraft.bytes)), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "attach_reference":
       if (requestControlsDisabled(model) || model.pickerPath.length === 0) return [model, Cmd.none];
       return [{ ...model, pickerActive: true }, Cmd.spawn([model.pickerPath], { key: "reference-picker", line: "picker_line", exit: "picker_exit", err: "picker_error" })];
@@ -561,6 +604,8 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "clarification_answer_3": return [replaceAnswer(model, 3, msg.edit), Cmd.none];
     case "clarification_answer_4": return [replaceAnswer(model, 4, msg.edit), Cmd.none];
     case "clarification_answer_5": return [replaceAnswer(model, 5, msg.edit), Cmd.none];
+    case "choose_clarification_a": return [selectedAnswer(model, model.clarificationOptionA), Cmd.none];
+    case "choose_clarification_b": return [selectedAnswer(model, model.clarificationOptionB), Cmd.none];
     case "cancel_attempt":
       if (model.pickerActive) return [{ ...model, pickerActive: false }, Cmd.cancel("reference-picker")];
       if (model.utilityState === "awaiting_clarification" && model.attemptId.length > 0) {
@@ -572,7 +617,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "retry_attempt":
       if (model.globalBusy) return [model, Cmd.none];
       if (model.submittedRevision.length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0) return [model, Cmd.none];
-      return [{ ...model, globalBusy: true, utilityState: "planning", attemptInterrupted: false, ownerError: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, model.submittedRevision) }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, model.submittedRevision), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
+      return [{ ...model, globalBusy: true, utilityState: "planning", stageIndex: 0, stageProgress: 0.25, attemptInterrupted: false, ownerError: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, model.submittedRevision) }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, model.submittedRevision), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "launch":
       if (!canLaunch(model)) return [model, Cmd.none];
       return [{ ...model, launched: true }, Cmd.spawn([asciiBytes("/usr/bin/open"), joinPath(model.dataRoot, model.readyArtifactPath)], { key: "launch-artifact", exit: "launch_exit", err: "launch_error" })];
