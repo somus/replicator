@@ -11,6 +11,8 @@ export type UtilityState =
   | "interrupted";
 
 export type RequestKind = "build" | "revision";
+export type ModelOverride = "haiku" | "sonnet";
+export type EffortOverride = "low" | "medium";
 
 export type ReferenceImageMetadata = {
   id: string;
@@ -36,6 +38,8 @@ export type StartAttemptCommand = {
   references: ReferenceImageMetadata[];
   currentSourceDigest?: string;
   readyArtifact?: ReadyArtifactMetadata;
+  modelOverride?: ModelOverride;
+  effortOverride?: EffortOverride;
 };
 
 export type AnswerClarificationCommand = {
@@ -81,6 +85,17 @@ export type AcceptedPlan = {
   summary: string;
   format: UtilityFormat;
   behaviorContract: BehaviorContract;
+  formatReason?: string;
+  primaryWorkflow?: string;
+  requirements?: Array<{ sourceQuote: string; acceptance: string }>;
+  decisions?: string[];
+  guidanceSelection?: Array<{
+    corpus: "native-skill" | "native-doc";
+    id: string;
+    sectionId: string;
+    digest: string;
+    purpose: string;
+  }>;
 };
 
 export type ScenarioResult = {
@@ -210,7 +225,7 @@ export function decodeHostCommand(line: string): HostCommand {
   if (type !== "start_attempt") throw new Error(`unknown command type: ${type}`);
   rejectUnknownFields(value, [
     "type", "utilityId", "requestId", "kind", "requestText", "references",
-    "currentSourceDigest", "readyArtifact",
+    "currentSourceDigest", "readyArtifact", "modelOverride", "effortOverride",
   ]);
   if (value.kind !== "build" && value.kind !== "revision") throw new Error("kind must be build or revision");
   if (!Array.isArray(value.references) || value.references.length > 4) {
@@ -227,6 +242,14 @@ export function decodeHostCommand(line: string): HostCommand {
   };
   if (value.currentSourceDigest !== undefined) command.currentSourceDigest = requireString(value.currentSourceDigest, "currentSourceDigest", 128);
   if (value.readyArtifact !== undefined) command.readyArtifact = decodeReadyArtifact(value.readyArtifact);
+  if (value.modelOverride !== undefined) {
+    if (value.modelOverride !== "haiku" && value.modelOverride !== "sonnet") throw new Error("modelOverride must be haiku or sonnet");
+    command.modelOverride = value.modelOverride;
+  }
+  if (value.effortOverride !== undefined) {
+    if (value.effortOverride !== "low" && value.effortOverride !== "medium") throw new Error("effortOverride must be low or medium");
+    command.effortOverride = value.effortOverride;
+  }
   if (command.kind === "revision" && (!command.currentSourceDigest || !command.readyArtifact)) {
     throw new Error("Revision requires currentSourceDigest and readyArtifact");
   }

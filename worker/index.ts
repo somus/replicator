@@ -2,7 +2,15 @@ import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
 import { cp, lstat, mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { createAgenticImplementation, createReferenceReader, runStructuredAgentTurn, type AgentReference } from "./agent.js";
+import {
+  createAgenticImplementation,
+  createPlanningGuidance,
+  createReferenceReader,
+  routeModel,
+  runStructuredAgentTurn,
+  systemInstruction,
+  type AgentReference,
+} from "./agent.js";
 import {
   decodeHostCommand,
   encodeWorkerEvent,
@@ -150,6 +158,65 @@ const buildOutputSchema: Record<string, unknown> = {
   additionalProperties: false,
   required: ["summary"],
   properties: { summary: { type: "string" } },
+};
+
+const planningOutputSchema: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["outcome"],
+  properties: {
+    outcome: { enum: ["clarification", "plan"] },
+    questions: {
+      type: "array",
+      minItems: 1,
+      maxItems: 6,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "question", "answerKind"],
+        properties: {
+          id: { type: "string" },
+          question: { type: "string" },
+          answerKind: { enum: ["choice", "short_text"] },
+          options: { type: "array", minItems: 2, maxItems: 5, items: { type: "string" } },
+        },
+      },
+    },
+    summary: { type: "string" },
+    format: { const: "native-bounded" },
+    scenarios: {
+      type: "array",
+      minItems: 1,
+      maxItems: 3,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "title", "purpose", "steps"],
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          purpose: { enum: ["primary", "newest_change", "preserved_behavior", "high_risk"] },
+          steps: {
+            type: "array",
+            minItems: 1,
+            maxItems: 24,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["action"],
+              properties: {
+                action: { enum: ["launch", "click", "input", "wait", "assert_text", "assert_visible", "screenshot"] },
+                target: { type: "string" },
+                value: { type: "string" },
+                milliseconds: { type: "number", minimum: 0, maximum: 5_000 },
+                name: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 function record(value: unknown): Record<string, unknown> {
@@ -386,13 +453,73 @@ function agentReferences(command: StartAttemptCommand): AgentReference[] {
   }));
 }
 
-async function sourceContext(sourceRoot: string): Promise<string> {
-  const parts: string[] = [];
-  for (const file of ["app.zon", "src/app.native", "src/core.ts"]) {
-    const contents = await readFile(path.join(sourceRoot, file), "utf8");
-    parts.push(`--- ${file} ---\n${contents}`);
+function planningPrompt(command: StartAttemptCommand, previousContract: BehaviorContract | undefined, answers?: Record<string, string>): string {
+  return [
+    `Request kind: ${command.kind}.`,
+    `Owner request: ${command.requestText}`,
+    `Reference Image IDs: ${command.references.map((reference) => reference.id).join(", ") || "none"}. Inspect every supplied image.`,
+    previousContract ? `Existing Behavior Contract to preserve where applicable: ${JSON.stringify(previousContract)}` : "",
+    answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
+    "Return one material Clarification batch only when ambiguity would change the result. Otherwise return one native-bounded plan and one to three executable scenarios.",
+    "Use only launch, click, input, wait, assert_text, assert_visible, and screenshot. Each wait is at most 5000 ms. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
+  ].filter(Boolean).join("\n");
+}
+
+async function acceptPlan(
+  attempt: ActiveAttempt,
+  utility: UtilityRecord,
+  sourceRoot: string,
+  sessionConfigDir: string,
+): Promise<{ plan: AcceptedPlan; sessionId: string }> {
+  let sessionId = utility.session.activeId || undefined;
+  let answers: Record<string, string> | undefined;
+  const references = agentReferences(attempt.command);
+  const route = routeModel("planning", utility.format, attempt.command.modelOverride, attempt.command.effortOverride);
+  const instruction = systemInstruction("planning", utility.format);
+  for (let batch = 0; batch <= 2; batch += 1) {
+    const turn = await withDeadline(attempt, FINALIZATION_RESERVE_MS, () => runStructuredAgentTurn({
+      cwd: sourceRoot,
+      sessionConfigDir,
+      prompt: planningPrompt(attempt.command, utility.behaviorContract, answers),
+      ...(sessionId ? { resumeSessionId: sessionId } : {}),
+      abortController: attempt.abortController,
+      outputSchema: planningOutputSchema,
+      validateOutput: (value) => validatePlanningResult(value, attempt.command.kind),
+      model: route.model,
+      effort: route.effort,
+      systemInstruction: instruction.text,
+      mcpServers: {
+        guidance: createPlanningGuidance(),
+        ...(references.length > 0 ? { references: createReferenceReader(references) } : {}),
+      },
+      allowedTools: [
+        "mcp__guidance__read_native_doc",
+        ...(references.length > 0 ? ["mcp__references__read_reference_image"] : []),
+      ],
+      onInitialized: async (initialized) => {
+        sessionId = initialized.sessionId;
+        await registry.persistSession(utility.id, initialized.sessionId);
+        await registry.persistQuery(utility.id, attempt.id, {
+          phase: "planning",
+          instructionVersion: instruction.version,
+          instructionDigest: instruction.digest,
+          logicalModel: route.model,
+          effort: route.effort,
+          resolvedModel: initialized.resolvedModel,
+          routeReason: route.reason,
+        });
+        emit({ type: "session_initialized", utilityId: utility.id, sessionId: initialized.sessionId });
+      },
+    }));
+    sessionId = turn.sessionId;
+    if (turn.output.outcome === "plan") return { plan: turn.output.plan, sessionId };
+    answers = await waitForClarification(attempt, utility, turn.output.questions, batch + 1);
+    await saveClarification(utility.id, `batch_${batch + 1}`, answers);
+    delete attempt.clarification;
+    resumeClock(attempt);
+    await setState(utility.id, attempt.id, "planning");
   }
-  return parts.join("\n");
+  throw new Error("Clarification limit exceeded");
 }
 
 async function persistPlan(utilityId: string, attemptId: string, plan: AcceptedPlan): Promise<void> {
@@ -452,8 +579,9 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
     const sessionConfigDir = path.join(utilityRoot, "agent-session");
     await mkdir(sessionConfigDir, { recursive: true, mode: 0o700 });
     const references = agentReferences(attempt.command);
-    let plan: AcceptedPlan | undefined;
-    let clarificationBatch = 0;
+    const { plan, sessionId } = await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir);
+    await persistPlan(utility.id, attempt.id, plan);
+    await setState(utility.id, attempt.id, "building");
     let candidateVerificationNumber = 0;
     const candidateAdapter = (candidateEvidenceRoot = path.join(utilityRoot, "evidence", `${attempt.id}-agent`)) => new BoundedNativeAdapter({
       nativeExecutable,
@@ -461,39 +589,33 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
       evidenceRoot: candidateEvidenceRoot,
       releaseRoot: path.join(utilityRoot, "artifacts", `${attempt.id}-agent`),
     });
+    const editableFiles = ["app.zon", "src/app.native", "src/core.ts"] as const;
+    const readEditable = async (file: string): Promise<string> => {
+      if (!editableFiles.includes(file as (typeof editableFiles)[number])) throw new Error("source path is not editable for bounded Native");
+      const contents = await readFile(path.join(sourceRoot, file), "utf8");
+      if (Buffer.byteLength(contents) > 120 * 1024) throw new Error("source file exceeds the read limit");
+      return contents;
+    };
     const implementation = createAgenticImplementation({
-      acceptPlan: async (input) => {
-        const result = validatePlanningResult({
-          outcome: "plan",
-          format: "native-bounded",
-          summary: input.summary,
-          scenarios: input.scenarios,
-        }, attempt.command.kind);
-        if (result.outcome !== "plan") throw new Error("Plan submission is invalid");
-        plan = result.plan;
-        await persistPlan(utility!.id, attempt.id, result.plan);
-        await setState(utility!.id, attempt.id, "building");
-        return `Plan accepted with ${result.plan.behaviorContract.scenarios.length} immutable Behavior Scenarios. Implement it now.`;
-      },
-      requestClarification: async (rawQuestions) => {
-        if (clarificationBatch >= 2) throw new Error("Clarification limit exceeded");
-        clarificationBatch += 1;
-        const questions = validateQuestions(rawQuestions);
-        const answers = await waitForClarification(attempt, utility!, questions, clarificationBatch);
-        await saveClarification(utility!.id, `batch_${clarificationBatch}`, answers);
-        delete attempt.clarification;
-        resumeClock(attempt);
-        await setState(utility!.id, attempt.id, "planning");
-        return answers;
-      },
+      planAcceptedInitially: true,
+      acceptPlan: async () => { throw new Error("Plan is already host-accepted"); },
+      requestClarification: async () => { throw new Error("Clarification is available only during planning"); },
       writeSource: (file, contents) => candidateAdapter().writeSource(file, contents),
+      listSourceFiles: async () => [...editableFiles],
+      readSource: readEditable,
+      editSource: async (file, oldText, newText, replaceAll) => {
+        const contents = await readEditable(file);
+        const matches = contents.split(oldText).length - 1;
+        if (matches === 0 || (!replaceAll && matches !== 1)) throw new Error("edit oldText must match exactly once unless replaceAll is true");
+        const next = replaceAll ? contents.replaceAll(oldText, newText) : contents.replace(oldText, newText);
+        await candidateAdapter().writeSource(file, next);
+      },
       currentDigest: () => sourceDigest(sourceRoot, "native-bounded"),
       validate: async () => {
         const outcomes = await candidateAdapter().validate(attempt.abortController.signal);
         return outcomes.map((outcome) => `${outcome.summary} (${outcome.durationMs} ms)`).join("\n");
       },
       verify: async () => {
-        if (!plan) throw new Error("Behavior Contract is unavailable before plan acceptance");
         candidateVerificationNumber += 1;
         const candidateEvidence = path.join(utilityRoot, "evidence", `${attempt.id}-agent-${candidateVerificationNumber}`);
         const outcome = await candidateAdapter(candidateEvidence).verify(plan.behaviorContract, attempt.abortController.signal);
@@ -507,16 +629,14 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
         summary: redactError(summary),
       }),
     });
+    const route = routeModel("build", plan.format, attempt.command.modelOverride, attempt.command.effortOverride);
+    const instruction = systemInstruction("build", plan.format);
     const buildPrompt = [
-      "Plan and implement one bounded Native macOS Utility in this single live agent query. Inspect every supplied Reference Image before accepting the plan. If a material ambiguity prevents a safe plan, call request_clarification and use the returned owner answers. Otherwise call accept_plan once before editing.",
-      `Request kind: ${attempt.command.kind}.`,
+      "Implement the host-accepted bounded Native plan in this resumed Session.",
       `Owner request: ${attempt.command.requestText}`,
-      `Reference Image IDs: ${references.map((reference) => reference.id).join(", ") || "none"}.`,
-      utility!.behaviorContract ? `Existing Behavior Contract to preserve where applicable: ${JSON.stringify(utility!.behaviorContract)}` : "",
-      "The accepted format is native-bounded. Submit one to three host-executable scenarios using launch, click, input, wait, assert_text, assert_visible, and screenshot with stable accessibility targets. Include primary behavior; a Revision must also cover newest_change and preserved_behavior. Each wait is at most 5000 ms. The 10-second Demo preset is accelerated Focus completion and increments the completed-focus count.",
+      `Accepted plan and immutable Behavior Contract: ${JSON.stringify(plan)}`,
       "Keep app.zon name generated-app. Do not use dependencies, scripts, nested modules, or unrequested features.",
-      "After editing, call validate_app and repair its exact diagnostics in this same turn. Then call verify_behavior for the immutable host contract; if behavior fails, make a focused repair, validate again, and retry. Call finalize_app exactly once as your final tool action, then return the structured summary. Do not claim completion without finalization.",
-      await sourceContext(sourceRoot),
+      "Inspect source with list_app_files and read_app, then use edit_app for exact replacements. Call validate_app and repair its exact diagnostics in this same turn. Then call verify_behavior for the immutable host contract; if behavior fails, make a focused repair, validate again, and retry. Call finalize_app exactly once as your final tool action, then return the structured summary. Do not claim completion without finalization.",
     ].join("\n");
     await withDeadline(
       attempt,
@@ -525,18 +645,21 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
         cwd: sourceRoot,
         sessionConfigDir,
         prompt: buildPrompt,
-        ...(utility!.session.activeId ? { resumeSessionId: utility!.session.activeId } : {}),
+        resumeSessionId: sessionId,
         abortController: attempt.abortController,
         outputSchema: buildOutputSchema,
         validateOutput: validateBuildResult,
+        model: route.model,
+        effort: route.effort,
+        systemInstruction: instruction.text,
         mcpServers: {
           replicator: implementation.server,
           ...(references.length > 0 ? { references: createReferenceReader(references) } : {}),
         },
         allowedTools: [
-          "mcp__replicator__write_source",
-          "mcp__replicator__request_clarification",
-          "mcp__replicator__accept_plan",
+          "mcp__replicator__list_app_files",
+          "mcp__replicator__read_app",
+          "mcp__replicator__edit_app",
           "mcp__replicator__read_sdk_doc",
           "mcp__replicator__validate_app",
           "mcp__replicator__verify_behavior",
@@ -544,14 +667,22 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
           ...(references.length > 0 ? ["mcp__references__read_reference_image"] : []),
         ],
         maxTurns: 40,
-        onInitialized: async (initializedId) => {
-          await registry.persistSession(utility!.id, initializedId);
-          emit({ type: "session_initialized", utilityId: utility!.id, sessionId: initializedId });
+        onInitialized: async (initialized) => {
+          if (initialized.sessionId !== sessionId) throw new Error("Agent SDK did not resume the Utility Session");
+          await registry.persistSession(utility!.id, initialized.sessionId);
+          await registry.persistQuery(utility!.id, attempt.id, {
+            phase: "build",
+            instructionVersion: instruction.version,
+            instructionDigest: instruction.digest,
+            logicalModel: route.model,
+            effort: route.effort,
+            resolvedModel: initialized.resolvedModel,
+            routeReason: route.reason,
+          });
+          emit({ type: "session_initialized", utilityId: utility!.id, sessionId: initialized.sessionId });
         },
       }),
     );
-    const acceptedPlan = plan;
-    if (!acceptedPlan) throw new Error("Agent implementation ended without an accepted plan");
     const agentFinalizedDigest = implementation.finalizedDigest();
     if (!agentFinalizedDigest || agentFinalizedDigest !== await sourceDigest(sourceRoot, "native-bounded")) {
       throw new Error("Agent implementation ended without finalizing the current source digest");
@@ -568,7 +699,7 @@ async function runAttempt(attempt: ActiveAttempt): Promise<void> {
       durationMs: outcome.durationMs,
     });
     await setState(utility.id, attempt.id, "verifying");
-    const verification = await withDeadline(attempt, 0, () => adapter.verify(acceptedPlan.behaviorContract, attempt.abortController.signal));
+    const verification = await withDeadline(attempt, 0, () => adapter.verify(plan.behaviorContract, attempt.abortController.signal));
     emit({
       type: "stage_result",
       attemptId: attempt.id,
@@ -665,29 +796,59 @@ function handleTerminationSignal(): void {
 process.on("SIGTERM", handleTerminationSignal);
 process.on("SIGINT", handleTerminationSignal);
 
-const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
-for await (const line of input) {
-  if (line.trim().length === 0) continue;
+async function dispatchCommand(line: string, waitForAttempt: boolean): Promise<void> {
+  const command = decodeHostCommand(line);
+  if (command.type === "start_attempt") {
+    if (active) throw new Error("a Request Attempt is already active");
+    const attempt: ActiveAttempt = {
+      id: randomUUID(),
+      command,
+      abortController: new AbortController(),
+      activeStartedAt: Date.now(),
+      activeElapsedMs: 0,
+      cancelRequested: false,
+    };
+    active = attempt;
+    if (waitForAttempt) await runAttempt(attempt);
+    else void runAttempt(attempt);
+    return;
+  }
+  if (command.type === "answer_clarification") {
+    await answerClarification(command);
+    return;
+  }
+  await cancelAttempt(command.attemptId);
+}
+
+async function commandFileContents(relativePath: string): Promise<string> {
+  if (relativePath.length === 0 || relativePath.length > 1_024 || path.isAbsolute(relativePath) || relativePath.includes("\\") || relativePath.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new Error("worker command path must be a normalized relative path");
+  }
+  const absolutePath = path.join(dataRoot, relativePath);
+  const metadata = await lstat(absolutePath);
+  if (!metadata.isFile() || metadata.isSymbolicLink() || metadata.size > 1024 * 1024) throw new Error("worker command file is invalid");
+  const contents = await readFile(absolutePath, "utf8");
+  if (contents.includes("\n") && contents.trimEnd().includes("\n")) throw new Error("worker command file must contain one JSON object");
+  return contents.trim();
+}
+
+const commandFile = process.argv[2];
+if (commandFile !== undefined) {
+  if (process.argv.length !== 3) throw new Error("worker accepts exactly one command-file argument");
   try {
-    const command = decodeHostCommand(line);
-    if (command.type === "start_attempt") {
-      if (active) throw new Error("a Request Attempt is already active");
-      const attempt: ActiveAttempt = {
-        id: randomUUID(),
-        command,
-        abortController: new AbortController(),
-        activeStartedAt: Date.now(),
-        activeElapsedMs: 0,
-        cancelRequested: false,
-      };
-      active = attempt;
-      void runAttempt(attempt);
-    } else if (command.type === "answer_clarification") {
-      await answerClarification(command);
-    } else {
-      await cancelAttempt(command.attemptId);
-    }
+    await dispatchCommand(await commandFileContents(commandFile), true);
   } catch (error) {
     logError(error);
+    process.exitCode = 1;
+  }
+} else {
+  const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
+  for await (const line of input) {
+    if (line.trim().length === 0) continue;
+    try {
+      await dispatchCommand(line, false);
+    } catch (error) {
+      logError(error);
+    }
   }
 }

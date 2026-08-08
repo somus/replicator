@@ -26,6 +26,23 @@ export type ActiveAttemptRecord = {
   activeElapsedMs: number;
   clarificationBatches: number;
   snapshot?: string;
+  phase?: "planning" | "building" | "verifying" | "preparing";
+  currentDigest?: string;
+  validatedDigest?: string;
+  verifiedDigest?: string;
+  binaryDigest?: string;
+  finalizationNonce?: string;
+  lastAcceptedTool?: string;
+  lastRepairScope?: "source" | "scenario" | "host";
+  queries?: Array<{
+    phase: "planning" | "build";
+    instructionVersion: string;
+    instructionDigest: string;
+    logicalModel: "haiku" | "sonnet";
+    effort: "low" | "medium";
+    resolvedModel: string;
+    routeReason: string;
+  }>;
 };
 
 export type OwnerFacingError = { code: string; message: string; occurredAt: string };
@@ -148,6 +165,20 @@ export class RegistryStore {
       const utility = registry.utilities.find((candidate) => candidate.id === utilityId);
       if (!utility) throw new Error(`unknown Utility: ${utilityId}`);
       utility.session.activeId = sessionId;
+      utility.updatedAt = new Date().toISOString();
+    });
+  }
+
+  async persistQuery(
+    utilityId: string,
+    attemptId: string,
+    query: NonNullable<ActiveAttemptRecord["queries"]>[number],
+  ): Promise<void> {
+    await this.update((registry) => {
+      const utility = registry.utilities.find((candidate) => candidate.id === utilityId);
+      if (!utility?.activeAttempt || utility.activeAttempt.id !== attemptId) throw new Error("Request Attempt is no longer active");
+      utility.activeAttempt.queries ??= [];
+      utility.activeAttempt.queries.push(query);
       utility.updatedAt = new Date().toISOString();
     });
   }
