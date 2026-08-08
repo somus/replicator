@@ -1,0 +1,30 @@
+.{
+    .id = "dev.replicator.generated-app",
+    .name = "generated-app",
+    .display_name = "Generated Web App",
+    .version = "0.1.0",
+    .platforms = .{ "macos" },
+    .permissions = .{},
+    .capabilities = .{ "webview" },
+    .frontend = .{
+        .dist = "frontend/dist",
+        .entry = "index.html",
+        .spa_fallback = true,
+        .dev = .{
+            .url = "http://127.0.0.1:5173/",
+            .command = .{ "npm", "--prefix", "frontend", "run", "dev", "--", "--host", "127.0.0.1" },
+            .ready_path = "/",
+            .timeout_ms = 30000,
+        },
+    },
+    .security = .{
+        .navigation = .{
+            .allowed_origins = .{ "zero://app", "zero://inline", "http://127.0.0.1:5173" },
+            .external_links = .{ .action = "deny" },
+        },
+    },
+    .web_engine = "system",
+    .windows = .{
+        .{ .label = "main", .title = "Generated Web App", .width = 720, .height = 480, .min_width = 480, .min_height = 320, .restore_state = false },
+    },
+}

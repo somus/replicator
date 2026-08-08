@@ -1,0 +1,5 @@
+<column gap="12" padding="16">
+  <text>Generated App</text>
+  <text grow="1">{message}</text>
+  <button variant="primary" on-press="activate">Activate</button>
+</column>
