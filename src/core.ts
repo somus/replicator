@@ -73,6 +73,7 @@ export interface Model {
   readonly pickerPath: Uint8Array;
   readonly pickerSelection: Uint8Array;
   readonly pickerActive: boolean;
+  readonly pickerSelections: readonly Uint8Array[];
   readonly submittedKind: RequestKind;
 }
 
@@ -180,6 +181,7 @@ export function initialModel(): Model {
     pickerPath: new Uint8Array(0),
     pickerSelection: new Uint8Array(0),
     pickerActive: false,
+    pickerSelections: [],
     submittedKind: "build",
   };
 }
@@ -380,6 +382,8 @@ function startAttempt(model: Model, request: Uint8Array): Uint8Array {
   const utilityId = quoteJson(model.selectedUtilityId);
   const requestId = revision ? asciiBytes(",\"requestId\":\"revision-1\",\"kind\":\"revision\",\"requestText\":") : asciiBytes(",\"requestId\":\"build-1\",\"kind\":\"build\",\"requestText\":");
   const middle = asciiBytes(",\"references\":"); const references = model.referenceJson.length > 0 ? model.referenceJson : asciiBytes("[]");
+  let referencePathsSize = asciiBytes(",\"referencePaths\":[]").length;
+  for (let index = 0; index < model.pickerSelections.length; index += 1) referencePathsSize += quoteJson(model.pickerSelections[index]).length + 1;
   const suffix = revision
     ? asciiBytes(",\"currentSourceDigest\":")
     : asciiBytes("}\n");
@@ -391,13 +395,16 @@ function startAttempt(model: Model, request: Uint8Array): Uint8Array {
   const binaryDigest = revision ? quoteJson(model.binaryDigest) : new Uint8Array(0);
   const ending = revision ? asciiBytes("}}\n") : new Uint8Array(0);
   const quoted = quoteJson(request);
-  const out = new Uint8Array(prefix.length + utilityId.length + requestId.length + quoted.length + middle.length + references.length + suffix.length + sourceDigest.length + artifactPrefix.length + artifactPath.length + artifactSource.length + sourceDigest.length + artifactBinary.length + binaryDigest.length + ending.length); let at = 0;
+  const out = new Uint8Array(prefix.length + utilityId.length + requestId.length + quoted.length + middle.length + references.length + referencePathsSize + suffix.length + sourceDigest.length + artifactPrefix.length + artifactPath.length + artifactSource.length + sourceDigest.length + artifactBinary.length + binaryDigest.length + ending.length); let at = 0;
   out.set(prefix, at); at += prefix.length;
   out.set(utilityId, at); at += utilityId.length;
   out.set(requestId, at); at += requestId.length;
   out.set(quoted, at); at += quoted.length;
   out.set(middle, at); at += middle.length;
   out.set(references, at); at += references.length;
+  const pathPrefix = asciiBytes(",\"referencePaths\":["); out.set(pathPrefix, at); at += pathPrefix.length;
+  for (let index = 0; index < model.pickerSelections.length; index += 1) { if (index > 0) { out[at] = 44; at += 1; } const path = quoteJson(model.pickerSelections[index]); out.set(path, at); at += path.length; }
+  out[at] = 93; at += 1;
   out.set(suffix, at); at += suffix.length;
   out.set(sourceDigest, at); at += sourceDigest.length;
   out.set(artifactPrefix, at); at += artifactPrefix.length;
@@ -523,7 +530,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, pickerActive: true }, Cmd.spawn([model.pickerPath], { key: "reference-picker", line: "picker_line", exit: "picker_exit", err: "picker_error" })];
     case "remove_first_reference":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
-      return [{ ...model, firstReferenceAttached: false, pickerSelection: new Uint8Array(0) }, Cmd.none];
+      return [{ ...model, firstReferenceAttached: false, pickerSelection: new Uint8Array(0), pickerSelections: [] }, Cmd.none];
     case "remove_second_reference":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
       return [{ ...model, secondReferenceAttached: false }, Cmd.none];
@@ -566,7 +573,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "worker_line":
       return [consumeWorkerEvent(model, msg.bytes), Cmd.none];
     case "picker_line":
-      if (bytesEqual(extractString(msg.bytes, asciiBytes("\"type\":\"")), asciiBytes("selected"))) return [{ ...model, firstReferenceAttached: true, pickerSelection: extractString(msg.bytes, asciiBytes("\"path\":\"")) }, Cmd.none];
+      if (bytesEqual(extractString(msg.bytes, asciiBytes("\"type\":\"")), asciiBytes("selected"))) { const path = extractString(msg.bytes, asciiBytes("\"path\":\"")); if (model.pickerSelections.length >= 4) return [model, Cmd.none]; return [{ ...model, firstReferenceAttached: true, pickerSelection: path, pickerSelections: [...model.pickerSelections, path] }, Cmd.none]; }
       if (bytesEqual(extractString(msg.bytes, asciiBytes("\"type\":\"")), asciiBytes("error"))) return [{ ...model, ownerError: extractString(msg.bytes, asciiBytes("\"reason\":\"")) }, Cmd.none];
       return [model, Cmd.none];
     case "picker_exit": return [{ ...model, pickerActive: false }, Cmd.none];
