@@ -1,0 +1,243 @@
+<row background="background" label="Replicator builder">
+  <column width="372" background="surface" label="Utility Library">
+    <column padding="24" gap="22">
+      <row gap="10" cross="center">
+        <panel width="42" height="42" padding="10" background="accent" radius="md">
+          <text foreground="accent_text"><span weight="bold">R</span></text>
+        </panel>
+        <text size="heading"><span weight="bold">Replicator</span></text>
+      </row>
+
+      <row gap="8" cross="center">
+        <text grow="1" foreground="text_muted"><span weight="bold">Utilities</span></text>
+        <button size="sm" variant="secondary" icon="plus" disabled="{globalBusy}" on-press="new_utility">New Utility</button>
+      </row>
+    </column>
+
+    <scroll grow="1" label="Your Utilities">
+      <column padding="12" gap="8">
+        <if test="{focusSelected}">
+          <button variant="secondary" on-press="select_focus" label="Focus Sprint, Ready">Focus Sprint - Ready</button>
+        </if>
+        <else>
+          <button variant="ghost" on-press="select_focus" label="Focus Sprint, Ready">Focus Sprint - Ready</button>
+        </else>
+        <column padding="4" gap="2">
+          <text size="sm">Stay focused. Get more done.</text>
+          <text size="sm" foreground="accent">Ready</text>
+        </column>
+
+        <if test="{recipeSelected}">
+          <button variant="secondary" on-press="select_recipe" label="Recipe Clipper, Needs input">Recipe Clipper - Needs input</button>
+        </if>
+        <else>
+          <button variant="ghost" on-press="select_recipe" label="Recipe Clipper, Needs input">Recipe Clipper - Needs input</button>
+        </else>
+        <column padding="4" gap="2">
+          <text size="sm">Save recipes in one place.</text>
+          <text size="sm" foreground="warning">? Needs input</text>
+        </column>
+
+        <if test="{renamerSelected}">
+          <button variant="secondary" on-press="select_renamer" label="File Renamer, Building">File Renamer - Building</button>
+        </if>
+        <else>
+          <button variant="ghost" on-press="select_renamer" label="File Renamer, Building">File Renamer - Building</button>
+        </else>
+        <column padding="4" gap="2">
+          <text size="sm">Batch rename files quickly.</text>
+          <text size="sm" foreground="info">Building</text>
+        </column>
+
+        <if test="{tallySelected}">
+          <button variant="secondary" on-press="select_tally" label="Menu Bar Tally, Needs attention">Menu Bar Tally - Needs attention</button>
+        </if>
+        <else>
+          <button variant="ghost" on-press="select_tally" label="Menu Bar Tally, Needs attention">Menu Bar Tally - Needs attention</button>
+        </else>
+        <column padding="4" gap="2">
+          <text size="sm">Track counts from anywhere.</text>
+          <text size="sm" foreground="destructive">! Needs attention</text>
+        </column>
+      </column>
+    </scroll>
+
+    <column padding="20" gap="8">
+      <panel padding="12" background="background" radius="md" label="Owner">
+        <row gap="10" cross="center">
+          <badge variant="primary">S</badge>
+          <column grow="1" gap="2">
+            <text size="sm" foreground="text_muted">Owned by</text>
+            <text><span weight="bold">Somu</span></text>
+          </column>
+        </row>
+      </panel>
+      <button variant="ghost" icon="settings">Settings</button>
+    </column>
+  </column>
+
+  <separator />
+
+  <column grow="1" label="Selected Utility workspace">
+    <row height="150" padding="28" gap="18" cross="center" background="surface" label="Utility Header">
+      <panel width="72" height="72" padding="20" background="background" radius="lg">
+        <text size="heading" foreground="accent"><span weight="bold">{selectedInitial}</span></text>
+      </panel>
+      <column grow="1" gap="7">
+        <row gap="10" cross="center">
+          <text size="heading"><span weight="bold">{selectedName}</span></text>
+          <badge variant="secondary">{selectedStatus}</badge>
+        </row>
+        <text foreground="text_muted">{selectedDescription}</text>
+      </column>
+      <if test="{canLaunch}">
+        <button variant="primary" icon="play" on-press="launch" label="Launch selected Utility">Launch</button>
+      </if>
+      <else>
+        <button variant="primary" icon="play" disabled="true" label="No Ready Artifact to launch">Launch</button>
+      </else>
+      <button variant="ghost" label="More actions">...</button>
+    </row>
+
+    <separator />
+
+    <scroll grow="1" label="Owner Timeline">
+      <column padding="32" gap="14">
+        <row gap="10" cross="center">
+          <text size="heading" grow="1"><span weight="bold">Owner Timeline</span></text>
+          <if test="{globalBusy}">
+            <badge variant="secondary">One request active</badge>
+          </if>
+        </row>
+
+        <if test="{focusSelected}">
+          <panel padding="16" background="surface" radius="lg" label="Build Request from You">
+            <column gap="7">
+              <row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">Build Request - Today at 9:41 AM</text></row>
+              <text wrap="true">Build a native Focus Sprint timer with Focus, Break, and Demo presets, Start, Pause, Reset, and completed sprint count.</text>
+              <row gap="8"><badge variant="secondary">Reference Image</badge><text size="sm">focus-sprint-dark.png</text></row>
+            </column>
+          </panel>
+
+          <panel padding="16" background="surface" radius="lg" label="Accepted plan from Claude">
+            <column gap="8">
+              <row gap="8"><badge variant="secondary">Claude</badge><text size="sm" foreground="text_muted">Plan accepted - Today at 9:42 AM</text></row>
+              <text><span weight="bold">Accepted plan</span></text>
+              <text wrap="true">Complete: Native timer presets and controls</text>
+              <text wrap="true">Complete: Calm dark hierarchy from the Reference Image</text>
+              <text wrap="true">Complete: Verify the primary timer journey</text>
+            </column>
+          </panel>
+
+          <panel padding="16" background="surface" radius="lg" label="Verification Evidence">
+            <column gap="8">
+              <row gap="8"><badge variant="primary">Passed</badge><text><span weight="bold">Verification Evidence</span></text></row>
+              <text wrap="true">Primary timer journey passed - Launch and controls accessible</text>
+              <text size="sm" foreground="text_muted">3 scenarios passed - Source and artifact digests matched</text>
+            </column>
+          </panel>
+
+          <panel padding="16" background="surface" radius="lg" label="Ready outcome">
+            <row gap="10" cross="center">
+              <badge variant="primary">Ready</badge>
+              <text grow="1">Built, verified, and ready to launch.</text>
+              <button size="sm" variant="secondary" icon="play" on-press="launch" label="Launch Focus Sprint">Launch</button>
+            </row>
+          </panel>
+
+          <if test="{revisionSubmitted}">
+            <panel padding="16" background="surface" radius="lg" label="Revision Request from You">
+              <column gap="7">
+                <row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">Revision Request - Just now</text></row>
+                <text wrap="true">{submittedRevision}</text>
+              </column>
+            </panel>
+          </if>
+        </if>
+
+        <if test="{recipeSelected}">
+          <panel padding="16" background="surface" radius="lg" label="Build Request from You">
+            <column gap="7"><row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">Build Request</text></row><text wrap="true">Make a desktop Utility for collecting recipes from websites.</text></column>
+          </panel>
+          <panel padding="16" background="surface" radius="lg" label="Clarification required">
+            <column gap="12">
+              <row gap="8"><badge variant="secondary">?</badge><text><span weight="bold">Two quick choices</span></text></row>
+              <text foreground="text_muted">I need these answers before I can lock the plan.</text>
+              <text><span weight="bold">Where should saved recipes live?</span></text>
+              <row gap="8"><button size="sm" variant="secondary" on-press="choose_inside">Inside the Utility</button><button size="sm" variant="ghost" on-press="choose_markdown">Markdown files</button></row>
+              <text><span weight="bold">How should a recipe be added?</span></text>
+              <row gap="8"><button size="sm" variant="secondary" on-press="choose_url">Paste a URL</button><button size="sm" variant="ghost" on-press="choose_text">Paste recipe text</button></row>
+              <button variant="primary" disabled="{clarificationIncomplete}" on-press="continue_clarification">Continue</button>
+            </column>
+          </panel>
+        </if>
+
+        <if test="{renamerSelected}">
+          <panel padding="16" background="surface" radius="lg" label="Build Request from You">
+            <column gap="7"><row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">Build Request</text></row><text wrap="true">Build a Utility that batch renames image files using a pattern.</text></column>
+          </panel>
+          <if test="{attemptInterrupted}">
+            <panel padding="16" background="surface" radius="lg" label="Interrupted outcome">
+              <column gap="9">
+                <row gap="8"><badge variant="secondary">Interrupted</badge><text><span weight="bold">Request cancelled</span></text></row>
+                <text wrap="true">Partial source was saved so a new Request Attempt can continue safely.</text>
+                <button size="sm" variant="secondary" disabled="{globalBusy}" on-press="retry_attempt">Retry</button>
+              </column>
+            </panel>
+          </if>
+          <else>
+            <panel padding="16" background="surface" radius="lg" label="Build progress">
+              <column gap="10">
+                <row gap="8"><badge variant="secondary">Building</badge><text><span weight="bold">Creating your Utility</span></text></row>
+                <text>Complete: Plan accepted</text>
+                <text foreground="info">Active: Validating the build</text>
+                <text foreground="text_muted">Waiting: Preparing to launch</text>
+                <button size="sm" variant="ghost" on-press="cancel_attempt">Cancel request</button>
+              </column>
+            </panel>
+          </else>
+        </if>
+
+        <if test="{tallySelected}">
+          <panel padding="16" background="surface" radius="lg" label="Build Request from You">
+            <column gap="7"><row gap="8"><badge variant="primary">You</badge><text size="sm" foreground="text_muted">Build Request</text></row><text wrap="true">Create a tiny menu bar tally counter with three named counters.</text></column>
+          </panel>
+          <panel padding="16" background="surface" radius="lg" label="Failed outcome">
+            <column gap="9">
+              <row gap="8"><badge variant="secondary">! Needs attention</badge><text><span weight="bold">Build stopped</span></text></row>
+              <text wrap="true">The Utility could not be validated. Your request and partial source were saved.</text>
+              <button size="sm" variant="secondary" disabled="{globalBusy}" on-press="retry_attempt">Retry</button>
+            </column>
+          </panel>
+        </if>
+      </column>
+    </scroll>
+
+    <separator />
+
+    <column height="146" padding="16" gap="9" background="surface" label="Request composer">
+      <row gap="8" cross="center">
+        <text grow="1"><span weight="bold">Revision Request</span></text>
+        <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="attach_reference" label="Attach Reference Image">Reference Image</button>
+      </row>
+      <row gap="8" cross="center">
+        <if test="{firstReferenceAttached}">
+          <row gap="4" cross="center">
+            <badge variant="secondary">Reference Image - focus-sprint-dark.png</badge>
+            <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="remove_first_reference" label="Remove focus-sprint-dark.png">Remove</button>
+          </row>
+        </if>
+        <if test="{secondReferenceAttached}">
+          <row gap="4" cross="center">
+            <badge variant="secondary">Reference Image - timer-controls.jpg</badge>
+            <button size="sm" variant="ghost" disabled="{requestControlsDisabled}" on-press="remove_second_reference" label="Remove timer-controls.jpg">Remove</button>
+          </row>
+        </if>
+      </row>
+      <row gap="10" cross="center">
+        <textarea grow="1" height="54" text="{revisionText}" placeholder="{composerPlaceholder}" disabled="{requestControlsDisabled}" on-input="revision_edit" label="Revision Request" />
+        <button variant="primary" icon="send" disabled="{requestControlsDisabled}" on-press="send_revision" label="Send Revision Request">Send Revision</button>
+      </row>
+    </column>
+  </column>
+</row>
