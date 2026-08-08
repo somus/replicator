@@ -1,0 +1,35 @@
+STATUS
+release assembly: PASS
+shell syntax: PASS
+compiled worker: PASS
+outer codesign --deep --strict: PASS
+prepared Utility codesign --deep --strict: PASS
+post-ZIP extraction codesign --deep --strict: PASS
+minimized-PATH worker probe: PASS
+minimized-PATH outer launch: PASS
+secret and absolute development path scan: PASS (no matches)
+
+PINNED VERSIONS
+Node.js 24.18.1
+Agent SDK 0.3.226
+Native 0.8.1
+Zig 0.16.0
+
+ARCHITECTURES
+Replicator outer executable: Mach-O 64-bit executable arm64
+Node executable: Mach-O 64-bit executable arm64
+Agent SDK executable: Mach-O 64-bit executable arm64
+Native executable: Mach-O 64-bit executable arm64
+Zig executable: Mach-O 64-bit executable arm64
+
+RUNTIME ISOLATION
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+data root=Library/Application Support/Replicator
+Claude login=not used
+Bun=not used
+development checkout=not used
+credential=not present
+
+PACKAGE
+dcf7533726aa8c0d281b503153e0ee8830d364d537aceea47c1e66d2e9fa1707  Replicator.zip
+metadata-preserving ZIP: ditto --sequesterRsrc --keepParent
