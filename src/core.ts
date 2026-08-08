@@ -133,12 +133,12 @@ export type Msg =
   | { readonly kind: "quit_app" };
 
 export const viewUnbound = [
-  "selectedUtility", "storageChosen", "importChosen", "attemptInterrupted", "launched", "utilityState", "attemptId", "readyArtifactPath", "sourceDigest", "binaryDigest",
+  "selectedUtility", "storageChosen", "importChosen", "attemptInterrupted", "launched", "utilityState", "attemptId", "readyArtifactPath", "sourceDigest", "binaryDigest", "acceptedPlan", "verificationEvidence", "revisionSubmitted", "submittedRevision",
   "clarificationQuestion", "nodePath", "workerPath", "dataRoot", "referenceJson", "pendingWorkerCommand", "pendingWorkerInvocation", "clarificationBatchId", "clarificationQuestionId",
   "clarificationAnswerKind",
   "nextLibraryCursor", "nextTimelineCursor", "pickerPath", "pickerSelection", "pickerActive", "submittedKind", "revisionDraft", "clarificationQuestionIds", "clarificationQuestions",
   "clarificationAnswers", "pickerSelections", "recipeSelected", "renamerSelected", "tallySelected", "planningState", "awaitingClarificationState", "buildingState", "verifyingState",
-  "preparingState", "failedState", "interruptedState", "clarificationIncomplete", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url",
+  "preparingState", "failedState", "interruptedState", "hasPlan", "hasEvidence", "submittedTitle", "clarificationIncomplete", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url",
   "choose_text", "worker_line", "worker_exit", "worker_error", "launch_exit", "launch_error", "node_path", "worker_path", "data_root", "reference_json", "registry_loaded",
   "registry_error", "command_written", "command_write_error", "picker_path", "picker_line", "picker_exit", "picker_error", "quit_app",
 ] as const;
@@ -535,6 +535,7 @@ function consumeWorkerEvent(model: Model, line: Uint8Array): Model {
   if (bytesEqual(type, asciiBytes("timeline_item"))) {
     if (model.timelineItems.length >= 50) return model;
     const item: TimelineItem = { utilityId: extractString(line, asciiBytes("\"utilityId\":\"")), entryId: extractString(line, asciiBytes("\"entryId\":\"")), kind: extractString(line, asciiBytes("\"kind\":\"")), createdAt: extractString(line, asciiBytes("\"createdAt\":\"")), text: extractString(line, asciiBytes("\"text\":\"")) };
+    for (const existing of model.timelineItems) if (bytesEqual(existing.entryId, item.entryId)) return model;
     return { ...model, timelineItems: [...model.timelineItems, item] };
   }
   if (bytesEqual(type, asciiBytes("registry_loaded"))) {

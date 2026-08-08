@@ -15,7 +15,7 @@ import type {
 
 export type OwnerTimelineEntry = {
   id: string;
-  kind: "build_request" | "revision_request" | "clarification";
+  kind: "build_request" | "revision_request" | "clarification" | "accepted_plan" | "verification" | "ready";
   createdAt: string;
   content: { text?: string; batchId?: string; questions?: unknown[]; answers?: Record<string, string> };
 };

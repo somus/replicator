@@ -27,7 +27,7 @@ import {
   type StartAttemptCommand,
   type WorkerEvent,
 } from "./protocol.js";
-import { RegistryStore, type UtilityRecord } from "./registry.js";
+import { RegistryStore, type OwnerTimelineEntry, type UtilityRecord } from "./registry.js";
 import { assertProjectPolicy, sourceDigest } from "./targets.js";
 import {
   AdapterFailure,
@@ -747,15 +747,60 @@ async function acceptPlan(
 }
 
 async function persistPlan(utilityId: string, attemptId: string, plan: AcceptedPlan): Promise<void> {
+  const createdAt = nowIso();
   await registry.update((current) => {
     const utility = current.utilities.find((candidate) => candidate.id === utilityId);
     if (!utility || utility.activeAttempt?.id !== attemptId) throw new Error("Request Attempt is no longer active");
     utility.format = plan.format;
     utility.acceptedPlan = plan;
     utility.behaviorContract = plan.behaviorContract;
-    utility.updatedAt = nowIso();
+    utility.timeline.push({ id: `${attemptId}:plan`, kind: "accepted_plan", createdAt, content: { text: plan.summary } });
+    utility.updatedAt = createdAt;
   });
+  emitTimelineItem(utilityId, { id: `${attemptId}:plan`, kind: "accepted_plan", createdAt, content: { text: plan.summary } });
   emit({ type: "plan_accepted", attemptId, plan: { summary: plan.summary } });
+}
+
+function timelineTitle(kind: string): string {
+  if (kind === "build_request") return "Build Request";
+  if (kind === "revision_request") return "Revision Request";
+  if (kind === "accepted_plan") return "Accepted Plan";
+  if (kind === "verification") return "Verification Evidence";
+  if (kind === "ready") return "Ready";
+  return "Clarification";
+}
+
+function timelineText(entry: OwnerTimelineEntry): string {
+  return entry.content.text
+    ?? (entry.content.answers ? `Clarification answered: ${Object.keys(entry.content.answers).length} response(s)` : "Clarification requested");
+}
+
+function emitTimelineItem(utilityId: string, entry: OwnerTimelineEntry): void {
+  emit({
+    type: "timeline_item",
+    utilityId,
+    entryId: entry.id,
+    kind: timelineTitle(entry.kind),
+    createdAt: entry.createdAt,
+    text: timelineText(entry).slice(0, 1_000),
+  });
+}
+
+async function appendAttemptTimeline(
+  utilityId: string,
+  attemptId: string,
+  id: string,
+  kind: OwnerTimelineEntry["kind"],
+  text: string,
+): Promise<void> {
+  const entry: OwnerTimelineEntry = { id, kind, createdAt: nowIso(), content: { text } };
+  await registry.update((current) => {
+    const utility = current.utilities.find((candidate) => candidate.id === utilityId);
+    if (!utility || utility.activeAttempt?.id !== attemptId) throw new Error("Request Attempt is no longer active");
+    if (!utility.timeline.some((candidate) => candidate.id === id)) utility.timeline.push(entry);
+    utility.updatedAt = entry.createdAt;
+  });
+  emitTimelineItem(utilityId, entry);
 }
 
 async function finishFailure(attempt: ActiveAttempt, utility: UtilityRecord, error: unknown): Promise<void> {
@@ -797,6 +842,8 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       if (!utility) throw new Error("Request Attempt is unavailable for resume");
     } else {
       utility = await ensureUtility(attempt.command, attempt.id);
+      const requestEntry = utility.timeline.find((entry) => entry.id === attempt.command.requestId);
+      if (requestEntry) emitTimelineItem(utility.id, requestEntry);
     }
     const sourceRoot = path.join(dataRoot, utility.folder, "source");
     const utilityRoot = path.join(dataRoot, utility.folder);
@@ -833,8 +880,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       : undefined;
     const { plan, sessionId } = reusablePlan
       ?? await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir, guidance);
-    if (reusablePlan) emit({ type: "plan_accepted", attemptId: attempt.id, plan: { summary: plan.summary } });
-    else await persistPlan(utility.id, attempt.id, plan);
+    await persistPlan(utility.id, attempt.id, plan);
     await setState(utility.id, attempt.id, "building");
     let verification: VerificationOutcome | undefined;
     let finalization: FinalizationOutcome | undefined;
@@ -870,7 +916,9 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       verify: async () => {
         await setState(utility!.id, attempt.id, "verifying");
         verification = await adapter.verify(plan.behaviorContract, attempt.abortController.signal);
-        return `${verification.scenarioResults.length} accepted Behavior Scenarios passed with ${verification.screenshots.length} screenshots`;
+        const summary = `${verification.scenarioResults.length} accepted Behavior Scenarios passed with ${verification.screenshots.length} screenshots`;
+        await appendAttemptTimeline(utility!.id, attempt.id, `${attempt.id}:verification`, "verification", summary);
+        return summary;
       },
       repairScope: (error) => error instanceof AdapterFailure ? error.repairScope : "host",
       reopenSourceRepair: async (error) => {
@@ -1035,6 +1083,12 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         scenarioResults,
         createdAt: nowIso(),
       };
+      stored.timeline.push({
+        id: `${attempt.id}:ready`,
+        kind: "ready",
+        createdAt: stored.readyArtifact.createdAt,
+        content: { text: "Built, verified, and ready to launch." },
+      });
       delete stored.activeAttempt;
       delete stored.lastError;
       stored.updatedAt = nowIso();
@@ -1043,6 +1097,12 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       await rm(path.join(utilityRoot, "snapshots", attempt.id), { recursive: true, force: true });
     }
     emit({ type: "artifact_ready", attemptId: attempt.id, artifact, screenshots, scenarioResults });
+    emitTimelineItem(utility.id, {
+      id: `${attempt.id}:ready`,
+      kind: "ready",
+      createdAt: (await registry.read()).utilities.find((candidate) => candidate.id === utility!.id)!.readyArtifact!.createdAt,
+      content: { text: "Built, verified, and ready to launch." },
+    });
     emit({ type: "state_changed", attemptId: attempt.id, state: "ready" });
   } catch (error) {
     if (error instanceof ClarificationPause) return;
@@ -1136,20 +1196,27 @@ async function loadRegistry(command: LoadRegistryCommand): Promise<void> {
     });
   }
   const selected = utilities.find((utility) => utility.id === command.selectedUtilityId) ?? utilities[0];
-  const timeline = selected ? [...selected.timeline].sort((left, right) => right.createdAt.localeCompare(left.createdAt)) : [];
+  const timeline = selected ? [...selected.timeline] : [];
+  if (selected?.readyArtifact && !timeline.some((entry) => entry.kind === "ready")) {
+    const createdAt = selected.readyArtifact.createdAt;
+    if (selected.acceptedPlan && !timeline.some((entry) => entry.kind === "accepted_plan")) {
+      timeline.push({ id: "current:plan", kind: "accepted_plan", createdAt, content: { text: selected.acceptedPlan.summary } });
+    }
+    if (!timeline.some((entry) => entry.kind === "verification")) {
+      timeline.push({
+        id: "current:verification",
+        kind: "verification",
+        createdAt,
+        content: { text: `${selected.readyArtifact.scenarioResults.length} accepted Behavior Scenarios passed with ${selected.readyArtifact.screenshots.length} screenshots` },
+      });
+    }
+    timeline.push({ id: "current:ready", kind: "ready", createdAt, content: { text: "Built, verified, and ready to launch." } });
+  }
+  timeline.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
   const timelineCursor = command.timelineCursor ?? 0;
   const timelinePage = timeline.slice(timelineCursor, timelineCursor + command.timelineLimit);
   for (const entry of timelinePage) {
-    const text = entry.content.text
-      ?? (entry.content.answers ? `Clarification answered: ${Object.keys(entry.content.answers).length} response(s)` : "Clarification requested");
-    emit({
-      type: "timeline_item",
-      utilityId: selected!.id,
-      entryId: entry.id,
-      kind: entry.kind,
-      createdAt: entry.createdAt,
-      text: text.slice(0, 1_000),
-    });
+    emitTimelineItem(selected!.id, entry);
   }
   emit({
     type: "registry_loaded",
