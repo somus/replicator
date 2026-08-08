@@ -132,6 +132,12 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+function assertResolvedModel(resolvedModel: string, logicalModel: "haiku" | "sonnet"): void {
+  if (!resolvedModel.toLowerCase().includes(logicalModel)) {
+    throw new Error(`Agent SDK resolved an unexpected model for the locked ${logicalModel} route`);
+  }
+}
+
 function imageMetadata(data: Buffer): { mediaType: "image/png" | "image/jpeg" | "image/webp"; extension: string; width: number; height: number } {
   if (data.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) && data.length >= 24) {
     return { mediaType: "image/png", extension: "png", width: data.readUInt32BE(16), height: data.readUInt32BE(20) };
@@ -715,6 +721,7 @@ async function acceptPlan(
       onInitialized: async (initialized) => {
         sessionId = initialized.sessionId;
         await registry.persistSession(utility.id, initialized.sessionId);
+        assertResolvedModel(initialized.resolvedModel, route.model);
         await registry.persistQuery(utility.id, attempt.id, {
           phase: "planning",
           instructionVersion: instruction.version,
@@ -949,6 +956,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         onInitialized: async (initialized) => {
           if (initialized.sessionId !== sessionId) throw new Error("Agent SDK did not resume the Utility Session");
           await registry.persistSession(utility!.id, initialized.sessionId);
+          assertResolvedModel(initialized.resolvedModel, route.model);
           await registry.persistQuery(utility!.id, attempt.id, {
             phase: "build",
             instructionVersion: instruction.version,
