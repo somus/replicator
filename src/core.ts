@@ -235,13 +235,13 @@ export function selectedInitial(model: Model): Uint8Array {
 
 export function selectedName(model: Model): Uint8Array {
   const item = selectedLibraryItem(model);
-  return item === null ? asciiBytes("New Utility") : item.displayName;
+  return item === null ? asciiBytes("New App") : item.displayName;
 }
 
 export function selectedDescription(model: Model): Uint8Array {
   return selectedLibraryItem(model) === null
     ? asciiBytes("Describe what you want Replicator to build.")
-    : asciiBytes("Bounded Native Utility");
+    : asciiBytes("Bounded Native App");
 }
 
 function selectedLibraryItem(model: Model): LibraryItem | null {
@@ -269,10 +269,10 @@ export function requestControlsDisabled(model: Model): boolean {
 }
 
 export function composerPlaceholder(model: Model): Uint8Array {
-  if (model.globalBusy) return asciiBytes("Another request is active. You can browse and launch Ready Utilities.");
+  if (model.globalBusy) return asciiBytes("Another request is active. You can browse and launch Ready Apps.");
   if (model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0) return asciiBytes("The bundled worker is unavailable in this launch.");
-  if (selectedLibraryItem(model) === null) return asciiBytes("Describe the Utility you want to build...");
-  return asciiBytes("Describe a change to this Utility...");
+  if (selectedLibraryItem(model) === null) return asciiBytes("Describe the App you want to build...");
+  return asciiBytes("Describe a change to this App...");
 }
 
 export function planningState(model: Model): boolean { return model.utilityState === "planning"; }
@@ -420,7 +420,7 @@ function startAttempt(model: Model, request: Uint8Array): Uint8Array {
   const prefix = revision
     ? asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":")
     : asciiBytes("{\"type\":\"start_attempt\",\"utilityId\":");
-  const utilityId = quoteJson(model.selectedUtilityId);
+  const utilityId = quoteJson(revision ? model.selectedUtilityId : asciiBytes("focus-sprint"));
   const requestId = revision ? asciiBytes(",\"requestId\":\"revision-1\",\"kind\":\"revision\",\"requestText\":") : asciiBytes(",\"requestId\":\"build-1\",\"kind\":\"build\",\"requestText\":");
   const middle = asciiBytes(",\"references\":"); const references = model.referenceJson.length > 0 ? model.referenceJson : asciiBytes("[]");
   let referencePathsSize = asciiBytes(",\"referencePaths\":[]").length;
@@ -639,7 +639,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, pickerActive: false, ownerError: asciiBytes("Reference Image selection could not continue.") }, Cmd.none];
     case "worker_exit":
       if (!model.globalBusy) return [model, Cmd.none];
-      return [{ ...model, globalBusy: false, utilityState: "failed", ownerError: asciiBytes("The worker ended before the Utility became ready.") }, Cmd.none];
+      return [{ ...model, globalBusy: false, utilityState: "failed", ownerError: asciiBytes("The worker ended before the App became ready.") }, Cmd.none];
     case "worker_error":
       if (bytesEqual(msg.bytes, asciiBytes("cancelled"))) return [{ ...model, globalBusy: false, utilityState: "interrupted", attemptInterrupted: true, ownerError: asciiBytes("The Request Attempt was cancelled. Saved work remains available for retry.") }, Cmd.none];
       return [{ ...model, globalBusy: false, utilityState: "failed", ownerError: asciiBytes("The Request Attempt could not continue. Your request and previous Ready Artifact are safe.") }, Cmd.none];

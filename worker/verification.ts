@@ -216,6 +216,32 @@ function validateScenario(scenario: BehaviorScenario): void {
   }
 }
 
+async function preflightSource(projectRoot: string): Promise<void> {
+  const markup = await readFile(path.join(projectRoot, "src", "app.native"), "utf8");
+  const core = await readFile(path.join(projectRoot, "src", "core.ts"), "utf8");
+  const diagnostics: string[] = [];
+  if (/\s\bid=\"/.test(markup)) diagnostics.push('src/app.native uses unsupported HTML id attributes; remove every id and use a unique label matching each Behavior Scenario target');
+  if (/\{\s*!/.test(markup)) diagnostics.push('src/app.native uses JavaScript ! negation; markup expressions use "not value"');
+  if (/<else-if\b/.test(markup)) diagnostics.push("src/app.native uses unsupported <else-if>; nest <if> inside <else>");
+  if (/<for\b[^>]*\beach=\"\{[^}]+\}\"/.test(markup)) diagnostics.push('src/app.native wraps a for iterable in binding braces; use each="rows"');
+  if (/<for\b[^>]*\beach=\"[A-Za-z_$][\w$]*\.[^\"]+\"/.test(markup)) diagnostics.push("src/app.native loops over an alias member; expose one top-level iterable instead");
+  if (/<(?:input|textarea)\b[^>]*\bvalue=\"\{[^}]+\}\"/.test(markup)) diagnostics.push('src/app.native binds editable text through value; use text="{field}"');
+  if (/<(?:text-field|input|search-field|combobox|textarea)\b[^>]*\bon-change=/.test(markup)) diagnostics.push("src/app.native uses on-change on editable text; use on-input with TextInputEvent");
+  if (/<(?:text-field|input|search-field|combobox|textarea)\b[^>]*\bon-input=\"[^\"]*:\{/.test(markup)) diagnostics.push("src/app.native interpolates a value into on-input; dispatch one plain message tag");
+  if (/\bon-(?:press|dismiss|toggle)=\"[a-z][a-z0-9_]*:\{['\"]/.test(markup)) diagnostics.push('src/app.native wraps a constant message payload in binding braces; use tag:value for constants and reserve tag:{binding} for one model binding');
+  if (/<text\b[^>]*\blabel=\"/.test(markup)) diagnostics.push('src/app.native puts an accessibility label directly on text; Native automation replaces the visible text with that label, so put the scenario label on a container around an unlabeled text node');
+  if (/\b(?:width|height)=\"0(?:\.0+)?\"/.test(markup)) diagnostics.push('src/app.native uses a zero-size widget to hide a binding; remove the invisible widget and list legitimately update-only state or host-fired messages in TypeScript viewUnbound');
+  if (/export\s+const\s+view_unbound\b/.test(core)) diagnostics.push('src/core.ts uses Zig spelling view_unbound; TypeScript requires export const viewUnbound = ["fieldName", "messageKind"] as const');
+  const modelBlock = core.match(/export\s+interface\s+Model\s*\{[\s\S]*?\n\}/)?.[0] ?? "";
+  if (/readonly\s+[A-Za-z_$][\w$]*\s*:\s*TextEditState\b/.test(modelBlock)) diagnostics.push("src/core.ts stores imported TextEditState in Model; keep a flat app-owned byte/edit record and construct TextEditState locally");
+  for (const match of markup.matchAll(/<(?:text-field|input|search-field|combobox|textarea)\b[^>]*\bon-input=\"([a-z][a-z0-9_]*)\"/g)) {
+    const tag = match[1] ?? "";
+    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (!new RegExp(`readonly\\s+kind\\s*:\\s*[\"']${escaped}[\"'][^}]{0,240}TextInputEvent`).test(core)) diagnostics.push(`src/core.ts message ${tag} must carry TextInputEvent because markup uses it as on-input`);
+  }
+  if (diagnostics.length > 0) throw new AdapterFailure("source", `Host preflight failed:\n- ${diagnostics.join("\n- ")}`);
+}
+
 function remainingMs(deadline: number): number {
   const remaining = Math.floor(deadline - performance.now());
   if (remaining <= 0) throw new AdapterFailure("source", "Behavior Contract exceeded its 45-second execution limit");
@@ -400,6 +426,7 @@ export class BoundedNativeAdapter {
         durationMs: version.durationMs,
         ok: true,
       });
+      await preflightSource(this.projectRoot);
       const coreDigest = await sha256File(path.join(this.projectRoot, "src", "core.ts"));
       const modelContractRefreshed = coreDigest !== this.modelContractCoreDigest;
       if (modelContractRefreshed) {
@@ -707,13 +734,13 @@ export class BoundedNativeAdapter {
       const [view, id] = await this.resolveWidgetTarget(step.target, deadline, signal);
       args = step.action === "click"
         ? ["automate", "widget-click", view, id]
-        : ["automate", "widget-action", view, id, "set-text", step.value];
+        : ["automate", "widget-action", view, id, "set_text", step.value];
     } else if (step.action === "assert_visible") {
       args = ["automate", "assert", "--timeout-ms", String(Math.min(5_000, remainingMs(deadline))), escapeRegex(step.target)];
     } else {
       args = [
         "automate", "assert", "--timeout-ms", String(Math.min(5_000, remainingMs(deadline))),
-        `${escapeRegex(step.target)}.*${escapeRegex(step.value)}`,
+        escapeRegex(step.target), escapeRegex(step.value),
       ];
     }
     try {

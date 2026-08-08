@@ -149,7 +149,7 @@ export type WorkerEvent =
       batchId: string;
       questions: ClarificationQuestion[];
     }
-  | { type: "plan_accepted"; attemptId: string; plan: AcceptedPlan }
+  | { type: "plan_accepted"; attemptId: string; plan: Pick<AcceptedPlan, "summary"> }
   | {
       type: "stage_result";
       attemptId: string;

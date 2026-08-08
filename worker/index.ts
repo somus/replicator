@@ -358,10 +358,6 @@ const planningOutputSchema: Record<string, unknown> = {
       },
     },
   },
-  allOf: [{
-    if: { properties: { outcome: { const: "plan" } } },
-    then: { required: ["summary", "format", "formatReason", "primaryWorkflow", "requirements", "decisions", "nativeGuidance", "scenarios"] },
-  }],
 };
 
 function record(value: unknown): Record<string, unknown> {
@@ -675,6 +671,7 @@ function planningPrompt(command: StartAttemptCommand, previousContract: Behavior
     answers ? `Recorded owner Clarification answers: ${JSON.stringify(answers)}` : "",
     `Packaged Native guidance catalog: ${guidanceCatalog}`,
     "Return one material Clarification batch only when ambiguity would change the result. A batch may begin with one choice question containing exactly two options; every additional question must use short_text. Otherwise return one complete native-bounded plan with requirements, decisions, the smallest exact nativeGuidance selection, and one to three executable scenarios.",
+    "The nativeGuidance selection must include both native-ui and ts-core and use at most eight skill sections total across both entries; count them before returning. Do not select generic native-ui elements or attributes sections when exact component pages cover them. Include the exact official docs/components page for every selected UI component, with component metadata naming its element and the exact bindings and events the plan will use.",
     "Use only launch, click, input, assert_text, assert_visible, and screenshot. Fixed waits are not executable; assertions own bounded polling. A Revision includes primary, newest_change, and preserved_behavior. Demo is accelerated Focus completion and increments the completed count.",
   ].filter(Boolean).join("\n");
 }
@@ -758,7 +755,7 @@ async function persistPlan(utilityId: string, attemptId: string, plan: AcceptedP
     utility.behaviorContract = plan.behaviorContract;
     utility.updatedAt = nowIso();
   });
-  emit({ type: "plan_accepted", attemptId, plan });
+  emit({ type: "plan_accepted", attemptId, plan: { summary: plan.summary } });
 }
 
 async function finishFailure(attempt: ActiveAttempt, utility: UtilityRecord, error: unknown): Promise<void> {
@@ -831,8 +828,13 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
     await mkdir(sessionConfigDir, { recursive: true, mode: 0o700 });
     const references = agentReferences(attempt.command);
     const guidance = await NativeGuidance.load(resourcesRoot);
-    const { plan, sessionId } = await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir, guidance);
-    await persistPlan(utility.id, attempt.id, plan);
+    const reusablePlan = attempt.command.kind === "build" && utility.acceptedPlan && utility.session.activeId
+      ? { plan: utility.acceptedPlan, sessionId: utility.session.activeId }
+      : undefined;
+    const { plan, sessionId } = reusablePlan
+      ?? await acceptPlan(attempt, utility, sourceRoot, sessionConfigDir, guidance);
+    if (reusablePlan) emit({ type: "plan_accepted", attemptId: attempt.id, plan: { summary: plan.summary } });
+    else await persistPlan(utility.id, attempt.id, plan);
     await setState(utility.id, attempt.id, "building");
     let verification: VerificationOutcome | undefined;
     let finalization: FinalizationOutcome | undefined;
@@ -892,14 +894,14 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
           attemptId: attempt.id,
           stage: "packaging",
           ok: true,
-          summary: "Verified standalone Utility package created without rebuilding",
+          summary: "Verified standalone App package created without rebuilding",
         });
         emit({
           type: "stage_result",
           attemptId: attempt.id,
           stage: "launch",
           ok: true,
-          summary: "Standalone Utility launched successfully",
+          summary: "Standalone App launched successfully",
           durationMs: finalization.launchDurationMs,
         });
         return "The host packaged and launched the exact verified binary.";
@@ -919,6 +921,11 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
       `Owner request: ${attempt.command.requestText}`,
       `Accepted plan and immutable Behavior Contract: ${JSON.stringify(plan)}`,
       "Keep app.zon name generated-app. Do not use dependencies, scripts, nested modules, or unrequested features.",
+      "Native 0.8.1 markup does not support HTML id or data-* attributes. Give every interactive or asserted scenario target a unique accessible label exactly matching the immutable Behavior Scenario target; labels, visible text, and Native automation replace DOM selectors.",
+      "For an asserted dynamic text value, put the scenario label on a container and render the value in an unlabeled child <text>. A label on <text> replaces its visible value in Native automation snapshots.",
+      "Native message payloads use tag:value for a constant and tag:{binding} for one model binding. Never wrap a quoted constant inside binding braces.",
+      "In a TypeScript core, declare update-only fields and host-fired messages with export const viewUnbound = [\"fieldName\", \"messageKind\"] as const. The snake_case view_unbound spelling is Zig-only and will fail native check --strict.",
+      "Never create zero-size, transparent, off-canvas, or otherwise invisible widgets just to satisfy the model-contract checker. Declare legitimately update-only state and host-fired messages in viewUnbound instead.",
       "Read every approved official component section through the guidance tools before editing the component it governs. No unapproved guidance is available during coding.",
       "Inspect source with list_app_files and read_app, then use edit_app for exact replacements. Call validate_app and repair its exact diagnostics in this same turn. Then call verify_behavior for the immutable host contract; if behavior fails, make a focused repair, validate again, and retry. Call finalize_app exactly once as your final tool action, then return the structured summary. Do not claim completion without finalization.",
     ].join("\n");
@@ -954,7 +961,7 @@ async function runAttempt(attempt: ActiveAttempt, resumeExisting = false): Promi
         ],
         maxTurns: 40,
         onInitialized: async (initialized) => {
-          if (initialized.sessionId !== sessionId) throw new Error("Agent SDK did not resume the Utility Session");
+          if (initialized.sessionId !== sessionId) throw new Error("Agent SDK did not resume the App Session");
           await registry.persistSession(utility!.id, initialized.sessionId);
           assertResolvedModel(initialized.resolvedModel, route.model);
           await registry.persistQuery(utility!.id, attempt.id, {
