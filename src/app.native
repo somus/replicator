@@ -2,9 +2,7 @@
   <column width="372" background="surface" label="Utility Library">
     <column padding="24" gap="22">
       <row gap="10" cross="center">
-        <panel width="42" height="42" padding="10" background="accent" radius="md">
-          <text foreground="accent_text"><span weight="bold">R</span></text>
-        </panel>
+        <image image="{brandImageId}" width="42" height="42" label="Replicator logo" />
         <text size="heading"><span weight="bold">Replicator</span></text>
       </row>
 
@@ -39,7 +37,6 @@
           </column>
         </row>
       </panel>
-      <button variant="ghost" icon="settings">Settings</button>
     </column>
   </column>
 
@@ -63,7 +60,7 @@
       <else>
         <button variant="primary" icon="play" disabled="true" label="No Ready Artifact to launch">Launch</button>
       </else>
-      <button variant="ghost" label="More actions">...</button>
+      <button variant="ghost" icon="menu" label="More actions">More</button>
     </row>
 
     <separator />

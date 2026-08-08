@@ -13,6 +13,7 @@ export type UtilityState = "planning" | "awaiting_clarification" | "building" | 
 export type RequestKind = "build" | "revision";
 
 export interface Model {
+  readonly brandImageId: number;
   readonly selectedUtility: number;
   readonly globalBusy: boolean;
   readonly revisionDraft: Draft;
@@ -38,6 +39,10 @@ export interface Model {
   readonly workerPath: Uint8Array;
   readonly dataRoot: Uint8Array;
   readonly referenceJson: Uint8Array;
+  readonly pendingWorkerCommand: Uint8Array;
+  readonly pendingWorkerInvocation: boolean;
+  readonly clarificationBatchId: Uint8Array;
+  readonly clarificationQuestionId: Uint8Array;
   readonly submittedKind: RequestKind;
 }
 
@@ -70,7 +75,10 @@ export type Msg =
   | { readonly kind: "data_root"; readonly bytes: Uint8Array }
   | { readonly kind: "reference_json"; readonly bytes: Uint8Array }
   | { readonly kind: "registry_loaded"; readonly bytes: Uint8Array }
-  | { readonly kind: "registry_error"; readonly bytes: Uint8Array };
+  | { readonly kind: "registry_error"; readonly bytes: Uint8Array }
+  | { readonly kind: "command_written" }
+  | { readonly kind: "command_write_error"; readonly bytes: Uint8Array }
+  | { readonly kind: "quit_app" };
 
 export const envMsgs = [
   { env: "REPLICATOR_NODE_PATH", msg: "node_path" },
@@ -79,10 +87,17 @@ export const envMsgs = [
   { env: "REPLICATOR_REFERENCE_JSON", msg: "reference_json" },
 ] as const;
 
-export const viewUnbound = ["launched", "attemptId", "sourceDigest", "binaryDigest", "nodePath", "workerPath", "dataRoot", "referenceJson", "worker_line", "worker_exit", "worker_error", "launch_exit", "launch_error", "node_path", "worker_path", "data_root", "reference_json", "registry_loaded", "registry_error"] as const;
+export function commandMsg(name: string): Msg | null {
+  if (name === "app.new-utility") return { kind: "new_utility" };
+  if (name === "app.quit") return { kind: "quit_app" };
+  return null;
+}
+
+export const viewUnbound = ["selectedUtility", "storageChosen", "importChosen", "attemptInterrupted", "launched", "utilityState", "attemptId", "readyArtifactPath", "sourceDigest", "binaryDigest", "nodePath", "workerPath", "dataRoot", "referenceJson", "submittedKind", "pendingWorkerCommand", "pendingWorkerInvocation", "clarificationBatchId", "clarificationQuestionId", "recipeSelected", "renamerSelected", "tallySelected", "planningState", "awaitingClarificationState", "buildingState", "verifyingState", "preparingState", "failedState", "interruptedState", "clarificationIncomplete", "revisionDraft", "select_recipe", "select_renamer", "select_tally", "choose_inside", "choose_markdown", "choose_url", "choose_text", "worker_line", "worker_exit", "worker_error", "launch_exit", "launch_error", "node_path", "worker_path", "data_root", "reference_json", "registry_loaded", "registry_error", "command_written", "command_write_error", "quit_app"] as const;
 
 export function initialModel(): Model {
   return {
+    brandImageId: 1,
     selectedUtility: 1,
     globalBusy: false,
     revisionDraft: emptyDraft(),
@@ -108,6 +123,10 @@ export function initialModel(): Model {
     workerPath: new Uint8Array(0),
     dataRoot: new Uint8Array(0),
     referenceJson: new Uint8Array(0),
+    pendingWorkerCommand: new Uint8Array(0),
+    pendingWorkerInvocation: false,
+    clarificationBatchId: new Uint8Array(0),
+    clarificationQuestionId: new Uint8Array(0),
     submittedKind: "build",
   };
 }
@@ -226,6 +245,26 @@ function joinPath(root: Uint8Array, relative: Uint8Array): Uint8Array {
   const out = new Uint8Array(root.length + relative.length + 1); out.set(root, 0); out[root.length] = 47; out.set(relative, root.length + 1); return out;
 }
 
+const commandFileRelative = asciiBytes("commands/ui-command.json");
+const nodeEnvFileArg = asciiBytes("--env-file-if-exists=.env");
+
+function loadRegistryCommand(): Uint8Array {
+  return asciiBytes("{\"type\":\"load_registry\",\"libraryLimit\":50,\"timelineLimit\":50}\n");
+}
+
+function answerClarificationCommand(model: Model): Uint8Array {
+  const prefix = asciiBytes("{\"type\":\"answer_clarification\",\"attemptId\":");
+  const batch = asciiBytes(",\"batchId\":");
+  const answers = asciiBytes(",\"answers\":{");
+  const answer = asciiBytes(":\"Use local app storage\"}}\n");
+  const attemptId = quoteJson(model.attemptId);
+  const batchId = quoteJson(model.clarificationBatchId);
+  const questionId = quoteJson(model.clarificationQuestionId);
+  const out = new Uint8Array(prefix.length + attemptId.length + batch.length + batchId.length + answers.length + questionId.length + answer.length);
+  let at = 0; out.set(prefix, at); at += prefix.length; out.set(attemptId, at); at += attemptId.length; out.set(batch, at); at += batch.length; out.set(batchId, at); at += batchId.length; out.set(answers, at); at += answers.length; out.set(questionId, at); at += questionId.length; out.set(answer, at);
+  return out;
+}
+
 function quoteJson(value: Uint8Array): Uint8Array {
   let extra = 2;
   for (let i = 0; i < value.length; i += 1) { const b = value[i]; if (b === 34 || b === 92 || b === 10 || b === 13 || b === 9) extra += 1; }
@@ -331,7 +370,14 @@ function stateFromEvent(line: Uint8Array, previous: UtilityState): UtilityState 
 function consumeWorkerEvent(model: Model, line: Uint8Array): Model {
   const type = extractString(line, asciiBytes("\"type\":\""));
   if (bytesEqual(type, asciiBytes("state_changed"))) return { ...model, utilityState: stateFromEvent(line, model.utilityState), attemptId: extractString(line, asciiBytes("\"attemptId\":\"")) };
-  if (bytesEqual(type, asciiBytes("clarification_required"))) return { ...model, utilityState: "awaiting_clarification", clarificationQuestion: extractString(line, asciiBytes("\"question\":\"")) };
+  if (bytesEqual(type, asciiBytes("clarification_required"))) return {
+    ...model,
+    globalBusy: false,
+    utilityState: "awaiting_clarification",
+    clarificationBatchId: extractString(line, asciiBytes("\"batchId\":\"")),
+    clarificationQuestionId: extractString(line, asciiBytes("\"questions\":[{\"id\":\"")),
+    clarificationQuestion: extractString(line, asciiBytes("\"question\":\"")),
+  };
   if (bytesEqual(type, asciiBytes("plan_accepted"))) return { ...model, utilityState: "building", acceptedPlan: extractString(line, asciiBytes("\"summary\":\"")) };
   if (bytesEqual(type, asciiBytes("stage_result"))) {
     const summary = extractString(line, asciiBytes("\"summary\":\""));
@@ -360,7 +406,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       return [{ ...model, revisionDraft: editDraft(model.revisionDraft, msg.edit) }, Cmd.none];
     case "send_revision":
       if (requestControlsDisabled(model) || trimBytes(model.revisionDraft.bytes).length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0 || model.dataRoot.length === 0 || (model.readyArtifactPath.length > 0 && (model.sourceDigest.length === 0 || model.binaryDigest.length === 0))) return [model, Cmd.none];
-      return [{ ...model, globalBusy: true, utilityState: "planning", revisionSubmitted: true, submittedKind: model.readyArtifactPath.length > 0 ? "revision" : "build", submittedRevision: trimBytes(model.revisionDraft.bytes), revisionDraft: emptyDraft(), attemptInterrupted: false, ownerError: new Uint8Array(0), clarificationQuestion: new Uint8Array(0), stageResult: asciiBytes("Starting the Request Attempt...") }, Cmd.spawn([model.nodePath, model.workerPath], { key: "request-worker", stdin: startAttempt(model, trimBytes(model.revisionDraft.bytes)), line: "worker_line", exit: "worker_exit", err: "worker_error" })];
+      return [{ ...model, globalBusy: true, utilityState: "planning", revisionSubmitted: true, submittedKind: model.readyArtifactPath.length > 0 ? "revision" : "build", submittedRevision: trimBytes(model.revisionDraft.bytes), revisionDraft: emptyDraft(), attemptInterrupted: false, ownerError: new Uint8Array(0), clarificationQuestion: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, trimBytes(model.revisionDraft.bytes)), stageResult: asciiBytes("Starting the Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, trimBytes(model.revisionDraft.bytes)), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "attach_reference":
       if (requestControlsDisabled(model)) return [model, Cmd.none];
       return [{ ...model, secondReferenceAttached: true }, Cmd.none];
@@ -377,15 +423,15 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "choose_text":
       return [{ ...model, importChosen: true }, Cmd.none];
     case "continue_clarification":
-      if (clarificationIncomplete(model)) return [model, Cmd.none];
-      return [{ ...model, globalBusy: true }, Cmd.none];
+      if (clarificationIncomplete(model) || model.attemptId.length === 0 || model.clarificationBatchId.length === 0 || model.clarificationQuestionId.length === 0) return [model, Cmd.none];
+      return [{ ...model, globalBusy: true, pendingWorkerInvocation: true, pendingWorkerCommand: answerClarificationCommand(model), stageResult: asciiBytes("Resuming this Request Attempt...") }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), answerClarificationCommand(model), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "cancel_attempt":
       if (!model.globalBusy) return [model, Cmd.none];
       return [{ ...model, stageResult: asciiBytes("Cancelling this Request Attempt...") }, Cmd.cancel("request-worker")];
     case "retry_attempt":
       if (model.globalBusy) return [model, Cmd.none];
       if (model.submittedRevision.length === 0 || model.nodePath.length === 0 || model.workerPath.length === 0) return [model, Cmd.none];
-      return [{ ...model, globalBusy: true, utilityState: "planning", attemptInterrupted: false, ownerError: new Uint8Array(0) }, Cmd.spawn([model.nodePath, model.workerPath], { key: "request-worker", stdin: startAttempt(model, model.submittedRevision), line: "worker_line", exit: "worker_exit", err: "worker_error" })];
+      return [{ ...model, globalBusy: true, utilityState: "planning", attemptInterrupted: false, ownerError: new Uint8Array(0), pendingWorkerInvocation: true, pendingWorkerCommand: startAttempt(model, model.submittedRevision) }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), startAttempt(model, model.submittedRevision), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "launch":
       if (!canLaunch(model)) return [model, Cmd.none];
       return [{ ...model, launched: true }, Cmd.spawn([asciiBytes("/usr/bin/open"), joinPath(model.dataRoot, model.readyArtifactPath)], { key: "launch-artifact", exit: "launch_exit", err: "launch_error" })];
@@ -394,6 +440,7 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
       const fresh = initialModel();
       return [{ ...fresh, nodePath: model.nodePath, workerPath: model.workerPath, dataRoot: model.dataRoot, referenceJson: model.referenceJson }, Cmd.none];
     }
+    case "quit_app": return [model, Cmd.quitApp()];
     case "worker_line":
       return [consumeWorkerEvent(model, msg.bytes), Cmd.none];
     case "worker_exit":
@@ -405,11 +452,22 @@ export function update(model: Model, msg: Msg): [Model, Cmd<Msg>] {
     case "launch_exit":
     case "launch_error":
       return [model, Cmd.none];
-    case "node_path": return [{ ...model, nodePath: msg.bytes }, Cmd.none];
-    case "worker_path": return [{ ...model, workerPath: msg.bytes }, Cmd.none];
-    case "data_root": return [{ ...model, dataRoot: msg.bytes }, Cmd.readFile(joinPath(msg.bytes, asciiBytes("registry.json")), { key: "registry", ok: "registry_loaded", err: "registry_error" })];
+    case "node_path":
+      if (model.workerPath.length === 0 || model.dataRoot.length === 0) return [{ ...model, nodePath: msg.bytes }, Cmd.none];
+      return [{ ...model, nodePath: msg.bytes, pendingWorkerInvocation: true, pendingWorkerCommand: loadRegistryCommand() }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), loadRegistryCommand(), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
+    case "worker_path":
+      if (model.nodePath.length === 0 || model.dataRoot.length === 0) return [{ ...model, workerPath: msg.bytes }, Cmd.none];
+      return [{ ...model, workerPath: msg.bytes, pendingWorkerInvocation: true, pendingWorkerCommand: loadRegistryCommand() }, Cmd.writeFile(joinPath(model.dataRoot, commandFileRelative), loadRegistryCommand(), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
+    case "data_root":
+      if (model.nodePath.length === 0 || model.workerPath.length === 0) return [{ ...model, dataRoot: msg.bytes }, Cmd.none];
+      return [{ ...model, dataRoot: msg.bytes, pendingWorkerInvocation: true, pendingWorkerCommand: loadRegistryCommand() }, Cmd.writeFile(joinPath(msg.bytes, commandFileRelative), loadRegistryCommand(), { key: "worker-command", ok: "command_written", err: "command_write_error" })];
     case "reference_json": return [{ ...model, referenceJson: msg.bytes, firstReferenceAttached: msg.bytes.length > 0 }, Cmd.none];
     case "registry_loaded": return [consumeRegistry(model, msg.bytes), Cmd.none];
     case "registry_error": return [model, Cmd.none];
+    case "command_written":
+      if (!model.pendingWorkerInvocation || model.nodePath.length === 0 || model.workerPath.length === 0) return [model, Cmd.none];
+      return [{ ...model, pendingWorkerInvocation: false, pendingWorkerCommand: new Uint8Array(0) }, Cmd.spawn([model.nodePath, nodeEnvFileArg, model.workerPath, commandFileRelative], { key: "request-worker", line: "worker_line", exit: "worker_exit", err: "worker_error" })];
+    case "command_write_error":
+      return [{ ...model, globalBusy: false, pendingWorkerInvocation: false, utilityState: "failed", ownerError: asciiBytes("Replicator could not prepare the worker command. Your prior Ready Artifact is safe.") }, Cmd.none];
   }
 }

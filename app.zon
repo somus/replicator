@@ -4,6 +4,8 @@
     .display_name = "Replicator",
     .description = "Build and revise personal native desktop Utilities.",
     .version = "0.1.0",
+    .icons = .{ "assets/replicator-icon.png" },
+    .assets = .{ .images = .{ .{ .id = 1, .path = "assets/replicator-icon.png" } } },
     .platforms = .{ "macos" },
     .permissions = .{ "view", "command" },
     .capabilities = .{ "native_views", "gpu_surfaces" },
@@ -12,10 +14,10 @@
             .{
                 .label = "main",
                 .title = "Replicator",
-                .width = 1180,
-                .height = 780,
-                .min_width = 920,
-                .min_height = 620,
+                .width = 1440,
+                .height = 1024,
+                .min_width = 880,
+                .min_height = 680,
                 .restore_state = true,
                 .restore_policy = "center_on_primary",
                 .views = .{
@@ -23,6 +25,21 @@
                 },
             },
         },
+    },
+    .commands = .{
+        .{ .id = "app.new-utility", .title = "New Utility" },
+        .{ .id = "app.quit", .title = "Quit Replicator" },
+    },
+    .menus = .{
+        .{ .title = "Replicator", .items = .{
+            .{ .label = "New Utility", .command = "app.new-utility", .key = "n", .modifiers = .{ "primary" } },
+            .{ .separator = true },
+            .{ .label = "Quit Replicator", .command = "app.quit", .key = "q", .modifiers = .{ "primary" } },
+        } },
+    },
+    .shortcuts = .{
+        .{ .id = "app.new-utility", .key = "n", .modifiers = .{ "primary" } },
+        .{ .id = "app.quit", .key = "q", .modifiers = .{ "primary" } },
     },
     .security = .{
         .navigation = .{
